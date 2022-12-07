@@ -5,7 +5,6 @@ import re
 
 while True:
 
-
     while True:
         adr = input('Вставьте ссылку на репозиторий (q - выход): ')
 
@@ -39,7 +38,7 @@ while True:
         print(f'Рейтинг: {repo.stargazers_count}')
         print('')
 
-    except (GithubException, UnknownObjectException, NameError):
+    except:
         print('Указанного вами репозитория не существует')
         print('Повторите попытку либо введите q для выхода')
         print('')
