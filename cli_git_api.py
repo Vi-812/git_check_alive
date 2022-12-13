@@ -1,34 +1,34 @@
-from github import Github
+from github import Github, GithubException, UnknownObjectException, RateLimitExceededException
 import sys
+import argparse
 import re
 
 
-while True:
+def createParser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('repository', nargs='?')
+    return parser
 
-    while True:
-        adr = input('Вставьте ссылку на репозиторий (q - выход): ')
+if __name__ == '__main__':
+    parser = createParser()
+    namespace = parser.parse_args()
 
-        if adr == 'q' or adr == 'Q':
-            sys.exit()
+    if not namespace.repository:
+        print('Укажите ссылку либо имя репозитория')
+        sys.exit()
+    if namespace.repository == '1':
+        namespace.repository = 'https://github.com/Vi-812/git_check_alive'
+    # print(namespace.repository)
 
-        if adr == ' ':
-            adr = 'https://github.com/Vi-812/GIT'
-
-        adress = re.search('github.com/(.+/.+)', adr)
-        if adress:
-            adress = adress.group(1)
-        else:
-            adress = re.search('(.+/.+)', adr)
-            if adress:
-                adress = adress.group(1)
-
-        if adress:
-            break
-        else:
-            print('Ссылка не корректна, введите ссылку в формате')
-            print('"https://github.com/Vi-812/GIT" либо "Vi-812/GIT"')
-            print('Либо введите q для выхода')
-            print('')
+    adress = re.search('([^/]+/[^/]+)$', namespace.repository)
+    if adress:
+        adress = adress.group(1)
+    # print(adress)
+    if not adress:
+        print('Ссылка не корректна, введите ссылку в формате')
+        print('"https://github.com/Vi-812/GIT" либо "Vi-812/GIT"')
+        sys.exit()
+    # print(adress)
 
     try:
         g = Github()
@@ -36,9 +36,9 @@ while True:
         print(f'Наименование: {repo.name}')
         print(f'Описание: {repo.description}')
         print(f'Рейтинг: {repo.stargazers_count}')
-        print('')
+
+    except UnknownObjectException:
+        print('Указанного вами репозитория не существует')
 
     except:
-        print('Указанного вами репозитория не существует')
-        print('Повторите попытку либо введите q для выхода')
-        print('')
+        print('Ошибка, возможно нет интернета =)')
