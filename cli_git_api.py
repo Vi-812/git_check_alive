@@ -1,4 +1,4 @@
-from github import Github, GithubException, UnknownObjectException, RateLimitExceededException
+from github import Github, GithubException, UnknownObjectException
 import sys
 import argparse
 import re
