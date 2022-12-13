@@ -1,7 +1,7 @@
-# GIT
+# GIT CHECK ALIVE
 
-Установите модуль API Github (pip install pygithub)
+1. Установите зависимости (python -m pip install -r requirements.txt)
+2. Перейдите в папку с файлом
+3. Запустите файл (python cli_git_api.py ссылка_на_репозиторий)
 
-Перейдите в папку с файлом
-
-Запустите файл (python cli.py)
+Ссылка передается в формате "https://github.com/Vi-812/git_check_alive" либо имя_пользователя/имя_репозитория "Vi-812/git_check_alive" 
