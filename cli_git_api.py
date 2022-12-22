@@ -1,4 +1,4 @@
-from github import Github, GithubException, UnknownObjectException
+from github import Github, GithubException, UnknownObjectException, RateLimitExceededException
 import sys
 import argparse
 import re
@@ -33,12 +33,37 @@ try:
     print(f'Наименование: {repo.name}')
     print(f'Описание: {repo.description}')
     print(f'Рейтинг: {repo.stargazers_count}')
+    issu = repo.get_issues()
+    a = 0
+    for i in issu:
+        print(i)
+        a += 1
+    print(a)
 
-except UnknownObjectException:
+
+
+
+except UnknownObjectException as error:
     print('Указанного вами репозитория не существует')
+    print(error.__class__)
+    print(error)
 
-except Exception as error:
-    print('Ошибка:')
+except RateLimitExceededException as error:
+    print('Превышен лимит запросов, попробуйте повторить через некоторое время')
+    print(error.__class__)
+    print(error)
+
+except GithubException as error:
+    print('Ошибка PyGithub')
     print(error.__class__)
     print(error.__context__)
+    print('-----------------')
+    print(error)
+
+except Exception as error:
+    print('Неизвестная ошибка')
+    print(error.__class__)
+    print(error.__context__)
+    print('-----------------')
+    print(error)
 
