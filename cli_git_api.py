@@ -19,7 +19,7 @@ if not namespace.repository:
 if namespace.repository == '1':
     namespace.repository = 'https://github.com/Vi-812/git_check_alive'
 
-adress = re.search('([^/]+/[^/]+)$', namespace.repository)
+adress = re.search('([^/])+/([^/]+)$', namespace.repository)
 if adress:
     adress = adress.group(1)
 if not adress:
