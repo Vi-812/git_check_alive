@@ -19,7 +19,7 @@ if not namespace.repository:
 if namespace.repository == '1':
     namespace.repository = 'https://github.com/Vi-812/git_check_alive'
 
-adress = re.search('([^/])+/([^/]+)$', namespace.repository)
+adress = re.search('([^/]+/[^/]+)$', namespace.repository)
 if adress:
     adress = adress.group(1)
 if not adress:
@@ -33,12 +33,17 @@ try:
     print(f'Наименование: {repo.name}')
     print(f'Описание: {repo.description}')
     print(f'Рейтинг: {repo.stargazers_count}')
-    issu = repo.get_issues()
-    a = 0
-    for i in issu:
-        print(i)
-        a += 1
-    print(a)
+
+    open_issues = repo.get_issues(state='open')   # closed
+    count_issues = count_bug_issues = 0
+    for issu in open_issues:
+        print(issu)
+        if 'bug' in issu.labels:
+            print('11')
+
+    labels = repo.get_labels()
+    for label in labels:
+        print(label)
 
 
 

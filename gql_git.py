@@ -8,11 +8,18 @@ from tok import get_token
 debug = True
 
 
-# Надо обработать ошибку передачи нескольких аргументов
-parser = argparse.ArgumentParser()
-parser.add_argument('repository_path', nargs='?')
-namespace = parser.parse_args()
+try:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('repository_path', nargs='?')
+    namespace = parser.parse_args()
+except:
+    print('--------------------------------------------------------------')
+    print('Возникла ошибка, передано слишком много аргументов')
+    print('Передайте аргументом ссылку или владельца/имя репозитория')
+    print('"https://github.com/Vi-812/GIT" либо "Vi-812/git"')
+    sys.exit()
 
+# DEBUG TRUE
 if not namespace.repository_path:
     if debug == False:
         print('Передайте аргументом ссылку или владельца/имя репозитория')
@@ -74,48 +81,58 @@ json = {
     '}'
 }
 
-# Необходимо будет улучшить обработку исключений
+
 try:
     data = requests.post(headers=headers, json=json, url=url)
     data = data.json()
-except:
-    print('Чота не так)')
+except requests.exceptions.ConnectionError as err:
+    print('--------------------------------------------------------------')
+    print('Ошибка ссоединения с сервером')
+    print(f'Исключение: {err}')
     sys.exit()
 
-name_js = data['data']['repository']['name']
-description_js = data['data']['repository']['description']
-stars_count_js = data['data']['repository']['stargazerCount']
+try:
+    name_js = data['data']['repository']['name']
+    description_js = data['data']['repository']['description']
+    stars_count_js = data['data']['repository']['stargazerCount']
 
-labels_total_js = data['data']['repository']['labels']['totalCount']
-labels_list_js = []
-labels_bug_js = 0
-for label in data['data']['repository']['labels']['nodes']:
-    labels_list_js.append(label['name'])
-    if 'bug' in label['name']:
-        labels_bug_js += 1
+    labels_total_js = data['data']['repository']['labels']['totalCount']
+    labels_list_js = []
+    labels_bug_js = 0
+    for label in data['data']['repository']['labels']['nodes']:
+        labels_list_js.append(label['name'])
+        if 'bug' in label['name']:
+            labels_bug_js += 1
 
-# Сделать обработку на 100+ багрепортов и 100+ меток в репозитории!!!
-issues_total_js = data['data']['repository']['issues']['totalCount']
-issues_get_js = issues_open_bug_js = issues_closed_bug_js = issues_open_nobug_js = issues_closed_nobug_js = 0
-for issue in data['data']['repository']['issues']['nodes']:
-    issues_get_js += 1
-    issue_bug = 0
-    for issue_label in issue['labels']['nodes']:
-        if 'bug' in issue_label['name']:
-            issue_bug += 1
-    if issue_bug > 0:
-        if issue['closed'] == False:
-            issues_open_bug_js += 1
+    # Сделать обработку на 100+ багрепортов и 100+ меток в репозитории!!!
+    issues_total_js = data['data']['repository']['issues']['totalCount']
+    issues_get_js = issues_open_bug_js = issues_closed_bug_js = issues_open_nobug_js = issues_closed_nobug_js = 0
+    for issue in data['data']['repository']['issues']['nodes']:
+        issues_get_js += 1
+        issue_bug = 0
+        for issue_label in issue['labels']['nodes']:
+            if 'bug' in issue_label['name']:
+                issue_bug += 1
+        if issue_bug > 0:
+            if issue['closed'] == False:
+                issues_open_bug_js += 1
+            else:
+                issues_closed_bug_js += 1
         else:
-            issues_closed_bug_js += 1
-    else:
-        if issue['closed'] == False:
-            issues_open_nobug_js += 1
-        else:
-            issues_closed_nobug_js +=1
+            if issue['closed'] == False:
+                issues_open_nobug_js += 1
+            else:
+                issues_closed_nobug_js +=1
 
-limit_cost_js = data['data']['rateLimit']['cost']
-limit_remaining_js = data['data']['rateLimit']['remaining']
+    limit_cost_js = data['data']['rateLimit']['cost']
+    limit_remaining_js = data['data']['rateLimit']['remaining']
+except TypeError as err:
+    print('--------------------------------------------------------------')
+    print('При получении данных из репозитория возникла ошибка')
+    print(f'Исключение: {err}')
+    print(f"Тип ошибки: {data['errors'][0]['type']}")
+    print(f"Сообщение: {data['errors'][0]['message']}")
+    sys.exit()
 
 print('--------------------------------------------------------------')
 print(f'Наименование: {name_js}')
