@@ -21,7 +21,7 @@ except:
 
 # DEBUG TRUE
 if not namespace.repository_path:
-    if debug == False:
+    if debug is False:
         print('Передайте аргументом ссылку или владельца/имя репозитория')
         print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
         sys.exit()
@@ -113,15 +113,15 @@ try:
             if 'bug' in issue_label['name']:
                 issue_bug += 1
         if issue_bug > 0:
-            if issue['closed'] == False:
+            if issue['closed'] is False:
                 issues_open_bug_js += 1
             else:
                 issues_closed_bug_js += 1
         else:
-            if issue['closed'] == False:
+            if issue['closed'] is False:
                 issues_open_nobug_js += 1
             else:
-                issues_closed_nobug_js +=1
+                issues_closed_nobug_js += 1
 
     limit_cost_js = data['data']['rateLimit']['cost']
     limit_remaining_js = data['data']['rateLimit']['remaining']
