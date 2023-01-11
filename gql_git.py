@@ -16,19 +16,18 @@ except:
     print('--------------------------------------------------------------')
     print('Возникла ошибка, передано слишком много аргументов')
     print('Передайте аргументом ссылку или владельца/имя репозитория')
-    print('"https://github.com/Vi-812/GIT" либо "Vi-812/git"')
+    print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
     sys.exit()
 
 # DEBUG TRUE
 if not namespace.repository_path:
     if debug == False:
         print('Передайте аргументом ссылку или владельца/имя репозитория')
-        print('"https://github.com/Vi-812/GIT" либо "Vi-812/git"')
+        print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
         sys.exit()
     else:
         namespace.repository_path = 'https://github.com/Vi-812/git_check_alive'
-if namespace.repository_path == '1':
-    namespace.repository_path = 'https://github.com/Vi-812/git_check_alive'
+
 
 data = re.search('([^/]+/[^/]+)$', namespace.repository_path)
 if data:
@@ -36,7 +35,7 @@ if data:
     repository_owner, repository_name = data.split('/', 2)
 else:
     print('Ссылка не корректна, введите ссылку в формате')
-    print('"https://github.com/Vi-812/GIT" либо "Vi-812/git"')
+    print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
     sys.exit()
 
 print(f'Имя владельца: {repository_owner}')
