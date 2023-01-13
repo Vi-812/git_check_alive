@@ -1,8 +1,8 @@
-import requests
+
 import argparse
 import sys
 import re
-from tok import get_token
+
 
 
 debug = True
@@ -42,9 +42,7 @@ print(f'Имя владельца: {repository_owner}')
 print(f'Имя репозитория: {repository_name}')
 
 
-url = 'https://api.github.com/graphql'
-api_token = 'token ' + get_token()
-headers = {'Authorization': api_token}
+
 
 # Это просто дичь какая то))
 json = {
