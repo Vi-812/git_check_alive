@@ -15,8 +15,16 @@ class GitGraphql:
         self.repository_name = 'jest'
 
     def get_info(self):
+
+        data = {
+            "owner": "facebook",
+            "name": "jest"
+            }
+
+        print(data)
+
         self.json = {
-            'query GetInfo($owner: String!, $name: String!)': '{'
+            'query': 'query GetInfo ($owner: String = "facebook", $name: String = "jest") {'
                 'repository(name: $name, owner: $owner) {'
                     'name\n'
                     'description\n'
@@ -44,13 +52,14 @@ class GitGraphql:
                     'remaining'
                 '}'
             '}'
-        }
-        params = {
-            'owner': '"facebook"',
-            'name': '"jest"'
+            # """
+            # variables {
+            #     "owner": "facebook"
+            # }
+            # """
         }
 
-        data = requests.post(url=self.url, headers=self.headers, json=self.json, params=params)
+        data = requests.post(url=self.url, headers=self.headers, json=self.json)
         data = data.json()
         print(data)
 
