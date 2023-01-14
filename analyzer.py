@@ -1,5 +1,6 @@
 import requests
-from tok import get_token
+import datetime
+from tok import get_token # Убрать))
 
 
 class GitGraphql:
@@ -19,7 +20,7 @@ class GitGraphql:
         self.labels_name = []
 
         while True:
-            self.json = {
+            self.json = { # Всего иссуес ??
                 'query': 'query GetInfo ($owner: String!, $name: String!, $cursor: String) {'
                     'repository(name: $name, owner: $owner) {'
                         'name '
@@ -88,57 +89,115 @@ class GitGraphql:
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
-        print(self.labels_bug)
+        # print(self.labels_bug)
 
     def get_issues(self):
-        self.cursor = None
+        def to_date(date_str):
+            date_dt = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+            return date_dt
 
-        self.json = {
-            'query': 'query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {'
-                'repository(name: $name, owner: $owner) {'
-                    'issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {'
-                        'totalCount '
-                        'pageInfo {'
-                            'startCursor '
-                            'endCursor '
-                            'hasNextPage'
-                        '}'
-                        'edges {'
-                            'cursor '
-                            'node {'
-                                'createdAt '
-                                'closedAt '
-                                'closed '
-                                'lastEditedAt '
-                                'updatedAt '
-                                'comments(last: 1) {'
-                                    'totalCount '
-                                    'nodes {'
-                                        'createdAt'
+        self.cursor = None
+        self.issues_dates_info = []
+        self.issues_open_count = 0
+        self.issues_closed_count = 0
+
+        while True:
+            self.json = {
+                'query': 'query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {'
+                    'repository(name: $name, owner: $owner) {'
+                        'issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {'
+                            'totalCount '
+                            'pageInfo {'
+                                'startCursor '
+                                'endCursor '
+                                'hasNextPage'
+                            '}'
+                            'edges {'
+                                'cursor '
+                                'node {'
+                                    'id '
+                                    'createdAt '
+                                    'closedAt '
+                                    'closed '
+                                    'updatedAt '
+                                    'comments(last: 1) {'
+                                        'totalCount '
+                                        'nodes {'
+                                            'createdAt'
+                                        '}'
                                     '}'
                                 '}'
                             '}'
                         '}'
                     '}'
-                '}'
-                'rateLimit {'
-                    'cost '
-                    'remaining '
-                    'resetAt'
-                '}'
-            '}',
-            'variables': {
-                "owner": self.repository_owner,
-                "name": self.repository_name,
-                "labels": self.labels_bug,
-                "cursor": self.cursor
+                    'rateLimit {'
+                        'cost '
+                        'remaining '
+                        'resetAt'
+                    '}'
+                '}',
+                'variables': {
+                    "owner": self.repository_owner,
+                    "name": self.repository_name,
+                    "labels": self.labels_bug,
+                    "cursor": self.cursor
+                }
             }
-        }
-        print(self.json)
+            # print(self.json)
 
-        data = requests.post(url=self.url, headers=self.headers, json=self.json)
-        data = data.json()
-        print(data)
+            data = requests.post(url=self.url, headers=self.headers, json=self.json)
+            data = data.json()
+            # print(data)
+
+            self.issues_count = data['data']['repository']['issues']['totalCount']
+            self.start_cursor = data['data']['repository']['issues']['pageInfo']['startCursor']
+            self.end_cursor = data['data']['repository']['issues']['pageInfo']['endCursor']
+            self.has_next_page = data['data']['repository']['issues']['pageInfo']['hasNextPage']
+            for issue in data['data']['repository']['issues']['edges']:
+                id_0 = issue['node']['id']
+                created_at_1 = to_date(issue['node']['createdAt'])
+                closed_at_2 = issue['node']['closedAt']
+                closed_bool = issue['node']['closed']
+                if bool(closed_at_2) and closed_bool:
+                    self.issues_closed_count += 1
+                    closed_at_2 = to_date(closed_at_2)
+                    duration_fix_6 = closed_at_2 - created_at_1
+                elif not bool(closed_at_2) and not closed_bool:
+                    self.issues_open_count += 1
+                    duration_fix_6 = None
+                else:
+                    duration_fix_6 = None
+                    print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = {closed_bool}, closed_at = {closed_at_2}')
+                updated_at_3 = to_date(issue['node']['updatedAt'])
+                comments_count_4 = issue['node']['comments']['totalCount']
+                if issue['node']['comments']['nodes']:
+                    comments_last_5 = to_date(issue['node']['comments']['nodes'][0]['createdAt'])
+                else:
+                    comments_last_5 = None
+                self.issues_dates_info.append([
+                    id_0,
+                    created_at_1,
+                    closed_at_2,
+                    updated_at_3,
+                    comments_count_4,
+                    comments_last_5,
+                    duration_fix_6
+                ])
+            if self.has_next_page:
+                self.cursor = self.end_cursor
+            else:
+                break
+
+        print(self.issues_count, self.issues_open_count, self.issues_closed_count)
+        print(len(self.issues_dates_info))
+
+        print(self.request_cost, self.request_balance)
+
+
+
+
+
+
 
 
 
