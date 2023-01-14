@@ -15,12 +15,12 @@ class GitGraphql:
         self.repository_name = 'jest'
 
     def get_info(self):
-        self.cursor = 'null'
+        self.cursor = None
         self.labels_name = []
 
         while True:
             self.json = {
-                'query': 'query GetInfo ($owner: String!, $name: String!, $cursor: String = null) {'
+                'query': 'query GetInfo ($owner: String!, $name: String!, $cursor: String) {'
                     'repository(name: $name, owner: $owner) {'
                         'name '
                         'description '
@@ -46,14 +46,13 @@ class GitGraphql:
                     'rateLimit {'
                         'cost '
                         'remaining '
-                         'resetAt'
+                        'resetAt'
                     '}'
                 '}',
                 'variables': {
                     "owner": self.repository_owner,
                     "name": self.repository_name,
                     "cursor": self.cursor
-
                 }
             }
             # print(self.json)
@@ -82,14 +81,64 @@ class GitGraphql:
             else:
                 break
 
-        print(self.labels_count, '>>', self.labels_name)
+        # print(self.labels_count, '>>', self.labels_name)
 
         self.labels_bug = []
         for name in self.labels_name:
-            if 'bug' in name:
+            if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
         print(self.labels_bug)
+
+    def get_issues(self):
+        self.cursor = None
+
+        self.json = {
+            'query': 'query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {'
+                'repository(name: $name, owner: $owner) {'
+                    'issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {'
+                        'totalCount '
+                        'pageInfo {'
+                            'startCursor '
+                            'endCursor '
+                            'hasNextPage'
+                        '}'
+                        'edges {'
+                            'cursor '
+                            'node {'
+                                'createdAt '
+                                'closedAt '
+                                'closed '
+                                'lastEditedAt '
+                                'updatedAt '
+                                'comments(last: 1) {'
+                                    'totalCount '
+                                    'nodes {'
+                                        'createdAt'
+                                    '}'
+                                '}'
+                            '}'
+                        '}'
+                    '}'
+                '}'
+                'rateLimit {'
+                    'cost '
+                    'remaining '
+                    'resetAt'
+                '}'
+            '}',
+            'variables': {
+                "owner": self.repository_owner,
+                "name": self.repository_name,
+                "labels": self.labels_bug,
+                "cursor": self.cursor
+            }
+        }
+        print(self.json)
+
+        data = requests.post(url=self.url, headers=self.headers, json=self.json)
+        data = data.json()
+        print(data)
 
 
 
@@ -97,3 +146,4 @@ class GitGraphql:
 
 x = GitGraphql()
 x.get_info()
+x.get_issues()
