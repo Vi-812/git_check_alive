@@ -39,12 +39,13 @@ else:
 
 print(f'Имя владельца: {repository_owner}')
 print(f'Имя репозитория: {repository_name}')
-print('---------------------------------------------------')
+print('--------------------------------------------------------------')
 
 xz = analyzer.GitGraphql(repository_owner, repository_name)
 # xz = analyzer.GitGraphql('facebook', 'jest')
+# xz = analyzer.GitGraphql('vi-812', 'git_check_alive')
 xz.get_info()
 xz.get_issues()
 xz.analyz()
 
-print('---------------------------------------------------')
+print('--------------------------------------------------------------')
