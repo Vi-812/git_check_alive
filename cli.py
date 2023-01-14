@@ -1,9 +1,7 @@
 import argparse
 import sys
 import re
-
 import analyzer
-from analyzer import GitGraphql
 
 
 debug = True
@@ -41,25 +39,12 @@ else:
 
 print(f'Имя владельца: {repository_owner}')
 print(f'Имя репозитория: {repository_name}')
+print('---------------------------------------------------')
 
+xz = analyzer.GitGraphql(repository_owner, repository_name)
+# xz = analyzer.GitGraphql('facebook', 'jest')
+xz.get_info()
+xz.get_issues()
+xz.analyz()
 
-
-# try:
-#
-# except requests.exceptions.ConnectionError as err:
-#     print('--------------------------------------------------------------')
-#     print('Ошибка ссоединения с сервером')
-#     print(f'Исключение: {err}')
-#     sys.exit()
-
-# try:
-#
-# except TypeError as err:
-#     print('--------------------------------------------------------------')
-#     print('При получении данных из репозитория возникла ошибка')
-#     print(f'Исключение: {err}')
-#     print(f"Тип ошибки: {data['errors'][0]['type']}")
-#     print(f"Сообщение: {data['errors'][0]['message']}")
-#     sys.exit()
-
-
+print('---------------------------------------------------')

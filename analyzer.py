@@ -219,10 +219,20 @@ class GitGraphql():
 
         print(self.request_balance, self.request_cost)
 
+# try:
+#
+# except requests.exceptions.ConnectionError as err:
+#     print('--------------------------------------------------------------')
+#     print('Ошибка ссоединения с сервером')
+#     print(f'Исключение: {err}')
+#     sys.exit()
 
-if __name__ == '__main__':
-    # x = GitGraphql('Vi-812', 'git_check_alive')
-    x = GitGraphql('facebook', 'jest')
-    x.get_info()
-    x.get_issues()
-    x.analyz()
+# try:
+#
+# except TypeError as err:
+#     print('--------------------------------------------------------------')
+#     print('При получении данных из репозитория возникла ошибка')
+#     print(f'Исключение: {err}')
+#     print(f"Тип ошибки: {data['errors'][0]['type']}")
+#     print(f"Сообщение: {data['errors'][0]['message']}")
+#     sys.exit()
