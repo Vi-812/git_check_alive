@@ -1,6 +1,8 @@
 import argparse
 import sys
 import re
+
+import analyzer
 from analyzer import GitGraphql
 
 
@@ -39,10 +41,6 @@ else:
 
 print(f'Имя владельца: {repository_owner}')
 print(f'Имя репозитория: {repository_name}')
-
-x = GitGraphql(repository_owner, repository_name)
-x.get_info()
-x.get_issues()
 
 
 

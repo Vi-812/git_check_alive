@@ -1,6 +1,6 @@
 import requests
 import datetime
-from tok import get_token # Убрать))
+from tok import get_token  # python-dotenv!
 
 
 class GitGraphql():
@@ -93,6 +93,7 @@ class GitGraphql():
             return datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.cursor = None
         self.issues_dates_info = []
+        self.duration_fix_list = []
         self.issues_open_count = 0
         self.issues_closed_count = 0
 
@@ -157,7 +158,7 @@ class GitGraphql():
                     duration_fix_6 = closed_at_2 - created_at_1
                 elif not bool(closed_at_2) and not closed_bool:
                     self.issues_open_count += 1
-                    duration_fix_6 = datetime.datetime.now() - created_at_1
+                    duration_fix_6 = None # datetime.datetime.now() - created_at_1
                 else:
                     duration_fix_6 = None
                     print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = {closed_bool}, closed_at = {closed_at_2}')
@@ -176,6 +177,8 @@ class GitGraphql():
                     comments_last_5,
                     duration_fix_6
                 ])
+                if duration_fix_6:
+                    self.duration_fix_list.append(duration_fix_6)
             self.request_cost = data['data']['rateLimit']['cost']
             self.request_balance = data['data']['rateLimit']['remaining']
             self.request_reset = data['data']['rateLimit']['resetAt']
@@ -185,38 +188,41 @@ class GitGraphql():
                 break
 
     def analyz(self):
-        self.average_duration_fix = datetime.timedelta(days=0)
-        self.average_maxduration_fix = datetime.timedelta(days=0)
-        self.average_minduration_fix = datetime.timedelta(days=0)
+        self.duration_fix_min = datetime.timedelta(days=0)
+        self.duration_fix_max = datetime.timedelta(days=0)
+        self.duration_fix_avg = datetime.timedelta(days=0)
+        self.duration_fix_mediana = datetime.timedelta(days=0)
+        if self.duration_fix_list:
+            self.duration_fix_list.sort()
+            self.duration_fix_min = self.duration_fix_list[0]
+            self.duration_fix_max = self.duration_fix_list[-1]
+            for duration in self.duration_fix_list:
+                self.duration_fix_avg += duration
+            self.duration_fix_avg = self.duration_fix_avg / len(self.duration_fix_list)
+            if len(self.duration_fix_list) % 2 == 1:
+                self.duration_fix_mediana = self.duration_fix_list[len(self.duration_fix_list) // 2]
+            else:
+                self.duration_fix_mediana = (self.duration_fix_list[len(self.duration_fix_list) // 2 - 1] +
+                                             self.duration_fix_list[len(self.duration_fix_list) // 2]) / 2
         print(f'Имя репозитория: {self.repository_name}')
         print(f'Владелец: {self.repository_owner}')
         print(f'Описание: {self.description}')
         print(f'Количество звезд: {self.stars}')
         print(f'Общее количество issue: {self.issues_total_count}')
-        print(f'Из них bug-report: {self.issues_bug_count}')
+        print(f'Issue bug-report: {self.issues_bug_count}')
         print(f'Из них открыты: {self.issues_open_count}')
         print(f'Из них закрыты: {self.issues_closed_count}')
-        for issue_info in self.issues_dates_info:
-            self.average_maxduration_fix = max(self.average_maxduration_fix, issue_info[6])
-            if not self.average_minduration_fix:
-                self.average_minduration_fix = issue_info[6]
-            self.average_minduration_fix = min(self.average_minduration_fix, issue_info[6])
-            self.average_duration_fix += issue_info[6]
-        self.average_duration_fix = self.average_duration_fix / self.issues_bug_count
-
-
-
-
+        print(f'Время актуальности bug-report, минимальное: {self.duration_fix_min}')
+        print(f'максимальное: {self.duration_fix_max}')
+        print(f'среднее: {self.duration_fix_avg}')
+        print(f'медиана: {self.duration_fix_mediana}')
 
         print(self.request_balance, self.request_cost)
-        print(self.average_duration_fix)
-        print(self.average_maxduration_fix)
-        print(self.average_minduration_fix)
 
 
-
-# x = GitGraphql('Vi-812', 'git_check_alive')
-x = GitGraphql('facebook', 'jest')
-x.get_info()
-x.get_issues()
-x.analyz()
+if __name__ == '__main__':
+    # x = GitGraphql('Vi-812', 'git_check_alive')
+    x = GitGraphql('facebook', 'jest')
+    x.get_info()
+    x.get_issues()
+    x.analyz()
