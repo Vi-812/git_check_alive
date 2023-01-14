@@ -3,9 +3,7 @@ import sys
 import re
 import analyzer
 
-
 debug = True
-
 
 try:
     parser = argparse.ArgumentParser()
@@ -27,7 +25,6 @@ if not namespace.repository_path:
     else:
         namespace.repository_path = 'https://github.com/Vi-812/git_check_alive'
 
-
 data = re.search('([^/]+/[^/]+)$', namespace.repository_path)
 if data:
     data = data.group(1)
@@ -43,9 +40,21 @@ print('--------------------------------------------------------------')
 
 xz = analyzer.GitGraphql(repository_owner, repository_name)
 # xz = analyzer.GitGraphql('facebook', 'jest')
-# xz = analyzer.GitGraphql('vi-812', 'git_check_alive')
 xz.get_info()
 xz.get_issues()
 xz.analyz()
 
+print(f'Имя репозитория: {xz.repository_name}')
+print(f'Владелец: {xz.repository_owner}')
+print(f'Описание: {xz.description}')
+print(f'Количество звезд: {xz.stars}')
+print(f'Общее количество issue: {xz.issues_total_count}')
+print(f'Issue bug-report: {xz.issues_bug_count}')
+print(f'Из них открыты: {xz.issues_open_count}')
+print(f'Из них закрыты: {xz.issues_closed_count}')
+print(f'Время актуальности bug-report, минимальное: {xz.duration_fix_min}')
+print(f'максимальное: {xz.duration_fix_max}')
+print(f'среднее: {xz.duration_fix_avg}')
+print(f'медиана: {xz.duration_fix_mediana}')
+print(f'Остаток запросов: {xz.request_balance}({xz.request_cost})')
 print('--------------------------------------------------------------')

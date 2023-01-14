@@ -1,7 +1,9 @@
 import requests
 import datetime
 import sys
-from tok import get_token  # python-dotenv!
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class GitGraphql():
@@ -11,7 +13,7 @@ class GitGraphql():
 
     def __init__(self, repository_owner, repository_name):
         self.url = 'https://api.github.com/graphql'
-        self.headers = {'Authorization': 'token ' + get_token()}
+        self.headers = {'Authorization': 'token ' + os.getenv('token')}
         self.repository_owner = repository_owner
         self.repository_name = repository_name
 
@@ -231,17 +233,3 @@ class GitGraphql():
             else:
                 self.duration_fix_mediana = (self.duration_fix_list[len(self.duration_fix_list) // 2 - 1] +
                                              self.duration_fix_list[len(self.duration_fix_list) // 2]) / 2
-        print(f'Имя репозитория: {self.repository_name}')
-        print(f'Владелец: {self.repository_owner}')
-        print(f'Описание: {self.description}')
-        print(f'Количество звезд: {self.stars}')
-        print(f'Общее количество issue: {self.issues_total_count}')
-        print(f'Issue bug-report: {self.issues_bug_count}')
-        print(f'Из них открыты: {self.issues_open_count}')
-        print(f'Из них закрыты: {self.issues_closed_count}')
-        print(f'Время актуальности bug-report, минимальное: {self.duration_fix_min}')
-        print(f'максимальное: {self.duration_fix_max}')
-        print(f'среднее: {self.duration_fix_avg}')
-        print(f'медиана: {self.duration_fix_mediana}')
-
-        print(self.request_balance, self.request_cost)
