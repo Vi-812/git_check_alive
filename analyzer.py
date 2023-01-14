@@ -3,24 +3,23 @@ import datetime
 from tok import get_token # Убрать))
 
 
-class GitGraphql:
+class GitGraphql():
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
 
-    def __init__(self):
+    def __init__(self, repository_owner, repository_name):
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + get_token()}
-        # Импортировать данные
-        self.repository_owner = 'facebook'
-        self.repository_name = 'jest'
+        self.repository_owner = repository_owner
+        self.repository_name = repository_name
 
     def get_info(self):
         self.cursor = None
         self.labels_name = []
 
         while True:
-            self.json = { # Всего иссуес ??
+            self.json = {
                 'query': 'query GetInfo ($owner: String!, $name: String!, $cursor: String) {'
                     'repository(name: $name, owner: $owner) {'
                         'name '
@@ -43,6 +42,9 @@ class GitGraphql:
                                 '}'
                             '}'
                         '}'
+                        'issues {'
+                            'totalCount'
+                        '}'
                     '}'
                     'rateLimit {'
                         'cost '
@@ -56,11 +58,9 @@ class GitGraphql:
                     "cursor": self.cursor
                 }
             }
-            # print(self.json)
 
             data = requests.post(url=self.url, headers=self.headers, json=self.json)
             data = data.json()
-            # print(data)
 
             self.name = data['data']['repository']['name']
             self.description = data['data']['repository']['description']
@@ -74,6 +74,7 @@ class GitGraphql:
             self.has_next_page = data['data']['repository']['labels']['pageInfo']['hasNextPage']
             for label in data['data']['repository']['labels']['edges']:
                 self.labels_name.append(label['node']['name'])
+            self.issues_total_count = data['data']['repository']['issues']['totalCount']
             self.request_cost = data['data']['rateLimit']['cost']
             self.request_balance = data['data']['rateLimit']['remaining']
             self.request_reset = data['data']['rateLimit']['resetAt']
@@ -82,20 +83,14 @@ class GitGraphql:
             else:
                 break
 
-        # print(self.labels_count, '=', len(self.labels_name), '>>', self.labels_name)
-
         self.labels_bug = []
         for name in self.labels_name:
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
-        # print(self.labels_bug)
-
     def get_issues(self):
         def to_date(date_str):
-            date_dt = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-            return date_dt
-
+            return datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.cursor = None
         self.issues_dates_info = []
         self.issues_open_count = 0
@@ -143,13 +138,11 @@ class GitGraphql:
                     "cursor": self.cursor
                 }
             }
-            # print(self.json)
 
             data = requests.post(url=self.url, headers=self.headers, json=self.json)
             data = data.json()
-            # print(data)
 
-            self.issues_count = data['data']['repository']['issues']['totalCount']
+            self.issues_bug_count = data['data']['repository']['issues']['totalCount']
             self.start_cursor = data['data']['repository']['issues']['pageInfo']['startCursor']
             self.end_cursor = data['data']['repository']['issues']['pageInfo']['endCursor']
             self.has_next_page = data['data']['repository']['issues']['pageInfo']['hasNextPage']
@@ -164,7 +157,7 @@ class GitGraphql:
                     duration_fix_6 = closed_at_2 - created_at_1
                 elif not bool(closed_at_2) and not closed_bool:
                     self.issues_open_count += 1
-                    duration_fix_6 = None
+                    duration_fix_6 = datetime.datetime.now() - created_at_1
                 else:
                     duration_fix_6 = None
                     print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = {closed_bool}, closed_at = {closed_at_2}')
@@ -183,26 +176,47 @@ class GitGraphql:
                     comments_last_5,
                     duration_fix_6
                 ])
+            self.request_cost = data['data']['rateLimit']['cost']
+            self.request_balance = data['data']['rateLimit']['remaining']
+            self.request_reset = data['data']['rateLimit']['resetAt']
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
                 break
 
-        print(self.issues_count, self.issues_open_count, self.issues_closed_count)
-        print(len(self.issues_dates_info))
+    def analyz(self):
+        self.average_duration_fix = datetime.timedelta(days=0)
+        self.average_maxduration_fix = datetime.timedelta(days=0)
+        self.average_minduration_fix = datetime.timedelta(days=0)
+        print(f'Имя репозитория: {self.repository_name}')
+        print(f'Владелец: {self.repository_owner}')
+        print(f'Описание: {self.description}')
+        print(f'Количество звезд: {self.stars}')
+        print(f'Общее количество issue: {self.issues_total_count}')
+        print(f'Из них bug-report: {self.issues_bug_count}')
+        print(f'Из них открыты: {self.issues_open_count}')
+        print(f'Из них закрыты: {self.issues_closed_count}')
+        for issue_info in self.issues_dates_info:
+            self.average_maxduration_fix = max(self.average_maxduration_fix, issue_info[6])
+            if not self.average_minduration_fix:
+                self.average_minduration_fix = issue_info[6]
+            self.average_minduration_fix = min(self.average_minduration_fix, issue_info[6])
+            self.average_duration_fix += issue_info[6]
+        self.average_duration_fix = self.average_duration_fix / self.issues_bug_count
 
-        print(self.request_cost, self.request_balance)
 
 
 
 
+        print(self.request_balance, self.request_cost)
+        print(self.average_duration_fix)
+        print(self.average_maxduration_fix)
+        print(self.average_minduration_fix)
 
 
 
-
-
-
-
-x = GitGraphql()
+# x = GitGraphql('Vi-812', 'git_check_alive')
+x = GitGraphql('facebook', 'jest')
 x.get_info()
 x.get_issues()
+x.analyz()
