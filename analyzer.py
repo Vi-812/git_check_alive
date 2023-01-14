@@ -81,7 +81,7 @@ class GitGraphql:
             else:
                 break
 
-        # print(self.labels_count, '>>', self.labels_name)
+        # print(self.labels_count, '=', len(self.labels_name), '>>', self.labels_name)
 
         self.labels_bug = []
         for name in self.labels_name:
