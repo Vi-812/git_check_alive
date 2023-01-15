@@ -7,4 +7,4 @@
 4. Запустите файл (python cli.py ссылка_на_репозиторий)
 
 Ссылка передается в формате "https://github.com/Vi-812/git_check_alive" либо "имя_пользователя/имя_репозитория" =>
-"Vi-812/git_check_alive"
+"vi-812/git_check_alive"
