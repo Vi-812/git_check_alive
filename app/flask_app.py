@@ -1,13 +1,21 @@
-from flask import Flask, render_template
+import requests
+from flask import Flask, render_template,flash
 from app.forms import RepositoryPath
 
 
 app_flask = Flask(__name__)
+app_flask.config['SECRET_KEY'] = 'super_secret_key'
 
 
-@app_flask.route('/')
+@app_flask.route('/', methods = ['GET', 'POST'])
 def main_page():
     form = RepositoryPath()
+    # Странная отловка сообщений
+    if form.validate_on_submit():
+        flash('вход')
+
+    # content = requests.request().json()
+    # print(content)
     return render_template('index.html', form=form)
 
 @app_flask.errorhandler(404)

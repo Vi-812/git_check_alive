@@ -9,9 +9,14 @@
 
             </h1>
             <form action="" method="post" novalidate>
-                {{form.link.label}}<br>
-                {{form.link(size=128)}}
-                {{form.submit() }}
+                {{ form.hidden_tag() }}
+                {{ form.link.label }}<br>
+                {{ form.link(size=128) }}
+                <!--Странная отловка ошибок-->
+                {% for error in form.link.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+                {{ form.submit() }}
             </form>
         </div>
     </div>

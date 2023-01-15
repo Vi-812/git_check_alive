@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired
 
 
 class RepositoryPath(FlaskForm):
-    class Meta:
-        csrf = False
+    # class Meta:
+    #     csrf = False
     link = StringField('Введите ссылку на репозиторий', validators=[DataRequired()])
     submit = SubmitField('Анализировать')
