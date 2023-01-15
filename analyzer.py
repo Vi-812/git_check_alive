@@ -2,6 +2,7 @@ import requests
 import datetime
 import sys
 import os
+from statistics import median
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -13,7 +14,7 @@ class GitGraphql():
 
     def __init__(self, repository_owner, repository_name):
         self.url = 'https://api.github.com/graphql'
-        self.headers = {'Authorization': 'token ' + os.getenv('token')}
+        self.headers = {'Authorization': 'token ' + os.getenv('TOKEN')}
         self.repository_owner = repository_owner
         self.repository_name = repository_name
 
@@ -108,7 +109,8 @@ class GitGraphql():
             return datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.cursor = None
         self.issues_dates_info = []
-        self.duration_fix_list = []
+        self.duration_closed_bug_list = []
+        self.duration_open_bug_list = []
         self.issues_open_count = 0
         self.issues_closed_count = 0
 
@@ -179,7 +181,7 @@ class GitGraphql():
                         duration_fix_6 = closed_at_2 - created_at_1
                     elif not bool(closed_at_2) and not closed_bool:
                         self.issues_open_count += 1
-                        duration_fix_6 = None  # datetime.datetime.now() - created_at_1
+                        duration_fix_6 = None
                     else:
                         duration_fix_6 = None
                         print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = '
@@ -200,7 +202,9 @@ class GitGraphql():
                         duration_fix_6
                     ])
                     if duration_fix_6:
-                        self.duration_fix_list.append(duration_fix_6)
+                        self.duration_closed_bug_list.append(duration_fix_6)
+                    else:
+                        self.duration_open_bug_list.append(datetime.datetime.now() - created_at_1)
                     self.request_cost = data['data']['rateLimit']['cost']
                     self.request_balance = data['data']['rateLimit']['remaining']
                     self.request_reset = data['data']['rateLimit']['resetAt']
@@ -216,20 +220,21 @@ class GitGraphql():
             else:
                 break
 
-    def analyz(self):
-        self.duration_fix_min = datetime.timedelta(days=0)
-        self.duration_fix_max = datetime.timedelta(days=0)
-        self.duration_fix_avg = datetime.timedelta(days=0)
-        self.duration_fix_mediana = datetime.timedelta(days=0)
-        if self.duration_fix_list:
-            self.duration_fix_list.sort()
-            self.duration_fix_min = self.duration_fix_list[0]
-            self.duration_fix_max = self.duration_fix_list[-1]
-            for duration in self.duration_fix_list:
-                self.duration_fix_avg += duration
-            self.duration_fix_avg = self.duration_fix_avg / len(self.duration_fix_list)
-            if len(self.duration_fix_list) % 2 == 1:
-                self.duration_fix_mediana = self.duration_fix_list[len(self.duration_fix_list) // 2]
-            else:
-                self.duration_fix_mediana = (self.duration_fix_list[len(self.duration_fix_list) // 2 - 1] +
-                                             self.duration_fix_list[len(self.duration_fix_list) // 2]) / 2
+    def data_analyz(self):
+        if self.duration_closed_bug_list:
+            self.duration_closed_bug_min = min(self.duration_closed_bug_list)
+            self.duration_closed_bug_max = max(self.duration_closed_bug_list)
+            self.duration_closed_bug_median = median(self.duration_closed_bug_list)
+        else:
+            self.duration_closed_bug_min = datetime.timedelta(days=0)
+            self.duration_closed_bug_max = datetime.timedelta(days=0)
+            self.duration_closed_bug_median = datetime.timedelta(days=0)
+        if self.duration_open_bug_list:
+            self.duration_open_bug_min = min(self.duration_open_bug_list)
+            self.duration_open_bug_max = max(self.duration_open_bug_list)
+            self.duration_open_bug_median = median(self.duration_open_bug_list)
+        else:
+            self.duration_open_bug_min = datetime.timedelta(days=0)
+            self.duration_open_bug_max = datetime.timedelta(days=0)
+            self.duration_open_bug_median = datetime.timedelta(days=0)
+
