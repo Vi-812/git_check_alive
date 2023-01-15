@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="text-center my-2">
+            <h1>
+
+                Git check alive
+
+            </h1>
+            <form action="" method="post" novalidate>
+                {{form.link.label}}<br>
+                {{form.link(size=128)}}
+                {{form.submit() }}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

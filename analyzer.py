@@ -5,6 +5,8 @@ import os
 from statistics import median
 from dotenv import load_dotenv
 load_dotenv()
+# https://www.w3schools.com/python/python_json.asp
+# https://developer.chrome.com/docs/devtools/network/
 
 
 class GitGraphql():
@@ -229,6 +231,7 @@ class GitGraphql():
             self.duration_closed_bug_min = datetime.timedelta(days=0)
             self.duration_closed_bug_max = datetime.timedelta(days=0)
             self.duration_closed_bug_median = datetime.timedelta(days=0)
+
         if self.duration_open_bug_list:
             self.duration_open_bug_min = min(self.duration_open_bug_list)
             self.duration_open_bug_max = max(self.duration_open_bug_list)

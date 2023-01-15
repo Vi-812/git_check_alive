@@ -36,7 +36,7 @@ else:
 
 xz = analyzer.GitGraphql(repository_owner, repository_name)
 # xz = analyzer.GitGraphql('facebook', 'jest')
-# xz = analyzer.GitGraphql('pallets', 'flask')
+# xz = analyzer.GitGraphql('pallets', 'app')
 xz.get_info()
 xz.get_issues()
 xz.data_analyz()
