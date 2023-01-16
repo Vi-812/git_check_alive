@@ -4,7 +4,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from statistics import median
-from json_file import get_info_json
+from json_file import get_info_labels_json, get_bug_issues_json
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -29,18 +29,18 @@ class GitGraphql():
 
         while True:
 
-            self.json = get_info_json(self.repository_owner, self.repository_name, self.cursor)
+            self.json = get_info_labels_json(self.repository_owner, self.repository_name, self.cursor)
 
             try:
-                self.data = requests.post(url=self.url, headers=self.headers, json=self.json)
-                self.data = self.data.json()
+                data = requests.post(url=self.url, headers=self.headers, json=self.json)
+                self.data = data.json()
             except requests.exceptions.ConnectionError as err:
                 print('--------------------------------------------------------------')
                 print('Ошибка ссоединения с сервером')
                 print(f'Исключение: {err}')
                 sys.exit()
 
-            self.parse_info_labesl()
+            self.parse_info_labes()
 
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -52,7 +52,7 @@ class GitGraphql():
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
-    def parse_info_labesl(self):
+    def parse_info_labes(self):
         try:
             self.name = self.data['data']['repository']['name']
             self.description = self.data['data']['repository']['description']
@@ -86,8 +86,6 @@ class GitGraphql():
 
 
     def get_bug_issues(self):
-        def to_date(date_str):
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.cursor = None
         self.issues_dates_info = []
         self.duration_closed_bug_list = []
@@ -96,116 +94,85 @@ class GitGraphql():
         self.issues_closed_count = 0
 
         while True:
-            self.json = {
-                'query': 'query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {'
-                    'repository(name: $name, owner: $owner) {'
-                        'issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {'
-                            'totalCount '
-                            'pageInfo {'
-                                'startCursor '
-                                'endCursor '
-                                'hasNextPage'
-                            '}'
-                            'edges {'
-                                'cursor '
-                                'node {'
-                                    'id '
-                                    'createdAt '
-                                    'closedAt '
-                                    'closed '
-                                    'updatedAt '
-                                    'comments(last: 1) {'
-                                        'totalCount '
-                                        'nodes {'
-                                            'createdAt'
-                                        '}'
-                                    '}'
-                                '}'
-                            '}'
-                        '}'
-                    '}'
-                    'rateLimit {'
-                        'cost '
-                        'remaining '
-                        'resetAt'
-                    '}'
-                '}',
-                'variables': {
-                    "owner": self.repository_owner,
-                    "name": self.repository_name,
-                    "labels": self.labels_bug,
-                    "cursor": self.cursor
-                }
-            }
+
+            self.json = get_bug_issues_json(self.repository_owner, self.repository_name, self.labels_bug, self.cursor)
+
             try:
                 data = requests.post(url=self.url, headers=self.headers, json=self.json)
-                data = data.json()
+                self.data = data.json()
             except requests.exceptions.ConnectionError as err:
                 print('--------------------------------------------------------------')
                 print('Ошибка ссоединения с сервером')
                 print(f'Исключение: {err}')
                 sys.exit()
 
-            try:
-                self.issues_bug_count = data['data']['repository']['issues']['totalCount']
-                self.start_cursor = data['data']['repository']['issues']['pageInfo']['startCursor']
-                self.end_cursor = data['data']['repository']['issues']['pageInfo']['endCursor']
-                self.has_next_page = data['data']['repository']['issues']['pageInfo']['hasNextPage']
-                for issue in data['data']['repository']['issues']['edges']:
-                    id_0 = issue['node']['id']
-                    created_at_1 = to_date(issue['node']['createdAt'])
-                    closed_at_2 = issue['node']['closedAt']
-                    closed_bool = issue['node']['closed']
-                    if bool(closed_at_2) and closed_bool:
-                        self.issues_closed_count += 1
-                        closed_at_2 = to_date(closed_at_2)
-                        duration_fix_6 = closed_at_2 - created_at_1
-                    elif not bool(closed_at_2) and not closed_bool:
-                        self.issues_open_count += 1
-                        duration_fix_6 = None
-                    else:
-                        duration_fix_6 = None
-                        print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = '
-                              f'{closed_bool}, closed_at = {closed_at_2}')
-                    updated_at_3 = to_date(issue['node']['updatedAt'])
-                    comments_count_4 = issue['node']['comments']['totalCount']
-                    if issue['node']['comments']['nodes']:
-                        comments_last_5 = to_date(issue['node']['comments']['nodes'][0]['createdAt'])
-                    else:
-                        comments_last_5 = None
-                    self.issues_dates_info.append([
-                        id_0,
-                        created_at_1,
-                        closed_at_2,
-                        updated_at_3,
-                        comments_count_4,
-                        comments_last_5,
-                        duration_fix_6
-                    ])
-                    if duration_fix_6:
-                        self.duration_closed_bug_list.append(duration_fix_6)
-                    else:
-                        self.duration_open_bug_list.append(datetime.now() - created_at_1)
-                    self.request_cost = data['data']['rateLimit']['cost']
-                    self.request_balance = data['data']['rateLimit']['remaining']
-                    self.request_reset = data['data']['rateLimit']['resetAt']
-            except TypeError as err:
-                print('--------------------------------------------------------------')
-                print('При получении данных из репозитория возникла ошибка')
-                print(f'Исключение: {err}')
-                print(f"Тип ошибки: {data['errors'][0]['type']}")
-                print(f"Сообщение: {data['errors'][0]['message']}")
-                sys.exit()
-            except KeyError as err:
-                print('--------------------------------------------------------------')
-                print('При получении данных из репозитория возникла ошибка')
-                print('Ошибка при обращении по ключу')
-                print(f'Ключ: {err}')
-                sys.exit()
+            self.parse_bug_issues()
+
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
                 break
+
+    def parse_bug_issues(self):
+        def to_date(date_str):
+            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+        try:
+            self.issues_bug_count = self.data['data']['repository']['issues']['totalCount']
+            print(self.data['data']['repository']['issues'])
+            self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
+            self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
+            self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
+            for issue in self.data['data']['repository']['issues']['edges']:
+                id_0 = issue['node']['id']
+                created_at_1 = to_date(issue['node']['createdAt'])
+                closed_at_2 = issue['node']['closedAt']
+                closed_bool = issue['node']['closed']
+                if bool(closed_at_2) and closed_bool:
+                    self.issues_closed_count += 1
+                    closed_at_2 = to_date(closed_at_2)
+                    duration_fix_6 = closed_at_2 - created_at_1
+                elif not bool(closed_at_2) and not closed_bool:
+                    self.issues_open_count += 1
+                    duration_fix_6 = None
+                else:
+                    duration_fix_6 = None
+                    print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = '
+                          f'{closed_bool}, closed_at = {closed_at_2}')
+                updated_at_3 = to_date(issue['node']['updatedAt'])
+                comments_count_4 = issue['node']['comments']['totalCount']
+                if issue['node']['comments']['nodes']:
+                    comments_last_5 = to_date(issue['node']['comments']['nodes'][0]['createdAt'])
+                else:
+                    comments_last_5 = None
+                self.issues_dates_info.append([
+                    id_0,
+                    created_at_1,
+                    closed_at_2,
+                    updated_at_3,
+                    comments_count_4,
+                    comments_last_5,
+                    duration_fix_6
+                ])
+                if duration_fix_6:
+                    self.duration_closed_bug_list.append(duration_fix_6)
+                else:
+                    self.duration_open_bug_list.append(datetime.now() - created_at_1)
+                self.request_cost = self.data['data']['rateLimit']['cost']
+                self.request_balance = self.data['data']['rateLimit']['remaining']
+                self.request_reset = self.data['data']['rateLimit']['resetAt']
+        except TypeError as err:
+            print('--------------------------------------------------------------')
+            print('При получении данных из репозитория возникла ошибка')
+            print(f'Исключение: {err}')
+            print(f"Тип ошибки: {self.data['errors'][0]['type']}")
+            print(f"Сообщение: {self.data['errors'][0]['message']}")
+            sys.exit()
+        except KeyError as err:
+            print('--------------------------------------------------------------')
+            print('При получении данных из репозитория возникла ошибка')
+            print('Ошибка при обращении по ключу')
+            print(f'Ключ: {err}')
+            sys.exit()
 
     def analyz_bug_issues(self):
         if self.duration_closed_bug_list:
