@@ -40,7 +40,7 @@ class GitGraphql():
                 print(f'Исключение: {err}')
                 sys.exit()
 
-            self.parse_info_labes()
+            self.parse_info_labels()
 
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -52,7 +52,7 @@ class GitGraphql():
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
-    def parse_info_labes(self):
+    def parse_info_labels(self):
         try:
             self.name = self.data['data']['repository']['name']
             self.description = self.data['data']['repository']['description']
