@@ -1,7 +1,6 @@
-import requests
 from flask import Flask, render_template,flash
 from app.forms import RepositoryPath
-
+import requests
 
 app_flask = Flask(__name__)
 app_flask.config['SECRET_KEY'] = 'super_secret_key'
