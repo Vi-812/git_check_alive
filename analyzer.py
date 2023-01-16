@@ -21,51 +21,26 @@ class GitGraphql():
         self.repository_owner = repository_owner
         self.repository_name = repository_name
 
+
     def get_info_labels(self):
         self.cursor = None
         self.labels_name = []
 
         while True:
+
             self.json = get_info_json(self.repository_owner, self.repository_name, self.cursor)
 
             try:
-                data = requests.post(url=self.url, headers=self.headers, json=self.json)
-                data = data.json()
+                self.data = requests.post(url=self.url, headers=self.headers, json=self.json)
+                self.data = self.data.json()
             except requests.exceptions.ConnectionError as err:
                 print('--------------------------------------------------------------')
                 print('Ошибка ссоединения с сервером')
                 print(f'Исключение: {err}')
                 sys.exit()
-            try:
-                self.name = data['data']['repository']['name']
-                self.description = data['data']['repository']['description']
-                self.stars = data['data']['repository']['stargazerCount']
-                self.created_at = data['data']['repository']['createdAt']
-                self.updated_at = data['data']['repository']['updatedAt']
-                self.archived = data['data']['repository']['isArchived']
-                self.labels_count = data['data']['repository']['labels']['totalCount']
-                self.start_cursor = data['data']['repository']['labels']['pageInfo']['startCursor']
-                self.end_cursor = data['data']['repository']['labels']['pageInfo']['endCursor']
-                self.has_next_page = data['data']['repository']['labels']['pageInfo']['hasNextPage']
-                for label in data['data']['repository']['labels']['edges']:
-                    self.labels_name.append(label['node']['name'])
-                self.issues_total_count = data['data']['repository']['issues']['totalCount']
-                self.request_cost = data['data']['rateLimit']['cost']
-                self.request_balance = data['data']['rateLimit']['remaining']
-                self.request_reset = data['data']['rateLimit']['resetAt']
-            except TypeError as err:
-                print('--------------------------------------------------------------')
-                print('При получении данных из репозитория возникла ошибка')
-                print(f'Исключение: {err}')
-                print(f"Тип ошибки: {data['errors'][0]['type']}")
-                print(f"Сообщение: {data['errors'][0]['message']}")
-                sys.exit()
-            except KeyError as err:
-                print('--------------------------------------------------------------')
-                print('При получении данных из репозитория возникла ошибка')
-                print('Ошибка при обращении по ключу')
-                print(f'Ключ: {err}')
-                sys.exit()
+
+            self.parse_info_labesl()
+
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -75,6 +50,39 @@ class GitGraphql():
         for name in self.labels_name:
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
+
+    def parse_info_labesl(self):
+        try:
+            self.name = self.data['data']['repository']['name']
+            self.description = self.data['data']['repository']['description']
+            self.stars = self.data['data']['repository']['stargazerCount']
+            self.created_at = self.data['data']['repository']['createdAt']
+            self.updated_at = self.data['data']['repository']['updatedAt']
+            self.archived = self.data['data']['repository']['isArchived']
+            self.labels_count = self.data['data']['repository']['labels']['totalCount']
+            self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
+            self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
+            self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
+            for label in self.data['data']['repository']['labels']['edges']:
+                self.labels_name.append(label['node']['name'])
+            self.issues_total_count = self.data['data']['repository']['issues']['totalCount']
+            self.request_cost = self.data['data']['rateLimit']['cost']
+            self.request_balance = self.data['data']['rateLimit']['remaining']
+            self.request_reset = self.data['data']['rateLimit']['resetAt']
+        except TypeError as err:
+            print('--------------------------------------------------------------')
+            print('При получении данных из репозитория возникла ошибка')
+            print(f'Исключение: {err}')
+            print(f"Тип ошибки: {self.data['errors'][0]['type']}")
+            print(f"Сообщение: {self.data['errors'][0]['message']}")
+            sys.exit()
+        except KeyError as err:
+            print('--------------------------------------------------------------')
+            print('При получении данных из репозитория возникла ошибка')
+            print('Ошибка при обращении по ключу')
+            print(f'Ключ: {err}')
+            sys.exit()
+
 
     def get_bug_issues(self):
         def to_date(date_str):
