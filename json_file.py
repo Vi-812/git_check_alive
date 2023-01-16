@@ -42,4 +42,3 @@ def get_info_json(repository_owner, repository_name, cursor):
         }
     }
     return json_info
-

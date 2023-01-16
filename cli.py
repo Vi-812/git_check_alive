@@ -59,4 +59,3 @@ print(f'максимальное: {xz.duration_open_bug_max}')
 print(f'медиана: {xz.duration_open_bug_median}')
 print(f'Остаток запросов: {xz.request_balance}({xz.request_cost})')
 print('--------------------------------------------------------------')
-

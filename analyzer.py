@@ -7,6 +7,7 @@ from statistics import median
 from json_file import get_info_json
 from dotenv import load_dotenv
 load_dotenv()
+
 # https://developer.chrome.com/docs/devtools/network/
 
 
