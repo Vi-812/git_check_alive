@@ -37,9 +37,9 @@ else:
 xz = analyzer.GitGraphql(repository_owner, repository_name)
 # xz = analyzer.GitGraphql('facebook', 'jest')
 # xz = analyzer.GitGraphql('pallets', 'app')
-xz.get_info()
-xz.get_issues()
-xz.data_analyz()
+xz.get_info_labels()
+xz.get_bug_issues()
+xz.analyz_bug_issues()
 
 # Вывод данных пока не оформляю, ждем полный список
 print('--------------------------------------------------------------')

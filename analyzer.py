@@ -1,11 +1,12 @@
 import requests
-import datetime
 import sys
 import os
+import json
+from datetime import datetime, timedelta
 from statistics import median
+from json_file import get_info_json
 from dotenv import load_dotenv
 load_dotenv()
-# https://www.w3schools.com/python/python_json.asp
 # https://developer.chrome.com/docs/devtools/network/
 
 
@@ -20,50 +21,13 @@ class GitGraphql():
         self.repository_owner = repository_owner
         self.repository_name = repository_name
 
-    def get_info(self):
+    def get_info_labels(self):
         self.cursor = None
         self.labels_name = []
 
         while True:
-            self.json = {
-                'query': 'query GetInfo ($owner: String!, $name: String!, $cursor: String) {'
-                    'repository(name: $name, owner: $owner) {'
-                        'name '
-                        'description '
-                        'stargazerCount '
-                        'createdAt '
-                        'updatedAt '
-                        'isArchived '
-                        'labels(first: 100, after: $cursor) {'
-                            'totalCount '
-                            'pageInfo {'
-                                'startCursor '
-                                'endCursor '
-                                'hasNextPage'
-                            '}'
-                            'edges {'
-                                'cursor '
-                                'node {'
-                                    'name'
-                                '}'
-                            '}'
-                        '}'
-                        'issues {'
-                            'totalCount'
-                        '}'
-                    '}'
-                    'rateLimit {'
-                        'cost '
-                        'remaining '
-                        'resetAt'
-                    '}'
-                '}',
-                'variables': {
-                    "owner": self.repository_owner,
-                    "name": self.repository_name,
-                    "cursor": self.cursor
-                }
-            }
+            self.json = get_info_json(self.repository_owner, self.repository_name, self.cursor)
+
             try:
                 data = requests.post(url=self.url, headers=self.headers, json=self.json)
                 data = data.json()
@@ -96,6 +60,12 @@ class GitGraphql():
                 print(f"Тип ошибки: {data['errors'][0]['type']}")
                 print(f"Сообщение: {data['errors'][0]['message']}")
                 sys.exit()
+            except KeyError as err:
+                print('--------------------------------------------------------------')
+                print('При получении данных из репозитория возникла ошибка')
+                print('Ошибка при обращении по ключу')
+                print(f'Ключ: {err}')
+                sys.exit()
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -106,9 +76,9 @@ class GitGraphql():
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
-    def get_issues(self):
+    def get_bug_issues(self):
         def to_date(date_str):
-            return datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.cursor = None
         self.issues_dates_info = []
         self.duration_closed_bug_list = []
@@ -206,7 +176,7 @@ class GitGraphql():
                     if duration_fix_6:
                         self.duration_closed_bug_list.append(duration_fix_6)
                     else:
-                        self.duration_open_bug_list.append(datetime.datetime.now() - created_at_1)
+                        self.duration_open_bug_list.append(datetime.now() - created_at_1)
                     self.request_cost = data['data']['rateLimit']['cost']
                     self.request_balance = data['data']['rateLimit']['remaining']
                     self.request_reset = data['data']['rateLimit']['resetAt']
@@ -217,27 +187,32 @@ class GitGraphql():
                 print(f"Тип ошибки: {data['errors'][0]['type']}")
                 print(f"Сообщение: {data['errors'][0]['message']}")
                 sys.exit()
+            except KeyError as err:
+                print('--------------------------------------------------------------')
+                print('При получении данных из репозитория возникла ошибка')
+                print('Ошибка при обращении по ключу')
+                print(f'Ключ: {err}')
+                sys.exit()
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
                 break
 
-    def data_analyz(self):
+    def analyz_bug_issues(self):
         if self.duration_closed_bug_list:
             self.duration_closed_bug_min = min(self.duration_closed_bug_list)
             self.duration_closed_bug_max = max(self.duration_closed_bug_list)
             self.duration_closed_bug_median = median(self.duration_closed_bug_list)
         else:
-            self.duration_closed_bug_min = datetime.timedelta(days=0)
-            self.duration_closed_bug_max = datetime.timedelta(days=0)
-            self.duration_closed_bug_median = datetime.timedelta(days=0)
+            self.duration_closed_bug_min = timedelta(days=0)
+            self.duration_closed_bug_max = timedelta(days=0)
+            self.duration_closed_bug_median = timedelta(days=0)
 
         if self.duration_open_bug_list:
             self.duration_open_bug_min = min(self.duration_open_bug_list)
             self.duration_open_bug_max = max(self.duration_open_bug_list)
             self.duration_open_bug_median = median(self.duration_open_bug_list)
         else:
-            self.duration_open_bug_min = datetime.timedelta(days=0)
-            self.duration_open_bug_max = datetime.timedelta(days=0)
-            self.duration_open_bug_median = datetime.timedelta(days=0)
-
+            self.duration_open_bug_min = timedelta(days=0)
+            self.duration_open_bug_max = timedelta(days=0)
+            self.duration_open_bug_median = timedelta(days=0)
