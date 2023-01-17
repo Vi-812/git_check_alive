@@ -34,8 +34,8 @@ else:
     print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
     sys.exit()
 
-# xz = analyzer.GitHubAnalyz(repository_owner, repository_name)
-xz = analyzer.GitHubAnalyz('facebook', 'jest')
+xz = analyzer.GitHubAnalyz(repository_owner, repository_name)
+# xz = analyzer.GitHubAnalyz('facebook', 'jest')
 # xz = analyzer.GitHubAnalyz('vi-812', 'empty')
 # xz = analyzer.GitHubAnalyz('pallets', 'flask')
 xz.get_info_labels()
