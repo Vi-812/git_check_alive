@@ -5,15 +5,16 @@ from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
 
 
-class GitHubAnalyz():
+class GraphqlClient():
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
 
-    def __init__(self, repository_owner, repository_name):
+    def __init__(self, repository_owner, repository_name, token):
         self.request_duration_time = datetime.now()
         self.repository_owner = repository_owner
         self.repository_name = repository_name
+        self.token = token
         self.request_total_cost = 0
 
     def get_info_labels(self):
@@ -22,7 +23,7 @@ class GitHubAnalyz():
 
         while True:
 
-            data_github = graphql.GraphqlAPI(self.repository_owner, self.repository_name, self.cursor)
+            data_github = graphql.GithubApi(self.repository_owner, self.repository_name, self.cursor, self.token)
             self.data = data_github.get_info_labels_json()
 
             self.parse_info_labels()
@@ -83,7 +84,7 @@ class GitHubAnalyz():
 
         while True:
 
-            data_github = graphql.GraphqlAPI(self.repository_owner, self.repository_name, self.cursor, self.labels_bug)
+            data_github = graphql.GithubApi(self.repository_owner, self.repository_name, self.cursor, self.token, self.labels_bug)
             self.data = data_github.get_bug_issues_json()
 
             self.parse_bug_issues()
