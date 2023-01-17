@@ -2,7 +2,6 @@ import sys
 import graphql
 from datetime import datetime, timedelta
 from statistics import median
-
 # https://developer.chrome.com/docs/devtools/network/
 
 
@@ -70,7 +69,6 @@ class GitHubAnalyz():
             print('Ошибка при обращении по ключу')
             print(f'Ключ: {err}')
             sys.exit()
-
 
     def get_bug_issues(self):
         self.cursor = None
@@ -152,7 +150,7 @@ class GitHubAnalyz():
             self.bug_issues_comments_last_list,
         ]))
         if not validation_list:
-            print(f'Ошибка! Несоответствие при валидации длинны массивов!')
+            print('Ошибка! Несоответствие при валидации длинны массивов!')
             sys.exit()
         for i in range(list_len):
             self.bug_issues_created_at_list[i] = to_date(self.bug_issues_created_at_list[i])

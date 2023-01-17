@@ -4,7 +4,7 @@ import re
 import analyzer
 
 debug = True
-testing = True
+testing = False
 
 try:
     parser = argparse.ArgumentParser()
