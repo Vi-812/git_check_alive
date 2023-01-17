@@ -27,7 +27,7 @@ class GitGraphql():
 
     def get_info_labels(self):
         self.cursor = None
-        self.labels_name = []
+        self.repo_labels_name = []
 
         while True:
 
@@ -50,25 +50,25 @@ class GitGraphql():
                 break
 
         self.labels_bug = []
-        for name in self.labels_name:
+        for name in self.repo_labels_name:
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
 
     def parse_info_labels(self):
         try:
-            self.name = self.data['data']['repository']['name']
-            self.description = self.data['data']['repository']['description']
-            self.stars = self.data['data']['repository']['stargazerCount']
-            self.created_at = self.data['data']['repository']['createdAt']
-            self.updated_at = self.data['data']['repository']['updatedAt']
-            self.archived = self.data['data']['repository']['isArchived']
-            self.labels_count = self.data['data']['repository']['labels']['totalCount']
+            self.repo_name = self.data['data']['repository']['name']
+            self.repo_description = self.data['data']['repository']['description']
+            self.repo_stars = self.data['data']['repository']['stargazerCount']
+            self.repo_created_at = self.data['data']['repository']['createdAt']
+            self.repo_updated_at = self.data['data']['repository']['updatedAt']
+            self.repo_archived_bool = self.data['data']['repository']['isArchived']
+            self.repo_labels_count = self.data['data']['repository']['labels']['totalCount']
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
             for label in self.data['data']['repository']['labels']['edges']:
-                self.labels_name.append(label['node']['name'])
-            self.issues_total_count = self.data['data']['repository']['issues']['totalCount']
+                self.repo_labels_name.append(label['node']['name'])
+            self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.request_cost = self.data['data']['rateLimit']['cost']
             self.request_total_cost += self.request_cost
             self.request_balance = self.data['data']['rateLimit']['remaining']
@@ -158,6 +158,8 @@ class GitGraphql():
     def analyz_bug_issues(self):
         def to_date(date_str):
             return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+        self.repo_created_at = to_date(self.repo_created_at)
+        self.repo_updated_at = to_date(self.repo_updated_at)
         self.issues_open_count = 0
         self.issues_closed_count = 0
         self.duration_all_bug_list = []
@@ -193,6 +195,9 @@ class GitGraphql():
                       f'closed = {self.bug_issues_closed_bool_list[i]}, '
                       f'closed_at = {self.bug_issues_closed_at_list[i]}')
                 sys.exit()
+            self.bug_issues_updated_at_list[i] = to_date(self.bug_issues_updated_at_list[i])
+            if self.bug_issues_comments_last_list[i]:
+                self.bug_issues_comments_last_list[i] = to_date(self.bug_issues_comments_last_list[i])
 
         if self.duration_closed_bug_list:
             self.duration_closed_bug_min = min(self.duration_closed_bug_list)
@@ -211,4 +216,6 @@ class GitGraphql():
             self.duration_open_bug_min = timedelta(days=0)
             self.duration_open_bug_max = timedelta(days=0)
             self.duration_open_bug_median = timedelta(days=0)
+
+    def get_json(self):
         self.request_duration_time = datetime.now() - self.request_duration_time
