@@ -6,6 +6,9 @@ load_dotenv()
 
 
 class GraphqlAPI():
+    """
+    ТОЖЕ ОПИСАТЕЛЬНОЕ
+    """
     def __init__(self, repository_owner, repository_name, cursor, labels_bug=None):
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + os.getenv('TOKEN')}
