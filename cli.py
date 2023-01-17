@@ -2,12 +2,12 @@ import sys
 import os
 import argparse
 import re
-import analyzer
+import github_api_client
 from dotenv import load_dotenv
 load_dotenv()
 
 debug = True
-testing = True
+testing = False
 
 try:
     parser = argparse.ArgumentParser()
@@ -39,7 +39,7 @@ else:
     sys.exit()
 
 if testing:
-    github_api = analyzer.GithubApiClient('facebook', 'jest', os.getenv('TOKEN'))
+    github_api = github_api_client.GithubApiClient('facebook', 'jest', os.getenv('TOKEN'))
     github_api.get_info_labels()
     github_api.get_bug_issues()
     github_api.analyz_bug_issues()
@@ -61,7 +61,7 @@ if testing:
     print(f'медиана: {github_api.duration_open_bug_median}')
     print(f'Стоимость: {github_api.request_total_cost}, время: {github_api.request_duration_time}, баланс: {github_api.request_balance}')
     print('--------------------------------------------------------------')
-    github_api = analyzer.GithubApiClient('vi-812', 'empty', os.getenv('TOKEN'))
+    github_api = github_api_client.GithubApiClient('vi-812', 'empty', os.getenv('TOKEN'))
     github_api.get_info_labels()
     github_api.get_bug_issues()
     github_api.analyz_bug_issues()
@@ -84,7 +84,7 @@ if testing:
     print(f'Стоимость: {github_api.request_total_cost}, время: {github_api.request_duration_time}, баланс: {github_api.request_balance}')
     print('--------------------------------------------------------------')
 else:
-    github_api = analyzer.GithubApiClient(repository_owner, repository_name, os.getenv('TOKEN'))
+    github_api = github_api_client.GithubApiClient(repository_owner, repository_name, os.getenv('TOKEN'))
     github_api.get_info_labels()
     github_api.get_bug_issues()
     github_api.analyz_bug_issues()

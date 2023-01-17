@@ -1,5 +1,5 @@
 import sys
-import graphql
+import use_graphql
 from datetime import datetime, timedelta
 from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
@@ -23,7 +23,7 @@ class GithubApiClient():
 
         while True:
 
-            data_github = graphql.GithubApi(self.repository_owner, self.repository_name, self.cursor, self.token)
+            data_github = use_graphql.UseGraphQL(self.repository_owner, self.repository_name, self.cursor, self.token)
             self.data = data_github.get_info_labels_json()
 
             self.parse_info_labels()
@@ -84,7 +84,7 @@ class GithubApiClient():
 
         while True:
 
-            data_github = graphql.GithubApi(self.repository_owner, self.repository_name, self.cursor, self.token, self.labels_bug)
+            data_github = use_graphql.UseGraphQL(self.repository_owner, self.repository_name, self.cursor, self.token, self.labels_bug)
             self.data = data_github.get_bug_issues_json()
 
             self.parse_bug_issues()

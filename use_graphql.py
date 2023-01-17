@@ -4,16 +4,15 @@ import sys
 
 
 
-class GithubApi():
+class UseGraphQL():
     """
     ТОЖЕ ОПИСАТЕЛЬНОЕ
     """
     def __init__(self, repository_owner, repository_name, cursor, token, labels_bug=None):
-        self.url = 'https://api.github.com/graphql'
-        self.headers = {'Authorization': 'token ' + token}
         self.repository_owner = repository_owner
         self.repository_name = repository_name
         self.cursor = cursor
+        self.token = token
         self.labels_bug = labels_bug
 
     def get_info_labels_json(self):
@@ -59,14 +58,8 @@ class GithubApi():
                 "cursor": self.cursor
             }
         }
-        try:
-            data = requests.post(url=self.url, headers=self.headers, json=json)
-            data = data.json()
-        except requests.exceptions.ConnectionError as err:
-            print('--------------------------------------------------------------')
-            print('Ошибка ссоединения с сервером')
-            print(f'Исключение: {err}')
-            sys.exit()
+        link = Link(self.token, json)
+        data = link.link()
         return data
 
     def get_bug_issues_json(self):
@@ -115,12 +108,22 @@ class GithubApi():
                 "cursor": self.cursor
             }
         }
+        link = Link(self.token, json)
+        data = link.link()
+        return data
+
+
+class Link():
+    def __init__(self, token, json):
+        self.url = 'https://api.github.com/graphql'
+        self.headers = {'Authorization': 'token ' + token}
+        self.json = json
+    def link(self):
         try:
-            data = requests.post(url=self.url, headers=self.headers, json=json)
-            data = data.json()
+            data = requests.post(url=self.url, headers=self.headers, json=self.json)
+            return data.json()
         except requests.exceptions.ConnectionError as err:
             print('--------------------------------------------------------------')
             print('Ошибка ссоединения с сервером')
             print(f'Исключение: {err}')
             sys.exit()
-        return data
