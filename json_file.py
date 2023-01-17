@@ -60,6 +60,7 @@ def get_bug_issues_json(repository_owner, repository_name, labels_bug, cursor):
                         cursor
                         node {
                             id
+                            title
                             createdAt
                             closedAt
                             closed

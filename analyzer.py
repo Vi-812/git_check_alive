@@ -17,10 +17,12 @@ class GitGraphql():
     """
 
     def __init__(self, repository_owner, repository_name):
+        self.request_duration_time = datetime.now()
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + os.getenv('TOKEN')}
         self.repository_owner = repository_owner
         self.repository_name = repository_name
+        self.request_total_cost = 0
 
 
     def get_info_labels(self):
@@ -68,6 +70,7 @@ class GitGraphql():
                 self.labels_name.append(label['node']['name'])
             self.issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.request_cost = self.data['data']['rateLimit']['cost']
+            self.request_total_cost += self.request_cost
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
@@ -87,11 +90,14 @@ class GitGraphql():
 
     def get_bug_issues(self):
         self.cursor = None
-        self.issues_dates_info = []
-        self.duration_closed_bug_list = []
-        self.duration_open_bug_list = []
-        self.issues_open_count = 0
-        self.issues_closed_count = 0
+        self.bug_issues_id_list = []
+        self.bug_issues_title_list = []
+        self.bug_issues_created_at_list = []
+        self.bug_issues_closed_at_list = []
+        self.bug_issues_closed_bool_list = []
+        self.bug_issues_updated_at_list = []
+        self.bug_issues_comments_count_list = []
+        self.bug_issues_comments_last_list = []
 
         while True:
 
@@ -114,52 +120,27 @@ class GitGraphql():
                 break
 
     def parse_bug_issues(self):
-        def to_date(date_str):
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         try:
             self.issues_bug_count = self.data['data']['repository']['issues']['totalCount']
-            print(self.data['data']['repository']['issues'])
             self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
             for issue in self.data['data']['repository']['issues']['edges']:
-                id_0 = issue['node']['id']
-                created_at_1 = to_date(issue['node']['createdAt'])
-                closed_at_2 = issue['node']['closedAt']
-                closed_bool = issue['node']['closed']
-                if bool(closed_at_2) and closed_bool:
-                    self.issues_closed_count += 1
-                    closed_at_2 = to_date(closed_at_2)
-                    duration_fix_6 = closed_at_2 - created_at_1
-                elif not bool(closed_at_2) and not closed_bool:
-                    self.issues_open_count += 1
-                    duration_fix_6 = None
-                else:
-                    duration_fix_6 = None
-                    print(f'Ошибка! Несоответствие информации о закрытии issues с id = {id_0}, closed = '
-                          f'{closed_bool}, closed_at = {closed_at_2}')
-                updated_at_3 = to_date(issue['node']['updatedAt'])
-                comments_count_4 = issue['node']['comments']['totalCount']
+                self.bug_issues_id_list.append(issue['node']['id'])
+                self.bug_issues_title_list.append(issue['node']['title'])
+                self.bug_issues_created_at_list.append(issue['node']['createdAt'])
+                self.bug_issues_closed_at_list.append(issue['node']['closedAt'])
+                self.bug_issues_closed_bool_list.append(issue['node']['closed'])
+                self.bug_issues_updated_at_list.append(issue['node']['updatedAt'])
+                self.bug_issues_comments_count_list.append(issue['node']['comments']['totalCount'])
                 if issue['node']['comments']['nodes']:
-                    comments_last_5 = to_date(issue['node']['comments']['nodes'][0]['createdAt'])
+                    self.bug_issues_comments_last_list.append(issue['node']['comments']['nodes'][0]['createdAt'])
                 else:
-                    comments_last_5 = None
-                self.issues_dates_info.append([
-                    id_0,
-                    created_at_1,
-                    closed_at_2,
-                    updated_at_3,
-                    comments_count_4,
-                    comments_last_5,
-                    duration_fix_6
-                ])
-                if duration_fix_6:
-                    self.duration_closed_bug_list.append(duration_fix_6)
-                else:
-                    self.duration_open_bug_list.append(datetime.now() - created_at_1)
-                self.request_cost = self.data['data']['rateLimit']['cost']
-                self.request_balance = self.data['data']['rateLimit']['remaining']
-                self.request_reset = self.data['data']['rateLimit']['resetAt']
+                    self.bug_issues_comments_last_list.append(None)
+            self.request_cost = self.data['data']['rateLimit']['cost']
+            self.request_total_cost += self.request_cost
+            self.request_balance = self.data['data']['rateLimit']['remaining']
+            self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
             print('--------------------------------------------------------------')
             print('При получении данных из репозитория возникла ошибка')
@@ -175,6 +156,44 @@ class GitGraphql():
             sys.exit()
 
     def analyz_bug_issues(self):
+        def to_date(date_str):
+            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+        self.issues_open_count = 0
+        self.issues_closed_count = 0
+        self.duration_all_bug_list = []
+        self.duration_closed_bug_list = []
+        self.duration_open_bug_list = []
+        list_len = len(self.bug_issues_id_list)
+        validation_list = all(map(lambda lst: len(lst) == list_len, [
+            self.bug_issues_title_list,
+            self.bug_issues_created_at_list,
+            self.bug_issues_closed_at_list,
+            self.bug_issues_closed_bool_list,
+            self.bug_issues_updated_at_list,
+            self.bug_issues_comments_count_list,
+            self.bug_issues_comments_last_list,
+        ]))
+        if not validation_list:
+            print(f'Ошибка! Несоответствие при валидации длинны массивов!')
+            sys.exit()
+        for i in range(list_len):
+            self.bug_issues_created_at_list[i] = to_date(self.bug_issues_created_at_list[i])
+            if bool(self.bug_issues_closed_at_list[i]) and self.bug_issues_closed_bool_list[i]:
+                self.issues_closed_count += 1
+                self.bug_issues_closed_at_list[i] = to_date(self.bug_issues_closed_at_list[i])
+                duration = self.bug_issues_closed_at_list[i] - self.bug_issues_created_at_list[i]
+                self.duration_all_bug_list.append(duration)
+                self.duration_closed_bug_list.append(duration)
+            elif not bool(self.bug_issues_closed_at_list[i]) and not self.bug_issues_closed_bool_list[i]:
+                self.issues_open_count += 1
+                self.duration_all_bug_list.append(None)
+                self.duration_open_bug_list.append(datetime.now() - self.bug_issues_created_at_list[i])
+            else:
+                print(f'Ошибка! Несоответствие информации о закрытии issues с id = {self.bug_issues_id_list[i]}, '
+                      f'closed = {self.bug_issues_closed_bool_list[i]}, '
+                      f'closed_at = {self.bug_issues_closed_at_list[i]}')
+                sys.exit()
+
         if self.duration_closed_bug_list:
             self.duration_closed_bug_min = min(self.duration_closed_bug_list)
             self.duration_closed_bug_max = max(self.duration_closed_bug_list)
@@ -192,3 +211,4 @@ class GitGraphql():
             self.duration_open_bug_min = timedelta(days=0)
             self.duration_open_bug_max = timedelta(days=0)
             self.duration_open_bug_median = timedelta(days=0)
+        self.request_duration_time = datetime.now() - self.request_duration_time
