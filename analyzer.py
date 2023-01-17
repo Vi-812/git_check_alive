@@ -5,7 +5,7 @@ from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
 
 
-class GraphqlClient():
+class GithubApiClient():
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
