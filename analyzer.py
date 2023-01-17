@@ -1,29 +1,21 @@
-import requests
 import sys
-import os
-import json
+import graphql
 from datetime import datetime, timedelta
 from statistics import median
-from json_file import get_info_labels_json, get_bug_issues_json
-from dotenv import load_dotenv
-load_dotenv()
 
 # https://developer.chrome.com/docs/devtools/network/
 
 
-class GitGraphql():
+class GitHubAnalyz():
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
 
     def __init__(self, repository_owner, repository_name):
         self.request_duration_time = datetime.now()
-        self.url = 'https://api.github.com/graphql'
-        self.headers = {'Authorization': 'token ' + os.getenv('TOKEN')}
         self.repository_owner = repository_owner
         self.repository_name = repository_name
         self.request_total_cost = 0
-
 
     def get_info_labels(self):
         self.cursor = None
@@ -31,16 +23,8 @@ class GitGraphql():
 
         while True:
 
-            self.json = get_info_labels_json(self.repository_owner, self.repository_name, self.cursor)
-
-            try:
-                data = requests.post(url=self.url, headers=self.headers, json=self.json)
-                self.data = data.json()
-            except requests.exceptions.ConnectionError as err:
-                print('--------------------------------------------------------------')
-                print('Ошибка ссоединения с сервером')
-                print(f'Исключение: {err}')
-                sys.exit()
+            data_github = graphql.GraphqlAPI(self.repository_owner, self.repository_name, self.cursor)
+            self.data = data_github.get_info_labels_json()
 
             self.parse_info_labels()
 
@@ -101,16 +85,8 @@ class GitGraphql():
 
         while True:
 
-            self.json = get_bug_issues_json(self.repository_owner, self.repository_name, self.labels_bug, self.cursor)
-
-            try:
-                data = requests.post(url=self.url, headers=self.headers, json=self.json)
-                self.data = data.json()
-            except requests.exceptions.ConnectionError as err:
-                print('--------------------------------------------------------------')
-                print('Ошибка ссоединения с сервером')
-                print(f'Исключение: {err}')
-                sys.exit()
+            data_github = graphql.GraphqlAPI(self.repository_owner, self.repository_name, self.cursor, self.labels_bug)
+            self.data = data_github.get_bug_issues_json()
 
             self.parse_bug_issues()
 
