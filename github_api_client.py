@@ -1,4 +1,5 @@
 import sys
+import re
 import use_graphql
 from datetime import datetime, timedelta
 from statistics import median
@@ -11,13 +12,19 @@ class GithubApiClient():
     """
 
     def __init__(self, token):
-        self.request_duration_time = datetime.now()
         self.token = token
-        self.request_total_cost = 0
 
-    def push_repository(self, repository_owner, repository_name):
-        self.repository_owner = repository_owner
-        self.repository_name = repository_name
+    def push_repository(self, repository_path):
+        data = re.search('([^/]+/[^/]+)$', repository_path)
+        if data:
+            data = data.group(1)
+            self.repository_owner, self.repository_name = data.split('/', 2)
+        else:
+            print('Ссылка не корректна, введите ссылку в формате')
+            print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
+            sys.exit()
+        self.request_duration_time = datetime.now()
+        self.request_total_cost = 0
         self.get_info_labels()
 
     def get_info_labels(self):
@@ -68,12 +75,12 @@ class GithubApiClient():
             print(f"Тип ошибки: {self.data['errors'][0]['type']}")
             print(f"Сообщение: {self.data['errors'][0]['message']}")
             sys.exit()
-        # except KeyError as err:
-        #     print('--------------------------------------------------------------')
-        #     print('При получении данных из репозитория возникла ошибка')
-        #     print('Ошибка при обращении по ключу')
-        #     print(f'Ключ: {err}')
-        #     sys.exit()
+        except KeyError as err:
+            print('--------------------------------------------------------------')
+            print('При получении данных из репозитория возникла ошибка')
+            print('Ошибка при обращении по ключу')
+            print(f'Ключ: {err}')
+            sys.exit()
 
     def get_bug_issues(self):
         self.cursor = None
@@ -211,8 +218,8 @@ class GithubApiClient():
     def repository_analytic_block(self):
         self.repo_duration = (datetime.now() - self.repo_created_at).days
         self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
-        print(self.repo_duration)
-        print(self.repo_last_updated)
+        # print(self.repo_duration)
+        # print(self.repo_last_updated)
 
     def forming_json(self):
         self.request_duration_time = datetime.now() - self.request_duration_time

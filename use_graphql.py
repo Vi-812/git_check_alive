@@ -20,7 +20,45 @@ class UseGraphQL():
             'query':
             """
             query GetInfo ($owner: String!, $name: String!, $cursor: String) {
-                repository(name: $name, owner: $owner) {
+                repository(name: $name, owner: $owner) {                    
+                    name
+                    owner {
+                        ... on User {
+                            id
+                            email
+                            createdAt
+                        }
+                    }
+                    description                    
+                    homepageUrl
+                    isInOrganization
+                    licenseInfo {
+                        name
+                    }                    
+                    stargazerCount
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    isArchived
+                    isDisabled
+                    isLocked
+                    isEmpty
+                    isFork
+                    issues {
+                        totalCount
+                    }
+                    forkCount
+                    watchers {
+                        totalCount
+                    }
+                    pullRequests(last: 100) {
+                        nodes {
+                            publishedAt
+                            lastEditedAt
+                            closedAt
+                            closed
+                        }
+                    }
                     labels(first: 100, after: $cursor) {
                         totalCount
                         pageInfo {
@@ -32,40 +70,6 @@ class UseGraphQL():
                             node {
                                 name
                             }
-                        }
-                    }
-                    name
-                    owner {
-                        login
-                    }
-                    description                    
-                    homepageUrl
-                    licenseInfo {
-                        name
-                    }
-                    isInOrganization
-                    stargazerCount
-                    createdAt
-                    updatedAt
-                    pushedAt
-                    isArchived
-                    isDisabled
-                    isLocked
-                    isEmpty
-                    isFork                    
-                    forkCount
-                    watchers {
-                        totalCount
-                    }
-                    issues {
-                        totalCount
-                    }
-                    pullRequests(last: 100) {
-                        nodes {
-                            publishedAt
-                            lastEditedAt
-                            closedAt
-                            closed
                         }
                     }                    
                 }
@@ -82,8 +86,8 @@ class UseGraphQL():
                 "cursor": self.cursor
             }
         }
-        link = Link(self.token, json)
-        data = link.link()
+        instance_link = Link(self.token, json)
+        data = instance_link.link()
         return data
 
     def get_bug_issues_json(self):
