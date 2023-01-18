@@ -50,13 +50,13 @@ class GithubApiClient():
             self.repo_created_at = self.data['data']['repository']['createdAt']
             self.repo_updated_at = self.data['data']['repository']['updatedAt']
             self.repo_archived_bool = self.data['data']['repository']['isArchived']
+            self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.repo_labels_count = self.data['data']['repository']['labels']['totalCount']
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
             for label in self.data['data']['repository']['labels']['edges']:
                 self.repo_labels_name.append(label['node']['name'])
-            self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.request_cost = self.data['data']['rateLimit']['cost']
             self.request_total_cost += self.request_cost
             self.request_balance = self.data['data']['rateLimit']['remaining']
@@ -68,12 +68,12 @@ class GithubApiClient():
             print(f"Тип ошибки: {self.data['errors'][0]['type']}")
             print(f"Сообщение: {self.data['errors'][0]['message']}")
             sys.exit()
-        except KeyError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print('Ошибка при обращении по ключу')
-            print(f'Ключ: {err}')
-            sys.exit()
+        # except KeyError as err:
+        #     print('--------------------------------------------------------------')
+        #     print('При получении данных из репозитория возникла ошибка')
+        #     print('Ошибка при обращении по ключу')
+        #     print(f'Ключ: {err}')
+        #     sys.exit()
 
     def get_bug_issues(self):
         self.cursor = None
@@ -97,7 +97,7 @@ class GithubApiClient():
                 self.cursor = self.end_cursor
             else:
                 break
-        self.main_analytical_unit()
+        self.main_analytic_unit()
 
     def parse_bug_issues(self):
         try:
@@ -135,8 +135,14 @@ class GithubApiClient():
             print(f'Ключ: {err}')
             sys.exit()
 
-    def main_analytical_unit(self):
+    def main_analytic_unit(self):
+        self.messages_info = []
+        self.messages_warning = []
         self.data_preparation_block()
+        self.repository_analytic_block()
+
+
+
         self.forming_json()
 
     def data_preparation_block(self):
@@ -202,15 +208,26 @@ class GithubApiClient():
             self.duration_open_bug_max = timedelta(days=0)
             self.duration_open_bug_median = timedelta(days=0)
 
+    def repository_analytic_block(self):
+        self.repo_duration = (datetime.now() - self.repo_created_at).days
+        self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
+        print(self.repo_duration)
+        print(self.repo_last_updated)
+
     def forming_json(self):
         self.request_duration_time = datetime.now() - self.request_duration_time
         self.return_json = {
-            'queryInfo':{
+            'repositoryInfo': {
+                'name': self.repo_name,
+                'description': self.repo_description,
+            },
+            'queryInfo': {
                 'time': self.request_duration_time,
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': self.request_reset,
             }
         }
+
     def get_json(self):
         return self.return_json

@@ -1,8 +1,8 @@
 import requests
 import sys
 
-
-
+# Формировать json тут (кнопка Explorer)
+# https://docs.github.com/ru/graphql/overview/explorer
 
 class UseGraphQL():
     """
@@ -21,12 +21,6 @@ class UseGraphQL():
             """
             query GetInfo ($owner: String!, $name: String!, $cursor: String) {
                 repository(name: $name, owner: $owner) {
-                    name
-                    description
-                    stargazerCount
-                    createdAt
-                    updatedAt
-                    isArchived
                     labels(first: 100, after: $cursor) {
                         totalCount
                         pageInfo {
@@ -35,15 +29,45 @@ class UseGraphQL():
                             hasNextPage
                         }
                         edges {
-                            cursor
                             node {
                                 name
                             }
                         }
                     }
+                    name
+                    owner {
+                        login
+                    }
+                    description                    
+                    homepageUrl
+                    licenseInfo {
+                        name
+                    }
+                    isInOrganization
+                    stargazerCount
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    isArchived
+                    isDisabled
+                    isLocked
+                    isEmpty
+                    isFork                    
+                    forkCount
+                    watchers {
+                        totalCount
+                    }
                     issues {
                         totalCount
                     }
+                    pullRequests(last: 100) {
+                        nodes {
+                            publishedAt
+                            lastEditedAt
+                            closedAt
+                            closed
+                        }
+                    }                    
                 }
                 rateLimit {
                     cost
