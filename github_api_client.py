@@ -10,12 +10,15 @@ class GithubApiClient():
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
 
-    def __init__(self, repository_owner, repository_name, token):
+    def __init__(self, token):
         self.request_duration_time = datetime.now()
-        self.repository_owner = repository_owner
-        self.repository_name = repository_name
         self.token = token
         self.request_total_cost = 0
+
+    def push_repository(self, repository_owner, repository_name):
+        self.repository_owner = repository_owner
+        self.repository_name = repository_name
+        self.get_info_labels()
 
     def get_info_labels(self):
         self.cursor = None
@@ -37,6 +40,7 @@ class GithubApiClient():
         for name in self.repo_labels_name:
             if 'bug' in name.lower():
                 self.labels_bug.append(name)
+        self.get_bug_issues()
 
     def parse_info_labels(self):
         try:
@@ -93,6 +97,7 @@ class GithubApiClient():
                 self.cursor = self.end_cursor
             else:
                 break
+        self.main_analytical_unit()
 
     def parse_bug_issues(self):
         try:
@@ -130,11 +135,16 @@ class GithubApiClient():
             print(f'Ключ: {err}')
             sys.exit()
 
-    def analyz_bug_issues(self):
+    def main_analytical_unit(self):
+        self.data_preparation_block()
+        self.forming_json()
+
+    def data_preparation_block(self):
         def to_date(date_str):
             return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.repo_created_at = to_date(self.repo_created_at)
         self.repo_updated_at = to_date(self.repo_updated_at)
+        self.request_reset = to_date(self.request_reset)
         self.issues_open_count = 0
         self.issues_closed_count = 0
         self.duration_all_bug_list = []
@@ -192,5 +202,15 @@ class GithubApiClient():
             self.duration_open_bug_max = timedelta(days=0)
             self.duration_open_bug_median = timedelta(days=0)
 
-    def get_json(self):
+    def forming_json(self):
         self.request_duration_time = datetime.now() - self.request_duration_time
+        self.return_json = {
+            'queryInfo':{
+                'time': self.request_duration_time,
+                'cost': self.request_total_cost,
+                'remaining': self.request_balance,
+                'resetAt': self.request_reset,
+            }
+        }
+    def get_json(self):
+        return self.return_json

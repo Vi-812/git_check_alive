@@ -108,8 +108,8 @@ class UseGraphQL():
                 "cursor": self.cursor
             }
         }
-        link = Link(self.token, json)
-        data = link.link()
+        instance_link = Link(self.token, json)
+        data = instance_link.link()
         return data
 
 
