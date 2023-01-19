@@ -11,7 +11,7 @@ def main_page():
     form = RepositoryPath()
     # Странная отловка сообщений
     if form.validate_on_submit():
-        flash('вход')
+        flash('нажато)')
 
     # content = requests.request().json()
     # print(content)
