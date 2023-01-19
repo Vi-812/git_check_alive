@@ -37,6 +37,9 @@ if testing:
     instance_api_client.push_repository('vi-812/empty')
     return_json = instance_api_client.get_json()
     print(return_json)
+    instance_api_client.push_repository('vi-812/cli_git_api.py')
+    return_json = instance_api_client.get_json()
+    print(return_json)
     instance_api_client.push_repository('facebook/jest')
     return_json =instance_api_client.get_json()
 else:
@@ -46,6 +49,8 @@ else:
 
 print('--------------------------------------------------------------')
 print(f'Имя репозитория: {instance_api_client.repository_name}')
-print(f'Владелец: {instance_api_client.repository_owner}')
+print(f'Медиана closed: {instance_api_client.duration_closed_bug_median}, '
+      f'open: {instance_api_client.duration_open_bug_median}')
+print(f'Обновлен: {instance_api_client.repo_updated_at}, pushed: {instance_api_client.repo_pushed_at}')
 print(return_json)
 print('--------------------------------------------------------------')

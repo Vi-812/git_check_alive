@@ -23,11 +23,7 @@ class UseGraphQL():
                 repository(name: $name, owner: $owner) {                    
                     name
                     owner {
-                        ... on User {
-                            id
-                            email
-                            createdAt
-                        }
+                        login
                     }
                     description                    
                     homepageUrl
@@ -47,10 +43,10 @@ class UseGraphQL():
                     issues {
                         totalCount
                     }
-                    forkCount
                     watchers {
                         totalCount
                     }
+                    forkCount
                     pullRequests(last: 100) {
                         nodes {
                             publishedAt
@@ -104,14 +100,13 @@ class UseGraphQL():
                             hasNextPage
                         }
                         edges {
-                            cursor
                             node {
                                 id
                                 title
                                 createdAt
+                                updatedAt
                                 closedAt
                                 closed
-                                updatedAt
                                 comments(last: 1) {
                                     totalCount
                                     nodes {
