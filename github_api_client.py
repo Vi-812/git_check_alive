@@ -50,10 +50,10 @@ class GithubApiClient():
             else:
                 break
 
-        self.repo_labels_bug = []
+        self.repo_labels_bug_list = []
         for name in self.repo_labels_name_list:
             if 'bug' in name.lower():
-                self.repo_labels_bug.append(name)
+                self.repo_labels_bug_list.append(name)
         self.get_bug_issues()
 
     def parse_info_labels(self):
@@ -122,7 +122,7 @@ class GithubApiClient():
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token,
-                                                 self.repo_labels_bug)
+                                                 self.repo_labels_bug_list)
             self.data = data_github.get_bug_issues_json()
 
             self.parse_bug_issues()
@@ -249,6 +249,7 @@ class GithubApiClient():
         # self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
         # print(self.repo_duration)
         # print(self.repo_last_updated)
+        # FC
 
     def analytic_bug_issues_block(self):
         if self.bug_issues_duration_closed_list:
