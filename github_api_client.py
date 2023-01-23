@@ -15,6 +15,11 @@ class GithubApiClient():
         self.token = token
 
     def push_repository(self, repository_path):
+        """
+
+        :param repository_path:
+        :return:
+        """
         self.request_duration_time = datetime.now()
         data = re.search('([^/]+/[^/]+)$', repository_path)
         if data:
@@ -26,6 +31,9 @@ class GithubApiClient():
             sys.exit()
         self.request_total_cost = 0
         self.get_info_labels()
+        self.get_bug_issues()
+        self.main_analytic_unit()
+        self.forming_json()
 
     def get_info_labels(self):
         self.cursor = None
@@ -54,7 +62,6 @@ class GithubApiClient():
         for name in self.repo_labels_name_list:
             if 'bug' in name.lower():
                 self.repo_labels_bug_list.append(name)
-        self.get_bug_issues()
 
     def parse_info_labels(self):
         try:
@@ -131,7 +138,6 @@ class GithubApiClient():
                 self.cursor = self.end_cursor
             else:
                 break
-        self.main_analytic_unit()
 
     def parse_bug_issues(self):
         try:
@@ -178,7 +184,9 @@ class GithubApiClient():
 
 
 
-        self.forming_json()
+
+
+
 
     def preparation_data_block(self):
         def to_date(date_str):
@@ -278,10 +286,10 @@ class GithubApiClient():
                 'description': self.repo_description,
             },
             'queryInfo': {
-                'time': self.request_duration_time,
+                'time': str(self.request_duration_time),
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
-                'resetAt': self.request_reset,
+                'resetAt': str(self.request_reset),
             }
         }
 
