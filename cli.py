@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 debug = True
-testing = False
+testing = True
 
 token = os.getenv('TOKEN')
 
@@ -49,8 +49,8 @@ else:
 
 print('--------------------------------------------------------------')
 print(f'Имя репозитория: {instance_api_client.repository_name}')
-print(f'Медиана closed: {instance_api_client.duration_closed_bug_median}, '
-      f'open: {instance_api_client.duration_open_bug_median}')
+print(f'Медиана closed: {instance_api_client.duration_closed_bug_50percent}, '
+      f'open: {instance_api_client.duration_open_bug_50percent}')
 print(f'Обновлен: {instance_api_client.repo_updated_at}, pushed: {instance_api_client.repo_pushed_at}')
 print(return_json)
 print('--------------------------------------------------------------')

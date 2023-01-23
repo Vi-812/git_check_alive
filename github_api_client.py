@@ -1,7 +1,7 @@
 import sys
 import re
 import use_graphql
-from datetime import datetime, timedelta
+from datetime import datetime
 from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
 
@@ -252,38 +252,56 @@ class GithubApiClient():
                 self.bug_issues_comments_last_list[i] = to_date(self.bug_issues_comments_last_list[i])
 
     def analytic_repository_block(self):
-        pass
         # self.repo_duration = (datetime.now() - self.repo_created_at).days
         # self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
-        # print(self.repo_duration)
-        # print(self.repo_last_updated)
-        # FC
+        pass
+
 
     def analytic_bug_issues_block(self):
-        if self.bug_issues_duration_closed_list:
-            self.duration_closed_bug_min = min(self.bug_issues_duration_closed_list)
-            self.duration_closed_bug_max = max(self.bug_issues_duration_closed_list)
-            self.duration_closed_bug_median = median(self.bug_issues_duration_closed_list)
+        closed_list_len = len(self.bug_issues_duration_closed_list)
+        open_list_len = len(self.bug_issues_duration_open_list)
+        if closed_list_len >= 10:
+            self.bug_issues_duration_closed_list.sort()
+            self.duration_closed_bug_min = self.bug_issues_duration_closed_list[0]
+            self.duration_closed_bug_max = self.bug_issues_duration_closed_list[-1]
+            self.duration_closed_bug_95percent = self.bug_issues_duration_closed_list[round((closed_list_len - 1) * 0.95)]
+            self.duration_closed_bug_50percent = median(self.bug_issues_duration_closed_list)
         else:
-            self.duration_closed_bug_min = timedelta(days=0)
-            self.duration_closed_bug_max = timedelta(days=0)
-            self.duration_closed_bug_median = timedelta(days=0)
+            self.duration_closed_bug_min = None
+            self.duration_closed_bug_max = None
+            self.duration_closed_bug_95percent = None
+            self.duration_closed_bug_50percent = None
 
-        if self.bug_issues_duration_open_list:
-            self.duration_open_bug_min = min(self.bug_issues_duration_open_list)
-            self.duration_open_bug_max = max(self.bug_issues_duration_open_list)
-            self.duration_open_bug_median = median(self.bug_issues_duration_open_list)
+        if open_list_len >= 10:
+            self.bug_issues_duration_open_list.sort()
+            self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
+            self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
+            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1) * 0.95)]
+            self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list)
         else:
-            self.duration_open_bug_min = timedelta(days=0)
-            self.duration_open_bug_max = timedelta(days=0)
-            self.duration_open_bug_median = timedelta(days=0)
+            self.duration_open_bug_min = None
+            self.duration_open_bug_max = None
+            self.duration_open_bug_95percent = None
+            self.duration_open_bug_50percent = None
 
     def forming_json(self):
+        # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
-                'description': self.repo_description,
+                'owner': self.repo_owner_login,
+            },
+            'parameters': {
+                'isArchived': self.repo_is_archived_bool,
+                'bugsClosedTime95percent': str(self.duration_closed_bug_95percent),
+                'bugsClosedTime50percent': str(self.duration_closed_bug_50percent),
+                'stars': self.repo_stars_count
+
+
+
+
+
             },
             'queryInfo': {
                 'time': str(self.request_duration_time),
