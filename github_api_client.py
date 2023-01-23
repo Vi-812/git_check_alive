@@ -264,8 +264,9 @@ class GithubApiClient():
             self.bug_issues_duration_closed_list.sort()
             self.duration_closed_bug_min = self.bug_issues_duration_closed_list[0]
             self.duration_closed_bug_max = self.bug_issues_duration_closed_list[-1]
-            self.duration_closed_bug_95percent = self.bug_issues_duration_closed_list[round((closed_list_len - 1) * 0.95)]
-            self.duration_closed_bug_50percent = median(self.bug_issues_duration_closed_list)
+            self.duration_closed_bug_95percent = self.bug_issues_duration_closed_list[round((closed_list_len - 1)
+                                                                                            * 0.95)].days
+            self.duration_closed_bug_50percent = median(self.bug_issues_duration_closed_list).days
         else:
             self.duration_closed_bug_min = None
             self.duration_closed_bug_max = None
@@ -276,8 +277,9 @@ class GithubApiClient():
             self.bug_issues_duration_open_list.sort()
             self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
             self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
-            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1) * 0.95)]
-            self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list)
+            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1)
+                                                                                        * 0.95)].days
+            self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list).days
         else:
             self.duration_open_bug_min = None
             self.duration_open_bug_max = None
@@ -294,9 +296,9 @@ class GithubApiClient():
             },
             'parameters': {
                 'isArchived': self.repo_is_archived_bool,
-                'bugsClosedTime95percent': str(self.duration_closed_bug_95percent),
-                'bugsClosedTime50percent': str(self.duration_closed_bug_50percent),
-                'stars': self.repo_stars_count
+                'bugsClosedTime95percent': self.duration_closed_bug_95percent,
+                'bugsClosedTime50percent': self.duration_closed_bug_50percent,
+                'stars': self.repo_stars_count,
 
 
 
