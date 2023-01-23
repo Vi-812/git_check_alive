@@ -14,7 +14,9 @@ def api_request():
 
     instance_api_client = github_api_client.GithubApiClient(token)
     instance_api_client.push_repository(repository_path)
+    print('++')
     return_json = instance_api_client.get_json()
+    print(return_json)
     return return_json
 
 

@@ -9,6 +9,7 @@ token = os.getenv('TOKEN')
 testing = [
     'vi-812/cli_git_api.py',
     'vi-812/git_check_alive',
+    'vi-812/git_check_alive1',
     'https://github.com/pallets/flask',
 ]
 
@@ -18,4 +19,5 @@ for test in testing:
         'repository_path': test
     }
     response = requests.post(url=url, json=body)
-    print(response.json())
+    # print(response.json())
+    print(response.text)

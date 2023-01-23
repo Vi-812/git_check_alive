@@ -30,7 +30,11 @@ class GithubApiClient():
             print('"https://github.com/Vi-812/git" либо "vi-812/git"')
             sys.exit()
         self.request_total_cost = 0
-        self.get_info_labels()
+        err = self.get_info_labels()
+        if err == 404:
+            print(err, 'ERRR121w2')
+            return 404
+        print('asdac')
         self.get_bug_issues()
         self.main_analytic_unit()
         self.forming_json()
@@ -53,7 +57,10 @@ class GithubApiClient():
                                                  self.token)
             self.data = data_github.get_info_labels_json()
 
-            self.parse_info_labels()
+            err = self.parse_info_labels()
+            if err == 404:
+                print(err, 'ERRR2')
+                return 404
 
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -101,12 +108,16 @@ class GithubApiClient():
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print(f'Исключение: {err}')
-            print(f"Тип ошибки: {self.data['errors'][0]['type']}")
-            print(f"Сообщение: {self.data['errors'][0]['message']}")
-            sys.exit()
+            err = self.json_error(err)
+            if err == 404:
+                print(err, 'ERRR1')
+                return 404
+            # print('--------------------------------------------------------------')
+            # print('При получении данных из репозитория возникла ошибка')
+            # print(f'Исключение: {err}')
+            # print(f"Тип ошибки: {self.data['errors'][0]['type']}")
+            # print(f"Сообщение: {self.data['errors'][0]['message']}")
+            # sys.exit()
         except KeyError as err:
             print('--------------------------------------------------------------')
             print('При получении данных из репозитория возникла ошибка')
@@ -319,3 +330,14 @@ class GithubApiClient():
 
     def get_json(self):
         return self.return_json
+
+    def json_error(self, error):
+        self.return_json = {
+            'errors': {
+                'error': 'Repository not found',
+                'cod': error,
+                'type': self.data['errors'][0]['type'],
+                'message': self.data['errors'][0]['message'],
+            }
+        }
+        return 404
