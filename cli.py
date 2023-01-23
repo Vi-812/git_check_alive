@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 debug = True
-testing = True
+testing = False
 
 token = os.getenv('TOKEN')
 
