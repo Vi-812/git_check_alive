@@ -1,9 +1,14 @@
-import argparse
 import sys
-import re
-import analyzer
+import os
+import argparse
+import github_api_client
+from dotenv import load_dotenv
+load_dotenv()
 
 debug = True
+testing = False
+
+token = os.getenv('TOKEN')
 
 try:
     parser = argparse.ArgumentParser()
@@ -25,38 +30,22 @@ if not namespace.repository_path:
     else:
         namespace.repository_path = 'https://github.com/Vi-812/git_check_alive'
 
-data = re.search('([^/]+/[^/]+)$', namespace.repository_path)
-if data:
-    data = data.group(1)
-    repository_owner, repository_name = data.split('/', 2)
+
+
+if testing:
+    instance_api_client = github_api_client.GithubApiClient(token)
+    instance_api_client.push_repository('vi-812/empty')
+    return_json = instance_api_client.get_json()
+    print(return_json)
+    instance_api_client.push_repository('facebook/jest')
+    return_json =instance_api_client.get_json()
 else:
-    print('Ссылка не корректна, введите ссылку в формате')
-    print('"https://github.com/Vi-812/git" либо "Vi-812/git"')
-    sys.exit()
+    instance_api_client = github_api_client.GithubApiClient(token)
+    instance_api_client.push_repository(namespace.repository_path)
+    return_json = instance_api_client.get_json()
 
-xz = analyzer.GitGraphql(repository_owner, repository_name)
-# xz = analyzer.GitGraphql('facebook', 'jest')
-# xz = analyzer.GitGraphql('pallets', 'app')
-xz.get_info_labels()
-xz.get_bug_issues()
-xz.analyz_bug_issues()
-
-# Вывод данных пока не оформляю, ждем полный список
 print('--------------------------------------------------------------')
-print(f'Имя репозитория: {xz.repository_name}')
-print(f'Владелец: {xz.repository_owner}')
-print(f'Описание: {xz.description}')
-print(f'Количество звезд: {xz.stars}')
-print(f'Общее количество issue: {xz.issues_total_count}')
-print(f'Issue bug-report: {xz.issues_bug_count}')
-print(f'Из них открыты: {xz.issues_open_count}')
-print(f'Из них закрыты: {xz.issues_closed_count}')
-print(f'Время актуальности закрытых bug-report, минимальное: {xz.duration_closed_bug_min}')
-print(f'максимальное: {xz.duration_closed_bug_max}')
-print(f'медиана: {xz.duration_closed_bug_median}')
-print(f'Время актуальности открытых bug-report, минимальное: {xz.duration_open_bug_min}')
-print(f'максимальное: {xz.duration_open_bug_max}')
-print(f'медиана: {xz.duration_open_bug_median}')
-print(f'Остаток запросов: {xz.request_balance}({xz.request_cost})')
+print(f'Имя репозитория: {instance_api_client.repository_name}')
+print(f'Владелец: {instance_api_client.repository_owner}')
+print(return_json)
 print('--------------------------------------------------------------')
-
