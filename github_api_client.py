@@ -1,6 +1,7 @@
 import sys
 import re
 import use_graphql
+import func_api_client as fa
 from datetime import datetime
 from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
@@ -14,7 +15,7 @@ class GithubApiClient():
     def __init__(self, token):
         self.token = token
 
-    def push_repository(self, repository_path):
+    def get_report(self, repository_path):
         """
 
         :param repository_path:
@@ -39,10 +40,9 @@ class GithubApiClient():
 
     def get_info_labels(self):
         self.cursor = None
-        self.repo_release = {
-            'version': [],
-            'published_at': [],
-        }
+        self.repo_major_version = None
+        self.repo_minor_version = None
+        self.repo_patch_version = None
         self.repo_pullrequests = {
             'published_at': [],
             'last_edited_at': [],
@@ -93,9 +93,11 @@ class GithubApiClient():
             self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
             self.repo_fork_total_count = self.data['data']['repository']['forkCount']
-            for release in self.data['data']['repository']['releases']['edges']:
-                self.repo_release['version'].append(release['node']['tag']['name'])
-                self.repo_release['published_at'].append(release['node']['publishedAt'])
+            if not self.cursor and self.data['data']['repository']['releases']['edges']:
+                version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
+                self.repo_major_version = version[0]
+                self.repo_minor_version = version[1]
+                self.repo_patch_version = version[2]
             for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
                 self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
                 self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
@@ -196,20 +198,15 @@ class GithubApiClient():
         self.analytic_bug_issues_block()
 
     def preparation_info_data_block(self):
-        def to_date(date_str):
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-        self.repo_created_at = to_date(self.repo_created_at)
-        self.repo_updated_at = to_date(self.repo_updated_at)
-        self.repo_pushed_at = to_date(self.repo_pushed_at)
-        self.request_reset = to_date(self.request_reset)
+        self.repo_created_at = fa.to_date(self.repo_created_at)
+        self.repo_updated_at = fa.to_date(self.repo_updated_at)
+        self.repo_pushed_at = fa.to_date(self.repo_pushed_at)
+        self.request_reset = fa.to_date(self.request_reset)
         self.bug_issues_open_total_count = 0
         self.bug_issues_closed_total_count = 0
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
-
-        self.parsing_version()
-
         list_len = len(self.repo_pullrequests['published_at'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
             self.repo_pullrequests['last_edited_at'],
@@ -220,11 +217,11 @@ class GithubApiClient():
             print('Ошибка! Несоответствие при валидации длинны массивов "repo_pullrequests"!')
             sys.exit()
         for i in range(list_len):
-            self.repo_pullrequests['published_at'][i] = to_date(self.repo_pullrequests['published_at'][i])
+            self.repo_pullrequests['published_at'][i] = fa.to_date(self.repo_pullrequests['published_at'][i])
             if self.repo_pullrequests['last_edited_at'][i]:
-                self.repo_pullrequests['last_edited_at'][i] = to_date(self.repo_pullrequests['last_edited_at'][i])
+                self.repo_pullrequests['last_edited_at'][i] = fa.to_date(self.repo_pullrequests['last_edited_at'][i])
             if self.repo_pullrequests['closed_at'][i]:
-                self.repo_pullrequests['closed_at'][i] = to_date(self.repo_pullrequests['closed_at'][i])
+                self.repo_pullrequests['closed_at'][i] = fa.to_date(self.repo_pullrequests['closed_at'][i])
 
         list_len = len(self.bug_issues['id'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
@@ -240,10 +237,10 @@ class GithubApiClient():
             print('Ошибка! Несоответствие при валидации длинны массивов bug_issues!')
             sys.exit()
         for i in range(list_len):
-            self.bug_issues['created_at'][i] = to_date(self.bug_issues['created_at'][i])
+            self.bug_issues['created_at'][i] = fa.to_date(self.bug_issues['created_at'][i])
             if bool(self.bug_issues['closed_at'][i]) and self.bug_issues['closed_bool'][i]:
                 self.bug_issues_closed_total_count += 1
-                self.bug_issues['closed_at'][i] = to_date(self.bug_issues['closed_at'][i])
+                self.bug_issues['closed_at'][i] = fa.to_date(self.bug_issues['closed_at'][i])
                 duration = self.bug_issues['closed_at'][i] - self.bug_issues['created_at'][i]
                 self.bug_issues_duration_all_list.append(duration)
                 self.bug_issues_duration_closed_list.append(duration)
@@ -256,18 +253,17 @@ class GithubApiClient():
                       f'closed = {self.bug_issues["closed_bool"][i]}, '
                       f'closed_at = {self.bug_issues["closed_at"][i]}')
                 sys.exit()
-            self.bug_issues['updated_at'][i] = to_date(self.bug_issues['updated_at'][i])
+            self.bug_issues['updated_at'][i] = fa.to_date(self.bug_issues['updated_at'][i])
             if self.bug_issues['comments_last'][i]:
-                self.bug_issues['comments_last'][i] = to_date(self.bug_issues['comments_last'][i])
+                self.bug_issues['comments_last'][i] = fa.to_date(self.bug_issues['comments_last'][i])
 
     def preparation_badissues_data_block(self):
         pass
 
     def analytic_repository_block(self):
-        # self.repo_duration = (datetime.now() - self.repo_created_at).days
-        # self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
-        pass
-
+        self.repo_duration = (datetime.now() - self.repo_created_at).days
+        self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
+        self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
         closed_list_len = len(self.bug_issues_duration_closed_list)
@@ -311,11 +307,10 @@ class GithubApiClient():
                 'bugsClosedTime95percent': self.duration_closed_bug_95percent,
                 'bugsClosedTime50percent': self.duration_closed_bug_50percent,
                 'stars': self.repo_stars_count,
-
-
-
-
-
+                'majorDaysPassed': self.repo_major_version,
+                'minorDaysPassed': self.repo_minor_version,
+                'patchDaysPassed': self.repo_patch_version,
+                'pushedAt': self.repo_pushed_at,
             },
             'queryInfo': {
                 'time': str(self.request_duration_time),
@@ -329,9 +324,7 @@ class GithubApiClient():
         return self.return_json
 
     def parsing_version(self):
-        self.repo_major_version = None
-        self.repo_minor_version = None
-        self.repo_patch_version = None
+
         for i, vers in enumerate(self.repo_release['version']):
 
             print(i, vers, self.repo_release['published_at'][i])

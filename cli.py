@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 debug = True
-testing = False
+testing = True
 
 token = os.getenv('TOKEN')
 
@@ -34,17 +34,17 @@ if not namespace.repository_path:
 
 if testing:
     instance_api_client = github_api_client.GithubApiClient(token)
-    instance_api_client.push_repository('vi-812/empty')
+    instance_api_client.get_report('vi-812/empty')
     return_json = instance_api_client.get_json()
     print(return_json)
-    instance_api_client.push_repository('vi-812/cli_git_api.py')
+    instance_api_client.get_report('vi-812/cli_git_api.py')
     return_json = instance_api_client.get_json()
     print(return_json)
-    instance_api_client.push_repository('facebook/jest')
+    instance_api_client.get_report('facebook/jest')
     return_json =instance_api_client.get_json()
 else:
     instance_api_client = github_api_client.GithubApiClient(token)
-    instance_api_client.push_repository(namespace.repository_path)
+    instance_api_client.get_report(namespace.repository_path)
     return_json = instance_api_client.get_json()
 
 print('--------------------------------------------------------------')
