@@ -32,9 +32,7 @@ class GithubApiClient():
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
-            print(err, 'ERRR121w2')
             return 404
-        print('asdac')
         self.get_bug_issues()
         self.main_analytic_unit()
         self.forming_json()
@@ -59,7 +57,6 @@ class GithubApiClient():
 
             err = self.parse_info_labels()
             if err == 404:
-                print(err, 'ERRR2')
                 return 404
 
             if self.has_next_page:
@@ -110,14 +107,7 @@ class GithubApiClient():
         except TypeError as err:
             err = self.json_error(err)
             if err == 404:
-                print(err, 'ERRR1')
                 return 404
-            # print('--------------------------------------------------------------')
-            # print('При получении данных из репозитория возникла ошибка')
-            # print(f'Исключение: {err}')
-            # print(f"Тип ошибки: {self.data['errors'][0]['type']}")
-            # print(f"Сообщение: {self.data['errors'][0]['message']}")
-            # sys.exit()
         except KeyError as err:
             print('--------------------------------------------------------------')
             print('При получении данных из репозитория возникла ошибка')
@@ -335,7 +325,6 @@ class GithubApiClient():
         self.return_json = {
             'errors': {
                 'error': 'Repository not found',
-                'cod': error,
                 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
             }
