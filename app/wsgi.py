@@ -13,9 +13,10 @@ def api_request():
     repository_path = request.json['repository_path']
 
     instance_api_client = github_api_client.GithubApiClient(token)
-    err = instance_api_client.get_report(repository_path)
-    return_json = instance_api_client.get_json()
-    return return_json, 404 if err == 404 else 200
+    return_json = instance_api_client.get_report(repository_path)
+    return return_json
+    # else:
+    #     return return_json, 406
 
 
 @app_flask.route('/', methods=['GET', 'POST'])

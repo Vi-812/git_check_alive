@@ -1,5 +1,6 @@
 import sys
 import re
+import json
 import use_graphql
 import func_api_client as fa
 from datetime import datetime
@@ -33,10 +34,11 @@ class GithubApiClient():
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
-            return 404
+            return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
         self.forming_json()
+        return self.return_json
 
     def get_info_labels(self):
         self.cursor = None
@@ -75,35 +77,36 @@ class GithubApiClient():
 
     def parse_info_labels(self):
         try:
-            self.repo_name = self.data['data']['repository']['name']
-            self.repo_owner_login = self.data['data']['repository']['owner']['login']
-            self.repo_description = self.data['data']['repository']['description']
-            self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
-            self.repo_in_organization = self.data['data']['repository']['isInOrganization']
-            self.repo_license_have = bool(self.data['data']['repository']['licenseInfo'])
-            self.repo_stars_count = self.data['data']['repository']['stargazerCount']
-            self.repo_created_at = self.data['data']['repository']['createdAt']
-            self.repo_updated_at = self.data['data']['repository']['updatedAt']
-            self.repo_pushed_at = self.data['data']['repository']['pushedAt']
-            self.repo_is_archived_bool = self.data['data']['repository']['isArchived']
-            self.repo_is_disabled_bool = self.data['data']['repository']['isDisabled']
-            self.repo_is_locked_bool = self.data['data']['repository']['isLocked']
-            self.repo_is_empty_bool = self.data['data']['repository']['isEmpty']
-            self.repo_is_fork_bool = self.data['data']['repository']['isFork']
-            self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
-            self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
-            self.repo_fork_total_count = self.data['data']['repository']['forkCount']
-            if not self.cursor and self.data['data']['repository']['releases']['edges']:
-                version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
-                self.repo_major_version = version[0]
-                self.repo_minor_version = version[1]
-                self.repo_patch_version = version[2]
-            for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
-                self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
-                self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
-                self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
-                self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
-            self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
+            if not self.cursor:
+                self.repo_name = self.data['data']['repository']['name']
+                self.repo_owner_login = self.data['data']['repository']['owner']['login']
+                self.repo_description = self.data['data']['repository']['description']
+                self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
+                self.repo_in_organization = self.data['data']['repository']['isInOrganization']
+                self.repo_license_have = bool(self.data['data']['repository']['licenseInfo'])
+                self.repo_stars_count = self.data['data']['repository']['stargazerCount']
+                self.repo_created_at = self.data['data']['repository']['createdAt']
+                self.repo_updated_at = self.data['data']['repository']['updatedAt']
+                self.repo_pushed_at = self.data['data']['repository']['pushedAt']
+                self.repo_is_archived_bool = self.data['data']['repository']['isArchived']
+                self.repo_is_disabled_bool = self.data['data']['repository']['isDisabled']
+                self.repo_is_locked_bool = self.data['data']['repository']['isLocked']
+                self.repo_is_empty_bool = self.data['data']['repository']['isEmpty']
+                self.repo_is_fork_bool = self.data['data']['repository']['isFork']
+                self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
+                self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
+                self.repo_fork_total_count = self.data['data']['repository']['forkCount']
+                self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
+                if self.data['data']['repository']['releases']['edges']:
+                    version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
+                    self.repo_major_version = version[0]
+                    self.repo_minor_version = version[1]
+                    self.repo_patch_version = version[2]
+                for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
+                    self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
+                    self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
+                    self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
+                    self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
@@ -319,15 +322,7 @@ class GithubApiClient():
                 'resetAt': str(self.request_reset),
             }
         }
-
-    def get_json(self):
-        return self.return_json
-
-    def parsing_version(self):
-
-        for i, vers in enumerate(self.repo_release['version']):
-
-            print(i, vers, self.repo_release['published_at'][i])
+        self.return_json = json.dumps(self.return_json)
 
     def json_error(self, error):
         self.return_json = {
