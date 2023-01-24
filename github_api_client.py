@@ -39,8 +39,12 @@ class GithubApiClient():
 
     def get_info_labels(self):
         self.cursor = None
+        self.repo_release = {
+            'version': [],
+            'published_at': [],
+        }
         self.repo_pullrequests = {
-            'publised_at': [],
+            'published_at': [],
             'last_edited_at': [],
             'closed_at': [],
             'closed_bool': [],
@@ -89,8 +93,11 @@ class GithubApiClient():
             self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
             self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
             self.repo_fork_total_count = self.data['data']['repository']['forkCount']
+            for release in self.data['data']['repository']['releases']['edges']:
+                self.repo_release['version'].append(release['node']['tag']['name'])
+                self.repo_release['published_at'].append(release['node']['publishedAt'])
             for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
-                self.repo_pullrequests['publised_at'].append(pull_r['publishedAt'])
+                self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
                 self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
                 self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
                 self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
@@ -183,17 +190,12 @@ class GithubApiClient():
     def main_analytic_unit(self):
         self.messages_info = []
         self.messages_warning = []
-        self.preparation_data_block()
+        self.preparation_info_data_block()
+        self.preparation_badissues_data_block()
         self.analytic_repository_block()
         self.analytic_bug_issues_block()
 
-
-
-
-
-
-
-    def preparation_data_block(self):
+    def preparation_info_data_block(self):
         def to_date(date_str):
             return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
         self.repo_created_at = to_date(self.repo_created_at)
@@ -206,7 +208,9 @@ class GithubApiClient():
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
 
-        list_len = len(self.repo_pullrequests['publised_at'])
+        self.parsing_version()
+
+        list_len = len(self.repo_pullrequests['published_at'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
             self.repo_pullrequests['last_edited_at'],
             self.repo_pullrequests['closed_at'],
@@ -216,7 +220,7 @@ class GithubApiClient():
             print('Ошибка! Несоответствие при валидации длинны массивов "repo_pullrequests"!')
             sys.exit()
         for i in range(list_len):
-            self.repo_pullrequests['publised_at'][i] = to_date(self.repo_pullrequests['publised_at'][i])
+            self.repo_pullrequests['published_at'][i] = to_date(self.repo_pullrequests['published_at'][i])
             if self.repo_pullrequests['last_edited_at'][i]:
                 self.repo_pullrequests['last_edited_at'][i] = to_date(self.repo_pullrequests['last_edited_at'][i])
             if self.repo_pullrequests['closed_at'][i]:
@@ -255,6 +259,9 @@ class GithubApiClient():
             self.bug_issues['updated_at'][i] = to_date(self.bug_issues['updated_at'][i])
             if self.bug_issues['comments_last'][i]:
                 self.bug_issues['comments_last'][i] = to_date(self.bug_issues['comments_last'][i])
+
+    def preparation_badissues_data_block(self):
+        pass
 
     def analytic_repository_block(self):
         # self.repo_duration = (datetime.now() - self.repo_created_at).days
@@ -320,6 +327,14 @@ class GithubApiClient():
 
     def get_json(self):
         return self.return_json
+
+    def parsing_version(self):
+        self.repo_major_version = None
+        self.repo_minor_version = None
+        self.repo_patch_version = None
+        for i, vers in enumerate(self.repo_release['version']):
+
+            print(i, vers, self.repo_release['published_at'][i])
 
     def json_error(self, error):
         self.return_json = {
