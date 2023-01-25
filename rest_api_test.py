@@ -9,7 +9,11 @@ url = 'http://localhost:8080/api'
 token = os.getenv('TOKEN')
 
 if not mega_test:
-    testing = ['vi-812/git_check_alive']
+    testing = [
+        'vi-812/empty',
+        'vi-812/git_check_alive',
+        'https://github.com/pallets/flask',
+    ]
 else:
     testing = [
         'zero',

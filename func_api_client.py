@@ -1,4 +1,5 @@
 from datetime import datetime
+from statistics import median
 import logging
 logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
@@ -54,15 +55,22 @@ def parsing_version(data):
 
 def pull_request_analytics(data):
     duration_closed_pullrequest = []
+    duration_open_pullrequest = []
     date_closed_pullrequest = []
     for pullrequest in data:
         if pullrequest['closed'] and bool(pullrequest['closedAt']):
             duration_closed_pullrequest.append(to_date(pullrequest['closedAt']) - to_date(pullrequest['publishedAt']))
             date_closed_pullrequest.append(to_date(pullrequest['closedAt']))
+        elif not pullrequest['closed'] and not bool(pullrequest['closedAt']):
+            duration_open_pullrequest.append(datetime.now() - to_date(pullrequest['publishedAt']))
+        else:
+            logging.error(f'Несовпадение значений! Owner: {repo_owner}, name: {repo_name}')
+    median_duration_closed_pr = median(duration_closed_pullrequest)
+    # Коэффициент?
 
 
 
-    print(duration_closed_pullrequest)
-    print(date_closed_pullrequest)
+    print(median_duration_closed_pr)
+    print(duration_open_pullrequest)
     if len(duration_closed_pullrequest) == len(date_closed_pullrequest):
         print(len(date_closed_pullrequest))
