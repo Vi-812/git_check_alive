@@ -4,10 +4,9 @@ import use_graphql as ug
 import func_api_client as fa
 from datetime import datetime
 from statistics import median
-# https://developer.chrome.com/docs/devtools/network/
 
 
-class GithubApiClient():
+class GithubApiClient:
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
@@ -43,12 +42,6 @@ class GithubApiClient():
         self.repo_major_version = None
         self.repo_minor_version = None
         self.repo_patch_version = None
-        self.repo_pullrequests = {
-            'published_at': [],
-            'last_edited_at': [],
-            'closed_at': [],
-            'closed_bool': [],
-        }
         self.repo_labels_name_list = []
 
         while True:
@@ -78,6 +71,7 @@ class GithubApiClient():
             if not self.cursor:
                 self.repo_name = self.data['data']['repository']['name']
                 self.repo_owner_login = self.data['data']['repository']['owner']['login']
+                fa.owner_name(self.repo_owner_login, self.repo_name)
                 self.repo_description = self.data['data']['repository']['description']
                 self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
                 self.repo_in_organization = self.data['data']['repository']['isInOrganization']
@@ -100,11 +94,14 @@ class GithubApiClient():
                     self.repo_major_version = version[0]
                     self.repo_minor_version = version[1]
                     self.repo_patch_version = version[2]
-                for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
-                    self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
-                    self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
-                    self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
-                    self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
+                if self.data['data']['repository']['pullRequests']['nodes']:
+                    analytics = fa.pull_request_analytics(self.data['data']['repository']['pullRequests']['nodes'])
+                    print(analytics)
+
+
+
+
+
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
@@ -208,22 +205,6 @@ class GithubApiClient():
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
-        list_len = len(self.repo_pullrequests['published_at'])
-        validation_list = all(map(lambda lst: len(lst) == list_len, [
-            self.repo_pullrequests['last_edited_at'],
-            self.repo_pullrequests['closed_at'],
-            self.repo_pullrequests['closed_bool'],
-        ]))
-        if not validation_list:
-            print('Ошибка! Несоответствие при валидации длинны массивов "repo_pullrequests"!')
-            sys.exit()
-        for i in range(list_len):
-            self.repo_pullrequests['published_at'][i] = fa.to_date(self.repo_pullrequests['published_at'][i])
-            if self.repo_pullrequests['last_edited_at'][i]:
-                self.repo_pullrequests['last_edited_at'][i] = fa.to_date(self.repo_pullrequests['last_edited_at'][i])
-            if self.repo_pullrequests['closed_at'][i]:
-                self.repo_pullrequests['closed_at'][i] = fa.to_date(self.repo_pullrequests['closed_at'][i])
-
         list_len = len(self.bug_issues['id'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
             self.bug_issues['title'],

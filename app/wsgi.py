@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 from app.forms import RepositoryPath
 import json
 import github_api_client
+import logging
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 
 app_flask = Flask(__name__)
@@ -31,4 +33,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app_flask.run(port=8080, debug=True)
+    app_flask.run(port=8080, debug=False)

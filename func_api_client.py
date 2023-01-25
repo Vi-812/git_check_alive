@@ -1,8 +1,14 @@
-import logging
 from datetime import datetime
+import logging
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
-logging.basicConfig(filename='logs.log', level=logging.INFO)
 
+
+def owner_name(owner, name):
+    global repo_owner
+    global repo_name
+    repo_owner = owner
+    repo_name = name
 
 def to_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
@@ -38,8 +44,25 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error('Проверено 100 записей, не найдено версии!', published_date)
+            logging.error(f'Проверено 100 записей и не найдено версии! Owner: {repo_owner}, name: {repo_name}, '
+                          f'дата: {published_date}')
+    # Проверить существование данных
     major_v = datetime.now() - to_date(major_v)
     minor_v = datetime.now() - to_date(minor_v)
     patch_v = datetime.now() - to_date(patch_v)
     return [major_v.days, minor_v.days, patch_v.days]
+
+def pull_request_analytics(data):
+    duration_closed_pullrequest = []
+    date_closed_pullrequest = []
+    for pullrequest in data:
+        if pullrequest['closed'] and bool(pullrequest['closedAt']):
+            duration_closed_pullrequest.append(to_date(pullrequest['closedAt']) - to_date(pullrequest['publishedAt']))
+            date_closed_pullrequest.append(to_date(pullrequest['closedAt']))
+
+
+
+    print(duration_closed_pullrequest)
+    print(date_closed_pullrequest)
+    if len(duration_closed_pullrequest) == len(date_closed_pullrequest):
+        print(len(date_closed_pullrequest))
