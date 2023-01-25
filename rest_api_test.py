@@ -7,6 +7,7 @@ url = 'http://localhost:8080/api'
 token = os.getenv('TOKEN')
 
 testing = [
+    'zero',
     'vi-812/git_',
     'vi-812/empty',
     'vi-812/git_check_alive',
@@ -19,4 +20,4 @@ for test in testing:
         'repository_path': test
     }
     response = requests.post(url=url, json=body)
-    print(response.json())
+    print(response.status_code, response.json())

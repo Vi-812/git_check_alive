@@ -22,14 +22,13 @@ class GithubApiClient():
         :return:
         """
         self.request_duration_time = datetime.now()
-        data = re.search('([^/]+/[^/]+)$', repository_path)
-        if data:
-            data = data.group(1)
+        repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
+        if repo_owner_name:
+            data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
-            print('Ссылка не корректна, введите ссылку в формате')
-            print('"https://github.com/Vi-812/git" либо "vi-812/git"')
-            sys.exit()
+            self.json_error_err400()
+            return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
@@ -116,7 +115,7 @@ class GithubApiClient():
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
-            err = self.json_error(err)
+            err = self.json_error_err404(err)
             if err == 404:
                 return 404
         except KeyError as err:
@@ -323,13 +322,24 @@ class GithubApiClient():
             'code': 200
         }
 
-    def json_error(self, error):
+    def json_error_err404(self, error):
         self.return_json = {
             'errors': {
                 'error': 'Repository not found',
                 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
             },
-            'code' : 404
+            'code': 404
         }
         return 404
+
+    def json_error_err400(self):
+        self.return_json = {
+            'errors': {
+                'error': 'Bad adress',
+                'message': "Bad repository adress, enter the address in the format "
+                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
+            },
+            'code': 400
+        }
+        return 400
