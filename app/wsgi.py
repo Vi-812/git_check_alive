@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 from app.forms import RepositoryPath
+import json
 import github_api_client
 
 
@@ -11,12 +12,10 @@ app_flask.config['SECRET_KEY'] = 'super_secret_key'
 def api_request():
     token = request.json['token']
     repository_path = request.json['repository_path']
-
     instance_api_client = github_api_client.GithubApiClient(token)
     return_json = instance_api_client.get_report(repository_path)
-    return return_json
-    # else:
-    #     return return_json, 406
+    code = return_json['code']
+    return json.dumps(return_json), code
 
 
 @app_flask.route('/', methods=['GET', 'POST'])

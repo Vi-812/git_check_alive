@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-import github_api_client
+import github_api_client as ga
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -33,14 +33,14 @@ if not namespace.repository_path:
 
 
 if testing:
-    instance_api_client = github_api_client.GithubApiClient(token)
+    instance_api_client = ga.GithubApiClient(token)
     return_json = instance_api_client.get_report('vi-812/empty')
     print(return_json)
     return_json = instance_api_client.get_report('vi-812/cli_git_api.py')
     print(return_json)
     return_json = instance_api_client.get_report('facebook/jest')
 else:
-    instance_api_client = github_api_client.GithubApiClient(token)
+    instance_api_client = ga.GithubApiClient(token)
     return_json = instance_api_client.get_report(namespace.repository_path)
 
 print('---')

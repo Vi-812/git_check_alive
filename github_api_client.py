@@ -1,7 +1,6 @@
 import sys
 import re
-import json
-import use_graphql
+import use_graphql as ug
 import func_api_client as fa
 from datetime import datetime
 from statistics import median
@@ -55,7 +54,7 @@ class GithubApiClient():
 
         while True:
 
-            data_github = use_graphql.UseGraphQL(self.repository_owner,
+            data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token)
@@ -142,7 +141,7 @@ class GithubApiClient():
 
         while True:
 
-            data_github = use_graphql.UseGraphQL(self.repository_owner,
+            data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token,
@@ -320,9 +319,9 @@ class GithubApiClient():
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
-            }
+            },
+            'code': 200
         }
-        self.return_json = json.dumps(self.return_json)
 
     def json_error(self, error):
         self.return_json = {
@@ -330,6 +329,7 @@ class GithubApiClient():
                 'error': 'Repository not found',
                 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
-            }
+            },
+            'code' : 404
         }
         return 404
