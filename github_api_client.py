@@ -44,6 +44,7 @@ class GithubApiClient:
 
     def get_info_labels(self):
         self.cursor = None
+        self.repo_version = None
         self.repo_major_version = None
         self.repo_minor_version = None
         self.repo_patch_version = None
@@ -97,6 +98,7 @@ class GithubApiClient:
                 self.repo_fork_total_count = self.data['data']['repository']['forkCount']
                 self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
                 if self.data['data']['repository']['releases']['edges']:
+                    self.repo_version = self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
                     version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
                     self.repo_major_version = version[0]
                     self.repo_minor_version = version[1]
