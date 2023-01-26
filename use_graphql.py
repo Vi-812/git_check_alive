@@ -1,10 +1,13 @@
 import requests
 import sys
+import logging
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 # Формировать json тут (кнопка Explorer)
 # https://docs.github.com/ru/graphql/overview/explorer
 
-class UseGraphQL():
+
+class UseGraphQL:
     """
     ТОЖЕ ОПИСАТЕЛЬНОЕ
     """
@@ -60,7 +63,6 @@ class UseGraphQL():
                     pullRequests(last: 100) {
                         nodes {
                             publishedAt
-                            lastEditedAt
                             closedAt
                             closed
                         }
@@ -146,7 +148,7 @@ class UseGraphQL():
         return data
 
 
-class Link():
+class Link:
     def __init__(self, token, json):
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + token}
@@ -156,7 +158,5 @@ class Link():
             data = requests.post(url=self.url, headers=self.headers, json=self.json)
             return data.json()
         except requests.exceptions.ConnectionError as err:
-            print('--------------------------------------------------------------')
-            print('Ошибка ссоединения с сервером')
-            print(f'Исключение: {err}')
+            logging.error(f'Ошибка ссоединения с сервером. Исключение: {err}')
             sys.exit()

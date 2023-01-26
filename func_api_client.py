@@ -1,7 +1,15 @@
+from datetime import datetime, timedelta
+from statistics import median
 import logging
-from datetime import datetime
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
-logging.basicConfig(filename='logs.log', level=logging.INFO)
+
+def owner_name(owner, name):
+    # Однократно передаем владельца и имя репозитория, используется для логирования
+    global repo_owner
+    global repo_name
+    repo_owner = owner
+    repo_name = name
 
 
 def to_date(date_str):
@@ -38,8 +46,37 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error('Проверено 100 записей, не найдено версии!', published_date)
+            logging.error(f'Проверено 100 записей и не найдено версии! Owner: {repo_owner}, name: {repo_name}')
+    if not major_v:
+        major_v = published_date
+    if not minor_v:
+        minor_v = published_date
+    if not patch_v:
+        patch_v = published_date
     major_v = datetime.now() - to_date(major_v)
     minor_v = datetime.now() - to_date(minor_v)
     patch_v = datetime.now() - to_date(patch_v)
     return [major_v.days, minor_v.days, patch_v.days]
+
+
+def pull_request_analytics(data):
+    """
+    Анализ 100 последних Pull Request.
+    Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
+    :param data: данные о 100 последних PR из json, полученного от GitHub
+    :return:
+    count_closed_pr: количество закрытых PR за последние 2 месяца (из 100 последних)
+    median_closed_pr: медиана обработки PR в днях, от публикации до согласования (вещественное число)
+    """
+    duration_pullrequest = []
+    count_closed_pr = 0
+    for pullrequest in data:
+        if pullrequest['closed'] and bool(pullrequest['closedAt']):
+            if to_date(pullrequest['closedAt']) + timedelta(60) > datetime.now():
+                duration_pullrequest.append(to_date(pullrequest['closedAt']) - to_date(pullrequest['publishedAt']))
+                count_closed_pr += 1
+    # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
+    # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
+    median_closed_pr = median(duration_pullrequest) * 24
+    median_closed_pr = median_closed_pr.days / 24
+    return [count_closed_pr, median_closed_pr]

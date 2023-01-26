@@ -1,14 +1,14 @@
 import sys
 import re
-import json
-import use_graphql
+import use_graphql as ug
 import func_api_client as fa
 from datetime import datetime
 from statistics import median
-# https://developer.chrome.com/docs/devtools/network/
+import logging
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 
-class GithubApiClient():
+class GithubApiClient:
     """
     ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
     """
@@ -23,17 +23,19 @@ class GithubApiClient():
         :return:
         """
         self.request_duration_time = datetime.now()
-        data = re.search('([^/]+/[^/]+)$', repository_path)
-        if data:
-            data = data.group(1)
+        repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
+        if repo_owner_name:
+            data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
-            print('Ссылка не корректна, введите ссылку в формате')
-            print('"https://github.com/Vi-812/git" либо "vi-812/git"')
-            sys.exit()
+            logging.error(f'Ошибка 400, не распознан repository_path={repository_path}.')
+            self.json_error_err400()
+            return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
+            logging.error(f'Ошибка 404, не найден репозиторий. Owner={self.repository_owner}, '
+                          f'name={self.repository_name}.')
             return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
@@ -42,20 +44,17 @@ class GithubApiClient():
 
     def get_info_labels(self):
         self.cursor = None
+        self.repo_version = None
         self.repo_major_version = None
         self.repo_minor_version = None
         self.repo_patch_version = None
-        self.repo_pullrequests = {
-            'published_at': [],
-            'last_edited_at': [],
-            'closed_at': [],
-            'closed_bool': [],
-        }
+        self.repo_pr_closed_count = None
+        self.repo_pr_closed_duration = None
         self.repo_labels_name_list = []
 
         while True:
 
-            data_github = use_graphql.UseGraphQL(self.repository_owner,
+            data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token)
@@ -80,6 +79,7 @@ class GithubApiClient():
             if not self.cursor:
                 self.repo_name = self.data['data']['repository']['name']
                 self.repo_owner_login = self.data['data']['repository']['owner']['login']
+                fa.owner_name(self.repo_owner_login, self.repo_name)
                 self.repo_description = self.data['data']['repository']['description']
                 self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
                 self.repo_in_organization = self.data['data']['repository']['isInOrganization']
@@ -98,15 +98,15 @@ class GithubApiClient():
                 self.repo_fork_total_count = self.data['data']['repository']['forkCount']
                 self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
                 if self.data['data']['repository']['releases']['edges']:
+                    self.repo_version = self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
                     version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
                     self.repo_major_version = version[0]
                     self.repo_minor_version = version[1]
                     self.repo_patch_version = version[2]
-                for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
-                    self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
-                    self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
-                    self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
-                    self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
+                if self.data['data']['repository']['pullRequests']['nodes']:
+                    closed_pr = fa.pull_request_analytics(self.data['data']['repository']['pullRequests']['nodes'])
+                    self.repo_pr_closed_count = closed_pr[0]
+                    self.repo_pr_closed_duration = closed_pr[1]
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
@@ -117,7 +117,7 @@ class GithubApiClient():
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
-            err = self.json_error(err)
+            err = self.json_error_err404(err)
             if err == 404:
                 return 404
         except KeyError as err:
@@ -142,7 +142,7 @@ class GithubApiClient():
 
         while True:
 
-            data_github = use_graphql.UseGraphQL(self.repository_owner,
+            data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token,
@@ -210,22 +210,6 @@ class GithubApiClient():
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
-        list_len = len(self.repo_pullrequests['published_at'])
-        validation_list = all(map(lambda lst: len(lst) == list_len, [
-            self.repo_pullrequests['last_edited_at'],
-            self.repo_pullrequests['closed_at'],
-            self.repo_pullrequests['closed_bool'],
-        ]))
-        if not validation_list:
-            print('Ошибка! Несоответствие при валидации длинны массивов "repo_pullrequests"!')
-            sys.exit()
-        for i in range(list_len):
-            self.repo_pullrequests['published_at'][i] = fa.to_date(self.repo_pullrequests['published_at'][i])
-            if self.repo_pullrequests['last_edited_at'][i]:
-                self.repo_pullrequests['last_edited_at'][i] = fa.to_date(self.repo_pullrequests['last_edited_at'][i])
-            if self.repo_pullrequests['closed_at'][i]:
-                self.repo_pullrequests['closed_at'][i] = fa.to_date(self.repo_pullrequests['closed_at'][i])
-
         list_len = len(self.bug_issues['id'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
             self.bug_issues['title'],
@@ -320,16 +304,28 @@ class GithubApiClient():
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
-            }
+            },
+            'code': 200
         }
-        self.return_json = json.dumps(self.return_json)
 
-    def json_error(self, error):
+    def json_error_err404(self, error):
         self.return_json = {
             'errors': {
                 'error': 'Repository not found',
                 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
-            }
+            },
+            'code': 404
         }
         return 404
+
+    def json_error_err400(self):
+        self.return_json = {
+            'errors': {
+                'error': 'Bad adress',
+                'message': "Bad repository adress, enter the address in the format "
+                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
+            },
+            'code': 400
+        }
+        return 400

@@ -1,22 +1,27 @@
-from flask import Flask, render_template, request, jsonify
+import os
+from flask import Flask, render_template, request
 from app.forms import RepositoryPath
+import json
 import github_api_client
+from dotenv import load_dotenv
+import logging
+load_dotenv()
+logger = logging.getLogger('werkzeug')
+logger.setLevel(logging.ERROR)
 
 
 app_flask = Flask(__name__)
-app_flask.config['SECRET_KEY'] = 'super_secret_key'
+app_flask.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
 @app_flask.route('/api', methods=['POST'])
 def api_request():
     token = request.json['token']
     repository_path = request.json['repository_path']
-
     instance_api_client = github_api_client.GithubApiClient(token)
     return_json = instance_api_client.get_report(repository_path)
-    return return_json
-    # else:
-    #     return return_json, 406
+    code = return_json['code']
+    return json.dumps(return_json), code
 
 
 @app_flask.route('/', methods=['GET', 'POST'])
@@ -32,4 +37,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app_flask.run(port=8080, debug=True)
+    app_flask.run(port=8080, debug=False)
