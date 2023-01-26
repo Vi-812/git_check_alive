@@ -4,6 +4,8 @@ import use_graphql as ug
 import func_api_client as fa
 from datetime import datetime
 from statistics import median
+import logging
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 
 class GithubApiClient:
@@ -26,11 +28,14 @@ class GithubApiClient:
             data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
+            logging.error(f'Ошибка 400, не распознан repository_path={repository_path}.')
             self.json_error_err400()
             return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
+            logging.error(f'Ошибка 404, не найден репозиторий. Owner={self.repository_owner}, '
+                          f'name={self.repository_name}.')
             return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
@@ -42,6 +47,8 @@ class GithubApiClient:
         self.repo_major_version = None
         self.repo_minor_version = None
         self.repo_patch_version = None
+        self.repo_pr_closed_count = None
+        self.repo_pr_closed_duration = None
         self.repo_labels_name_list = []
 
         while True:
@@ -95,13 +102,9 @@ class GithubApiClient:
                     self.repo_minor_version = version[1]
                     self.repo_patch_version = version[2]
                 if self.data['data']['repository']['pullRequests']['nodes']:
-                    analytics = fa.pull_request_analytics(self.data['data']['repository']['pullRequests']['nodes'])
-                    print(analytics)
-
-
-
-
-
+                    closed_pr = fa.pull_request_analytics(self.data['data']['repository']['pullRequests']['nodes'])
+                    self.repo_pr_closed_count = closed_pr[0]
+                    self.repo_pr_closed_duration = closed_pr[1]
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']

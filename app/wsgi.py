@@ -1,13 +1,17 @@
+import os
 from flask import Flask, render_template, request
 from app.forms import RepositoryPath
 import json
 import github_api_client
+from dotenv import load_dotenv
 import logging
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+load_dotenv()
+logger = logging.getLogger('werkzeug')
+logger.setLevel(logging.ERROR)
 
 
 app_flask = Flask(__name__)
-app_flask.config['SECRET_KEY'] = 'super_secret_key'
+app_flask.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
 @app_flask.route('/api', methods=['POST'])
