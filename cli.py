@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 debug = True
-testing = True
+testing = False
 
 token = os.getenv('TOKEN')
 
@@ -34,23 +34,16 @@ if not namespace.repository_path:
 
 if testing:
     instance_api_client = github_api_client.GithubApiClient(token)
-    instance_api_client.push_repository('vi-812/empty')
-    return_json = instance_api_client.get_json()
+    return_json = instance_api_client.get_report('vi-812/empty')
     print(return_json)
-    instance_api_client.push_repository('vi-812/cli_git_api.py')
-    return_json = instance_api_client.get_json()
+    return_json = instance_api_client.get_report('vi-812/cli_git_api.py')
     print(return_json)
-    instance_api_client.push_repository('facebook/jest')
-    return_json =instance_api_client.get_json()
+    return_json = instance_api_client.get_report('facebook/jest')
 else:
     instance_api_client = github_api_client.GithubApiClient(token)
-    instance_api_client.push_repository(namespace.repository_path)
-    return_json = instance_api_client.get_json()
+    return_json = instance_api_client.get_report(namespace.repository_path)
 
-print('--------------------------------------------------------------')
+print('---')
 print(f'Имя репозитория: {instance_api_client.repository_name}')
-print(f'Медиана closed: {instance_api_client.duration_closed_bug_median}, '
-      f'open: {instance_api_client.duration_open_bug_median}')
-print(f'Обновлен: {instance_api_client.repo_updated_at}, pushed: {instance_api_client.repo_pushed_at}')
 print(return_json)
-print('--------------------------------------------------------------')
+print('---')

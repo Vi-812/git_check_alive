@@ -47,6 +47,16 @@ class UseGraphQL():
                         totalCount
                     }
                     forkCount
+                    releases(first: 100) {
+                        edges {
+                            node {
+                                publishedAt
+                                tag {
+                                    name
+                                }
+                            }
+                        }
+                    }
                     pullRequests(last: 100) {
                         nodes {
                             publishedAt

@@ -1,7 +1,9 @@
 import sys
 import re
+import json
 import use_graphql
-from datetime import datetime, timedelta
+import func_api_client as fa
+from datetime import datetime
 from statistics import median
 # https://developer.chrome.com/docs/devtools/network/
 
@@ -14,7 +16,12 @@ class GithubApiClient():
     def __init__(self, token):
         self.token = token
 
-    def push_repository(self, repository_path):
+    def get_report(self, repository_path):
+        """
+
+        :param repository_path:
+        :return:
+        """
         self.request_duration_time = datetime.now()
         data = re.search('([^/]+/[^/]+)$', repository_path)
         if data:
@@ -25,14 +32,25 @@ class GithubApiClient():
             print('"https://github.com/Vi-812/git" либо "vi-812/git"')
             sys.exit()
         self.request_total_cost = 0
-        self.get_info_labels()
+        err = self.get_info_labels()
+        if err == 404:
+            return self.return_json
+        self.get_bug_issues()
+        self.main_analytic_unit()
+        self.forming_json()
+        return self.return_json
 
     def get_info_labels(self):
         self.cursor = None
-        self.repo_pullreq_publised_at_list = []
-        self.repo_pullreq_last_edited_at_list = []
-        self.repo_pullreq_closed_at_list = []
-        self.repo_pullreq_closed_bool_list = []
+        self.repo_major_version = None
+        self.repo_minor_version = None
+        self.repo_patch_version = None
+        self.repo_pullrequests = {
+            'published_at': [],
+            'last_edited_at': [],
+            'closed_at': [],
+            'closed_bool': [],
+        }
         self.repo_labels_name_list = []
 
         while True:
@@ -43,7 +61,9 @@ class GithubApiClient():
                                                  self.token)
             self.data = data_github.get_info_labels_json()
 
-            self.parse_info_labels()
+            err = self.parse_info_labels()
+            if err == 404:
+                return 404
 
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -54,34 +74,39 @@ class GithubApiClient():
         for name in self.repo_labels_name_list:
             if 'bug' in name.lower():
                 self.repo_labels_bug_list.append(name)
-        self.get_bug_issues()
 
     def parse_info_labels(self):
         try:
-            self.repo_name = self.data['data']['repository']['name']
-            self.repo_owner_login = self.data['data']['repository']['owner']['login']
-            self.repo_description = self.data['data']['repository']['description']
-            self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
-            self.repo_in_organization = self.data['data']['repository']['isInOrganization']
-            self.repo_license_have = bool(self.data['data']['repository']['licenseInfo'])
-            self.repo_stars_count = self.data['data']['repository']['stargazerCount']
-            self.repo_created_at = self.data['data']['repository']['createdAt']
-            self.repo_updated_at = self.data['data']['repository']['updatedAt']
-            self.repo_pushed_at = self.data['data']['repository']['pushedAt']
-            self.repo_is_archived_bool = self.data['data']['repository']['isArchived']
-            self.repo_is_disabled_bool = self.data['data']['repository']['isDisabled']
-            self.repo_is_locked_bool = self.data['data']['repository']['isLocked']
-            self.repo_is_empty_bool = self.data['data']['repository']['isEmpty']
-            self.repo_is_fork_bool = self.data['data']['repository']['isFork']
-            self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
-            self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
-            self.repo_fork_total_count = self.data['data']['repository']['forkCount']
-            for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
-                self.repo_pullreq_publised_at_list.append(pull_r['publishedAt'])
-                self.repo_pullreq_last_edited_at_list.append(pull_r['lastEditedAt'])
-                self.repo_pullreq_closed_at_list.append(pull_r['closedAt'])
-                self.repo_pullreq_closed_bool_list.append(pull_r['closed'])
-            self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
+            if not self.cursor:
+                self.repo_name = self.data['data']['repository']['name']
+                self.repo_owner_login = self.data['data']['repository']['owner']['login']
+                self.repo_description = self.data['data']['repository']['description']
+                self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
+                self.repo_in_organization = self.data['data']['repository']['isInOrganization']
+                self.repo_license_have = bool(self.data['data']['repository']['licenseInfo'])
+                self.repo_stars_count = self.data['data']['repository']['stargazerCount']
+                self.repo_created_at = self.data['data']['repository']['createdAt']
+                self.repo_updated_at = self.data['data']['repository']['updatedAt']
+                self.repo_pushed_at = self.data['data']['repository']['pushedAt']
+                self.repo_is_archived_bool = self.data['data']['repository']['isArchived']
+                self.repo_is_disabled_bool = self.data['data']['repository']['isDisabled']
+                self.repo_is_locked_bool = self.data['data']['repository']['isLocked']
+                self.repo_is_empty_bool = self.data['data']['repository']['isEmpty']
+                self.repo_is_fork_bool = self.data['data']['repository']['isFork']
+                self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
+                self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
+                self.repo_fork_total_count = self.data['data']['repository']['forkCount']
+                self.repo_labels_total_count = self.data['data']['repository']['labels']['totalCount']
+                if self.data['data']['repository']['releases']['edges']:
+                    version = fa.parsing_version(self.data['data']['repository']['releases']['edges'])
+                    self.repo_major_version = version[0]
+                    self.repo_minor_version = version[1]
+                    self.repo_patch_version = version[2]
+                for pull_r in self.data['data']['repository']['pullRequests']['nodes']:
+                    self.repo_pullrequests['published_at'].append(pull_r['publishedAt'])
+                    self.repo_pullrequests['last_edited_at'].append(pull_r['lastEditedAt'])
+                    self.repo_pullrequests['closed_at'].append(pull_r['closedAt'])
+                    self.repo_pullrequests['closed_bool'].append(pull_r['closed'])
             self.start_cursor = self.data['data']['repository']['labels']['pageInfo']['startCursor']
             self.end_cursor = self.data['data']['repository']['labels']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['labels']['pageInfo']['hasNextPage']
@@ -92,12 +117,9 @@ class GithubApiClient():
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print(f'Исключение: {err}')
-            print(f"Тип ошибки: {self.data['errors'][0]['type']}")
-            print(f"Сообщение: {self.data['errors'][0]['message']}")
-            sys.exit()
+            err = self.json_error(err)
+            if err == 404:
+                return 404
         except KeyError as err:
             print('--------------------------------------------------------------')
             print('При получении данных из репозитория возникла ошибка')
@@ -107,14 +129,16 @@ class GithubApiClient():
 
     def get_bug_issues(self):
         self.cursor = None
-        self.bug_issues_id_list = []
-        self.bug_issues_title_list = []
-        self.bug_issues_created_at_list = []
-        self.bug_issues_updated_at_list = []
-        self.bug_issues_closed_at_list = []
-        self.bug_issues_closed_bool_list = []
-        self.bug_issues_comments_count_list = []
-        self.bug_issues_comments_last_list = []
+        self.bug_issues = {
+            'id': [],
+            'title': [],
+            'created_at': [],
+            'updated_at': [],
+            'closed_at': [],
+            'closed_bool': [],
+            'comments_count': [],
+            'comments_last': [],
+        }
 
         while True:
 
@@ -131,7 +155,6 @@ class GithubApiClient():
                 self.cursor = self.end_cursor
             else:
                 break
-        self.main_analytic_unit()
 
     def parse_bug_issues(self):
         try:
@@ -140,17 +163,17 @@ class GithubApiClient():
             self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
             self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
             for bug_issue in self.data['data']['repository']['issues']['edges']:
-                self.bug_issues_id_list.append(bug_issue['node']['id'])
-                self.bug_issues_title_list.append(bug_issue['node']['title'])
-                self.bug_issues_created_at_list.append(bug_issue['node']['createdAt'])
-                self.bug_issues_updated_at_list.append(bug_issue['node']['updatedAt'])
-                self.bug_issues_closed_at_list.append(bug_issue['node']['closedAt'])
-                self.bug_issues_closed_bool_list.append(bug_issue['node']['closed'])
-                self.bug_issues_comments_count_list.append(bug_issue['node']['comments']['totalCount'])
+                self.bug_issues['id'].append(bug_issue['node']['id'])
+                self.bug_issues['title'].append(bug_issue['node']['title'])
+                self.bug_issues['created_at'].append(bug_issue['node']['createdAt'])
+                self.bug_issues['updated_at'].append(bug_issue['node']['updatedAt'])
+                self.bug_issues['closed_at'].append(bug_issue['node']['closedAt'])
+                self.bug_issues['closed_bool'].append(bug_issue['node']['closed'])
+                self.bug_issues['comments_count'].append(bug_issue['node']['comments']['totalCount'])
                 if bug_issue['node']['comments']['nodes']:
-                    self.bug_issues_comments_last_list.append(bug_issue['node']['comments']['nodes'][0]['createdAt'])
+                    self.bug_issues['comments_last'].append(bug_issue['node']['comments']['nodes'][0]['createdAt'])
                 else:
-                    self.bug_issues_comments_last_list.append(None)
+                    self.bug_issues['comments_last'].append(None)
             self.request_cost = self.data['data']['rateLimit']['cost']
             self.request_total_cost += self.request_cost
             self.request_balance = self.data['data']['rateLimit']['remaining']
@@ -172,118 +195,141 @@ class GithubApiClient():
     def main_analytic_unit(self):
         self.messages_info = []
         self.messages_warning = []
-        self.preparation_data_block()
+        self.preparation_info_data_block()
+        self.preparation_badissues_data_block()
         self.analytic_repository_block()
         self.analytic_bug_issues_block()
 
-
-
-        self.forming_json()
-
-    def preparation_data_block(self):
-        def to_date(date_str):
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-        self.repo_created_at = to_date(self.repo_created_at)
-        self.repo_updated_at = to_date(self.repo_updated_at)
-        self.repo_pushed_at = to_date(self.repo_pushed_at)
-        self.request_reset = to_date(self.request_reset)
+    def preparation_info_data_block(self):
+        self.repo_created_at = fa.to_date(self.repo_created_at)
+        self.repo_updated_at = fa.to_date(self.repo_updated_at)
+        self.repo_pushed_at = fa.to_date(self.repo_pushed_at)
+        self.request_reset = fa.to_date(self.request_reset)
         self.bug_issues_open_total_count = 0
         self.bug_issues_closed_total_count = 0
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
-
-        list_len = len(self.repo_pullreq_publised_at_list)
+        list_len = len(self.repo_pullrequests['published_at'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
-            self.repo_pullreq_last_edited_at_list,
-            self.repo_pullreq_closed_at_list,
-            self.repo_pullreq_closed_bool_list,
+            self.repo_pullrequests['last_edited_at'],
+            self.repo_pullrequests['closed_at'],
+            self.repo_pullrequests['closed_bool'],
         ]))
         if not validation_list:
-            print('Ошибка! Несоответствие при валидации длинны массивов repo_pullreq!')
+            print('Ошибка! Несоответствие при валидации длинны массивов "repo_pullrequests"!')
             sys.exit()
         for i in range(list_len):
-            self.repo_pullreq_publised_at_list[i] = to_date(self.repo_pullreq_publised_at_list[i])
-            if self.repo_pullreq_last_edited_at_list[i]:
-                self.repo_pullreq_last_edited_at_list[i] = to_date(self.repo_pullreq_last_edited_at_list[i])
-            if self.repo_pullreq_closed_at_list[i]:
-                self.repo_pullreq_closed_at_list[i] = to_date(self.repo_pullreq_closed_at_list[i])
+            self.repo_pullrequests['published_at'][i] = fa.to_date(self.repo_pullrequests['published_at'][i])
+            if self.repo_pullrequests['last_edited_at'][i]:
+                self.repo_pullrequests['last_edited_at'][i] = fa.to_date(self.repo_pullrequests['last_edited_at'][i])
+            if self.repo_pullrequests['closed_at'][i]:
+                self.repo_pullrequests['closed_at'][i] = fa.to_date(self.repo_pullrequests['closed_at'][i])
 
-        list_len = len(self.bug_issues_id_list)
+        list_len = len(self.bug_issues['id'])
         validation_list = all(map(lambda lst: len(lst) == list_len, [
-            self.bug_issues_title_list,
-            self.bug_issues_created_at_list,
-            self.bug_issues_closed_at_list,
-            self.bug_issues_closed_bool_list,
-            self.bug_issues_updated_at_list,
-            self.bug_issues_comments_count_list,
-            self.bug_issues_comments_last_list,
+            self.bug_issues['title'],
+            self.bug_issues['created_at'],
+            self.bug_issues['updated_at'],
+            self.bug_issues['closed_at'],
+            self.bug_issues['closed_bool'],
+            self.bug_issues['comments_count'],
+            self.bug_issues['comments_last'],
         ]))
         if not validation_list:
             print('Ошибка! Несоответствие при валидации длинны массивов bug_issues!')
             sys.exit()
         for i in range(list_len):
-            self.bug_issues_created_at_list[i] = to_date(self.bug_issues_created_at_list[i])
-            if bool(self.bug_issues_closed_at_list[i]) and self.bug_issues_closed_bool_list[i]:
+            self.bug_issues['created_at'][i] = fa.to_date(self.bug_issues['created_at'][i])
+            if bool(self.bug_issues['closed_at'][i]) and self.bug_issues['closed_bool'][i]:
                 self.bug_issues_closed_total_count += 1
-                self.bug_issues_closed_at_list[i] = to_date(self.bug_issues_closed_at_list[i])
-                duration = self.bug_issues_closed_at_list[i] - self.bug_issues_created_at_list[i]
+                self.bug_issues['closed_at'][i] = fa.to_date(self.bug_issues['closed_at'][i])
+                duration = self.bug_issues['closed_at'][i] - self.bug_issues['created_at'][i]
                 self.bug_issues_duration_all_list.append(duration)
                 self.bug_issues_duration_closed_list.append(duration)
-            elif not bool(self.bug_issues_closed_at_list[i]) and not self.bug_issues_closed_bool_list[i]:
+            elif not bool(self.bug_issues['closed_at'][i]) and not self.bug_issues['closed_bool'][i]:
                 self.bug_issues_open_total_count += 1
-                self.bug_issues_duration_all_list.append(None)
-                self.bug_issues_duration_open_list.append(datetime.now() - self.bug_issues_created_at_list[i])
+                self.bug_issues_duration_all_list.append(None) # ??? --------------------------------
+                self.bug_issues_duration_open_list.append(datetime.now() - self.bug_issues['created_at'][i])
             else:
-                print(f'Ошибка! Несоответствие информации о закрытии issues с id = {self.bug_issues_id_list[i]}, '
-                      f'closed = {self.bug_issues_closed_bool_list[i]}, '
-                      f'closed_at = {self.bug_issues_closed_at_list[i]}')
+                print(f'Ошибка! Несоответствие информации о закрытии issues с id = {self.bug_issues["id"][i]}, '
+                      f'closed = {self.bug_issues["closed_bool"][i]}, '
+                      f'closed_at = {self.bug_issues["closed_at"][i]}')
                 sys.exit()
-            self.bug_issues_updated_at_list[i] = to_date(self.bug_issues_updated_at_list[i])
-            if self.bug_issues_comments_last_list[i]:
-                self.bug_issues_comments_last_list[i] = to_date(self.bug_issues_comments_last_list[i])
+            self.bug_issues['updated_at'][i] = fa.to_date(self.bug_issues['updated_at'][i])
+            if self.bug_issues['comments_last'][i]:
+                self.bug_issues['comments_last'][i] = fa.to_date(self.bug_issues['comments_last'][i])
+
+    def preparation_badissues_data_block(self):
+        pass
 
     def analytic_repository_block(self):
-        pass
-        # self.repo_duration = (datetime.now() - self.repo_created_at).days
-        # self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
-        # print(self.repo_duration)
-        # print(self.repo_last_updated)
-        # FC
+        self.repo_duration = (datetime.now() - self.repo_created_at).days
+        self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
+        self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
-        if self.bug_issues_duration_closed_list:
-            self.duration_closed_bug_min = min(self.bug_issues_duration_closed_list)
-            self.duration_closed_bug_max = max(self.bug_issues_duration_closed_list)
-            self.duration_closed_bug_median = median(self.bug_issues_duration_closed_list)
+        closed_list_len = len(self.bug_issues_duration_closed_list)
+        open_list_len = len(self.bug_issues_duration_open_list)
+        if closed_list_len >= 10:
+            self.bug_issues_duration_closed_list.sort()
+            self.duration_closed_bug_min = self.bug_issues_duration_closed_list[0]
+            self.duration_closed_bug_max = self.bug_issues_duration_closed_list[-1]
+            self.duration_closed_bug_95percent = self.bug_issues_duration_closed_list[round((closed_list_len - 1)
+                                                                                            * 0.95)].days
+            self.duration_closed_bug_50percent = median(self.bug_issues_duration_closed_list).days
         else:
-            self.duration_closed_bug_min = timedelta(days=0)
-            self.duration_closed_bug_max = timedelta(days=0)
-            self.duration_closed_bug_median = timedelta(days=0)
+            self.duration_closed_bug_min = None
+            self.duration_closed_bug_max = None
+            self.duration_closed_bug_95percent = None
+            self.duration_closed_bug_50percent = None
 
-        if self.bug_issues_duration_open_list:
-            self.duration_open_bug_min = min(self.bug_issues_duration_open_list)
-            self.duration_open_bug_max = max(self.bug_issues_duration_open_list)
-            self.duration_open_bug_median = median(self.bug_issues_duration_open_list)
+        if open_list_len >= 10:
+            self.bug_issues_duration_open_list.sort()
+            self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
+            self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
+            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1)
+                                                                                        * 0.95)].days
+            self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list).days
         else:
-            self.duration_open_bug_min = timedelta(days=0)
-            self.duration_open_bug_max = timedelta(days=0)
-            self.duration_open_bug_median = timedelta(days=0)
+            self.duration_open_bug_min = None
+            self.duration_open_bug_max = None
+            self.duration_open_bug_95percent = None
+            self.duration_open_bug_50percent = None
 
     def forming_json(self):
+        # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
-                'description': self.repo_description,
+                'owner': self.repo_owner_login,
+            },
+            'parameters': {
+                'isArchived': self.repo_is_archived_bool,
+                'bugsClosedTime95percent': self.duration_closed_bug_95percent,
+                'bugsClosedTime50percent': self.duration_closed_bug_50percent,
+                'stars': self.repo_stars_count,
+                'majorDaysPassed': self.repo_major_version,
+                'minorDaysPassed': self.repo_minor_version,
+                'patchDaysPassed': self.repo_patch_version,
+                'pushedAt': self.repo_pushed_at,
             },
             'queryInfo': {
-                'time': self.request_duration_time,
+                'time': str(self.request_duration_time),
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
-                'resetAt': self.request_reset,
+                'resetAt': str(self.request_reset),
             }
         }
+        self.return_json = json.dumps(self.return_json)
 
-    def get_json(self):
-        return self.return_json
+    def json_error(self, error):
+        self.return_json = {
+            'errors': {
+                'error': 'Repository not found',
+                'type': self.data['errors'][0]['type'],
+                'message': self.data['errors'][0]['message'],
+            }
+        }
+        return 404
