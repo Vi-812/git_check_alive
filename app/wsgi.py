@@ -1,24 +1,15 @@
-import os
-from flask import Flask, render_template, request
-from app.forms import RepositoryPath
+from flask import render_template, request
+from app.forms import RepositoryPathForm
 import json
 import github_api_client
-from dotenv import load_dotenv
-import logging
-load_dotenv()
-logger = logging.getLogger('werkzeug')
-logger.setLevel(logging.ERROR)
-
-
-app_flask = Flask(__name__)
-app_flask.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+from app import app_flask, token_flask
 
 
 @app_flask.route('/api', methods=['POST'])
 def api_request():
-    token = request.json['token']
+    token_api = request.json['token']
     repository_path = request.json['repository_path']
-    instance_api_client = github_api_client.GithubApiClient(token)
+    instance_api_client = github_api_client.GithubApiClient(token_api)
     return_json = instance_api_client.get_report(repository_path)
     code = return_json['code']
     return json.dumps(return_json), code
@@ -26,9 +17,20 @@ def api_request():
 
 @app_flask.route('/', methods=['GET', 'POST'])
 def main_page():
-    form = RepositoryPath()
-    # Доработать форму
-    return render_template('index.html', form=form)
+    if request.method == 'GET':
+        form = RepositoryPathForm()
+        return render_template('index.html', form=form), 200
+    elif request.method == 'POST':
+        form = RepositoryPathForm()
+        repository_path = request.form['link_repository']
+        instance_api_client = github_api_client.GithubApiClient(token_flask)
+        return_json = instance_api_client.get_report(repository_path)
+        code = return_json['code']
+        return render_template('index.html', form=form, json=json.dumps(return_json)), code
+
+
+
+
 
 
 @app_flask.errorhandler(404)

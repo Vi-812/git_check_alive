@@ -23,6 +23,7 @@ class GithubApiClient:
         :return:
         """
         self.request_duration_time = datetime.now()
+        self.bug_issues_total_count = None
         repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
         if repo_owner_name:
             data = repo_owner_name.group(1)
