@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from statistics import median
 import logging
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
 
 def owner_name(owner, name):

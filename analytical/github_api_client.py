@@ -1,11 +1,12 @@
 import sys
 import re
-import use_graphql as ug
-import func_api_client as fa
+import analytical.use_graphql as ug
+import analytical.func_api_client as fa
+import analytical.bug_issues as bi
 from datetime import datetime
 from statistics import median
 import logging
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
 
 class GithubApiClient:
@@ -121,86 +122,52 @@ class GithubApiClient:
             err = self.json_error_err404(err)
             if err == 404:
                 return 404
-        except KeyError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print('Ошибка при обращении по ключу')
-            print(f'Ключ: {err}')
-            sys.exit()
 
     def get_bug_issues(self):
         self.cursor = None
-        self.bug_issues = {
-            'id': [],
-            'title': [],
-            'created_at': [],
-            'updated_at': [],
-            'closed_at': [],
-            'closed_bool': [],
-            'comments_count': [],
-            'comments_last': [],
-        }
-
+        self.instance_b_i_a = bi.BugIssuesAnalytic()
         while True:
-
             data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token,
                                                  self.repo_labels_bug_list)
             self.data = data_github.get_bug_issues_json()
-
             self.parse_bug_issues()
 
             if self.has_next_page:
                 if not self.cursor:
-                    trc = 3
-                    r_time = (self.bug_issues_total_count // 100) * trc
-                    print(r_time + 4, '>', end=' ')
+                    self.bug_issues_total_count = self.data['data']['repository']['issues']['totalCount']
+                    cost_multiplier = 3
+                    r_time = (self.bug_issues_total_count // 100) * cost_multiplier
+                    print(r_time + 5, '>', end=' ')
                 self.cursor = self.end_cursor
             else:
                 break
 
     def parse_bug_issues(self):
-        try:
-            self.bug_issues_total_count = self.data['data']['repository']['issues']['totalCount']
-            self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
-            self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
-            self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
-            for bug_issue in self.data['data']['repository']['issues']['edges']:
-                self.bug_issues['id'].append(bug_issue['node']['id'])
-                self.bug_issues['title'].append(bug_issue['node']['title'])
-                self.bug_issues['created_at'].append(bug_issue['node']['createdAt'])
-                self.bug_issues['updated_at'].append(bug_issue['node']['updatedAt'])
-                self.bug_issues['closed_at'].append(bug_issue['node']['closedAt'])
-                self.bug_issues['closed_bool'].append(bug_issue['node']['closed'])
-                self.bug_issues['comments_count'].append(bug_issue['node']['comments']['totalCount'])
-                if bug_issue['node']['comments']['nodes']:
-                    self.bug_issues['comments_last'].append(bug_issue['node']['comments']['nodes'][0]['createdAt'])
-                else:
-                    self.bug_issues['comments_last'].append(None)
-            self.request_cost = self.data['data']['rateLimit']['cost']
-            self.request_total_cost += self.request_cost
-            self.request_balance = self.data['data']['rateLimit']['remaining']
-            self.request_reset = self.data['data']['rateLimit']['resetAt']
-        except TypeError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print(f'Исключение: {err}')
-            print(f"Тип ошибки: {self.data['errors'][0]['type']}")
-            print(f"Сообщение: {self.data['errors'][0]['message']}")
-            sys.exit()
-        except KeyError as err:
-            print('--------------------------------------------------------------')
-            print('При получении данных из репозитория возникла ошибка')
-            print('Ошибка при обращении по ключу')
-            print(f'Ключ: {err}')
-            sys.exit()
+        self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
+        self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
+        self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
+        if self.data['data']['repository']['issues']['edges']:
+            self.instance_b_i_a.push_bug_issues(self.data['data']['repository']['issues']['edges'])
+        self.request_cost = self.data['data']['rateLimit']['cost']
+        self.request_total_cost += self.request_cost
+        self.request_balance = self.data['data']['rateLimit']['remaining']
+        self.request_reset = self.data['data']['rateLimit']['resetAt']
 
     def main_analytic_unit(self):
         self.messages_info = []
         self.messages_warning = []
 
+        bug_analytic = self.instance_b_i_a.get_bug_analytic()
+        self.duration_closed_bug_min = bug_analytic[0]
+        self.duration_closed_bug_max = bug_analytic[1]
+        self.duration_closed_bug_95percent = bug_analytic[2]
+        self.duration_closed_bug_50percent = bug_analytic[3]
+        self.duration_open_bug_min = bug_analytic[4]
+        self.duration_open_bug_max = bug_analytic[5]
+        self.duration_open_bug_50percent = bug_analytic[6]
         self.preparation_info_data_block()
         self.preparation_badissues_data_block()
         self.analytic_repository_block()
@@ -211,44 +178,6 @@ class GithubApiClient:
         self.repo_updated_at = fa.to_date(self.repo_updated_at)
         self.repo_pushed_at = fa.to_date(self.repo_pushed_at)
         self.request_reset = fa.to_date(self.request_reset)
-        self.bug_issues_closed_total_count = 0
-        self.bug_issues_open_total_count = 0
-        self.bug_issues_duration_all_list = []
-        self.bug_issues_duration_closed_list = []
-        self.bug_issues_duration_open_list = []
-        list_len = len(self.bug_issues['id'])
-        validation_list = all(map(lambda lst: len(lst) == list_len, [
-            self.bug_issues['title'],
-            self.bug_issues['created_at'],
-            self.bug_issues['updated_at'],
-            self.bug_issues['closed_at'],
-            self.bug_issues['closed_bool'],
-            self.bug_issues['comments_count'],
-            self.bug_issues['comments_last'],
-        ]))
-        if not validation_list:
-            print('Ошибка! Несоответствие при валидации длинны массивов bug_issues!')
-            sys.exit()
-        for i in range(list_len):
-            self.bug_issues['created_at'][i] = fa.to_date(self.bug_issues['created_at'][i])
-            if bool(self.bug_issues['closed_at'][i]) and self.bug_issues['closed_bool'][i]:
-                self.bug_issues_closed_total_count += 1
-                self.bug_issues['closed_at'][i] = fa.to_date(self.bug_issues['closed_at'][i])
-                duration = self.bug_issues['closed_at'][i] - self.bug_issues['created_at'][i]
-                self.bug_issues_duration_all_list.append(duration)
-                self.bug_issues_duration_closed_list.append(duration)
-            elif not bool(self.bug_issues['closed_at'][i]) and not self.bug_issues['closed_bool'][i]:
-                self.bug_issues_open_total_count += 1
-                self.bug_issues_duration_all_list.append(None) # ??? --------------------------------
-                self.bug_issues_duration_open_list.append(datetime.now() - self.bug_issues['created_at'][i])
-            else:
-                print(f'Ошибка! Несоответствие информации о закрытии issues с id = {self.bug_issues["id"][i]}, '
-                      f'closed = {self.bug_issues["closed_bool"][i]}, '
-                      f'closed_at = {self.bug_issues["closed_at"][i]}')
-                sys.exit()
-            self.bug_issues['updated_at'][i] = fa.to_date(self.bug_issues['updated_at'][i])
-            if self.bug_issues['comments_last'][i]:
-                self.bug_issues['comments_last'][i] = fa.to_date(self.bug_issues['comments_last'][i])
 
     def preparation_badissues_data_block(self):
         pass
@@ -259,31 +188,7 @@ class GithubApiClient:
         self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
-        closed_list_len = len(self.bug_issues_duration_closed_list)
-        open_list_len = len(self.bug_issues_duration_open_list)
-        if closed_list_len >= 10:
-            self.bug_issues_duration_closed_list.sort()
-            self.duration_closed_bug_min = self.bug_issues_duration_closed_list[0]
-            self.duration_closed_bug_max = self.bug_issues_duration_closed_list[-1]
-            self.duration_closed_bug_95percent = self.bug_issues_duration_closed_list[round((closed_list_len - 1)
-                                                                                            * 0.95)].days
-            self.duration_closed_bug_50percent = median(self.bug_issues_duration_closed_list).days
-        else:
-            self.duration_closed_bug_min = None
-            self.duration_closed_bug_max = None
-            self.duration_closed_bug_95percent = None
-            self.duration_closed_bug_50percent = None
-
-        if open_list_len >= 10:
-            self.bug_issues_duration_open_list.sort()
-            self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
-            self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
-            self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list).days
-        else:
-            self.duration_open_bug_min = None
-            self.duration_open_bug_max = None
-            self.duration_open_bug_95percent = None
-            self.duration_open_bug_50percent = None
+        pass
 
     def forming_json(self):
         # datetime str ???
