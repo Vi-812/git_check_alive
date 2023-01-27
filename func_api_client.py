@@ -17,6 +17,13 @@ def to_date(date_str):
 
 
 def parsing_version(data):
+    """
+    Распарсиваем, дополняем до 3х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
+    Если в считанных записях не находится изменений версии, присваивается самая ранняя считанная дата.
+    При наличии 1 версии проекта, все счетчики считаются от нее.
+    :param data: даты и версии проекта, 100 последних изменений (json/GitHub)
+    :return: количество полных дней с обновления мажорной, минорной и патч версий
+    """
     major_v = minor_v = patch_v = None
     version = data[0]['node']['tag']['name'].split('.')
     published_date = data[0]['node']['publishedAt']
@@ -46,7 +53,8 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error(f'Проверено 100 записей и не найдено версии! Owner: {repo_owner}, name: {repo_name}')
+            logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
+                          f'Owner="{repo_owner}", name="{repo_name}". ')
     if not major_v:
         major_v = published_date
     if not minor_v:
@@ -63,7 +71,7 @@ def pull_request_analytics(data):
     """
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
-    :param data: данные о 100 последних PR из json, полученного от GitHub
+    :param data: данные о 100 последних PR (json/GitHub)
     :return:
     count_closed_pr: количество закрытых PR за последние 2 месяца (из 100 последних)
     median_closed_pr: медиана обработки PR в днях, от публикации до согласования (вещественное число)

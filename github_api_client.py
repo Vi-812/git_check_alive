@@ -23,19 +23,20 @@ class GithubApiClient:
         :return:
         """
         self.request_duration_time = datetime.now()
+        self.bug_issues_total_count = None
         repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
         if repo_owner_name:
             data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
-            logging.error(f'Ошибка 400, не распознан repository_path={repository_path}.')
+            logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
             self.json_error_err400()
             return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
-            logging.error(f'Ошибка 404, не найден репозиторий. Owner={self.repository_owner}, '
-                          f'name={self.repository_name}.')
+            logging.error(f'ERR404!ok Не найден репозиторий. Owner="{self.repository_owner}", '
+                          f'name="{self.repository_name}".')
             return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
@@ -152,6 +153,10 @@ class GithubApiClient:
             self.parse_bug_issues()
 
             if self.has_next_page:
+                if not self.cursor:
+                    trc = 3
+                    r_time = (self.bug_issues_total_count // 100) * trc
+                    print(r_time + 4, '>', end=' ')
                 self.cursor = self.end_cursor
             else:
                 break
@@ -195,6 +200,7 @@ class GithubApiClient:
     def main_analytic_unit(self):
         self.messages_info = []
         self.messages_warning = []
+
         self.preparation_info_data_block()
         self.preparation_badissues_data_block()
         self.analytic_repository_block()
@@ -205,8 +211,8 @@ class GithubApiClient:
         self.repo_updated_at = fa.to_date(self.repo_updated_at)
         self.repo_pushed_at = fa.to_date(self.repo_pushed_at)
         self.request_reset = fa.to_date(self.request_reset)
-        self.bug_issues_open_total_count = 0
         self.bug_issues_closed_total_count = 0
+        self.bug_issues_open_total_count = 0
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
@@ -249,7 +255,7 @@ class GithubApiClient:
 
     def analytic_repository_block(self):
         self.repo_duration = (datetime.now() - self.repo_created_at).days
-        self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
+        self.repo_updated_at = (datetime.now() - self.repo_updated_at).days
         self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
@@ -272,8 +278,6 @@ class GithubApiClient:
             self.bug_issues_duration_open_list.sort()
             self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
             self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
-            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1)
-                                                                                        * 0.95)].days
             self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list).days
         else:
             self.duration_open_bug_min = None
@@ -284,6 +288,10 @@ class GithubApiClient:
     def forming_json(self):
         # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
+        print(self.request_duration_time.seconds, end='||')
+        if self.request_total_cost > 10:
+            logging.error(f't_ratio_c={self.request_duration_time.seconds / self.request_total_cost} '
+                          f'({self.request_total_cost}/{self.request_duration_time.seconds}) {self.repo_name}')
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
@@ -305,7 +313,7 @@ class GithubApiClient:
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
             },
-            'code': 200
+            'code': 200,
         }
 
     def json_error_err404(self, error):
