@@ -153,6 +153,10 @@ class GithubApiClient:
             self.parse_bug_issues()
 
             if self.has_next_page:
+                if not self.cursor:
+                    trc = 3
+                    r_time = (self.bug_issues_total_count // 100) * trc
+                    print(r_time + 4, '>', end=' ')
                 self.cursor = self.end_cursor
             else:
                 break
@@ -284,6 +288,10 @@ class GithubApiClient:
     def forming_json(self):
         # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
+        print(self.request_duration_time.seconds, end='||')
+        if self.request_total_cost > 10:
+            logging.error(f't_ratio_c={self.request_duration_time.seconds / self.request_total_cost} '
+                          f'({self.request_total_cost}/{self.request_duration_time.seconds}) {self.repo_name}')
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
@@ -305,7 +313,7 @@ class GithubApiClient:
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
             },
-            'code': 200
+            'code': 200,
         }
 
     def json_error_err404(self, error):
