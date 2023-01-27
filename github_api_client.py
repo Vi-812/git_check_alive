@@ -28,13 +28,13 @@ class GithubApiClient:
             data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
-            logging.error(f'ERR400!ok, не распознан repository_path="{repository_path}".')
+            logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
             self.json_error_err400()
             return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
-            logging.error(f'ERR404!ok не найден репозиторий. Owner="{self.repository_owner}", '
+            logging.error(f'ERR404!ok Не найден репозиторий. Owner="{self.repository_owner}", '
                           f'name="{self.repository_name}".')
             return self.return_json
         self.get_bug_issues()
@@ -273,8 +273,6 @@ class GithubApiClient:
             self.bug_issues_duration_open_list.sort()
             self.duration_open_bug_min = self.bug_issues_duration_open_list[0]
             self.duration_open_bug_max = self.bug_issues_duration_open_list[-1]
-            self.duration_open_bug_95percent = self.bug_issues_duration_open_list[round((open_list_len - 1)
-                                                                                        * 0.95)].days
             self.duration_open_bug_50percent = median(self.bug_issues_duration_open_list).days
         else:
             self.duration_open_bug_min = None

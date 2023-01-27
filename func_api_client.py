@@ -53,7 +53,8 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error(f'Проверено 100 записей и не найдено версии! Owner: {repo_owner}, name: {repo_name}')
+            logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
+                          f'Owner="{repo_owner}", name="{repo_name}". ')
     if not major_v:
         major_v = published_date
     if not minor_v:
