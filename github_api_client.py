@@ -28,14 +28,14 @@ class GithubApiClient:
             data = repo_owner_name.group(1)
             self.repository_owner, self.repository_name = data.split('/', 2)
         else:
-            logging.error(f'Ошибка 400, не распознан repository_path={repository_path}.')
+            logging.error(f'ERR400!ok, не распознан repository_path="{repository_path}".')
             self.json_error_err400()
             return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
         if err == 404:
-            logging.error(f'Ошибка 404, не найден репозиторий. Owner={self.repository_owner}, '
-                          f'name={self.repository_name}.')
+            logging.error(f'ERR404!ok не найден репозиторий. Owner="{self.repository_owner}", '
+                          f'name="{self.repository_name}".')
             return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
@@ -195,6 +195,7 @@ class GithubApiClient:
     def main_analytic_unit(self):
         self.messages_info = []
         self.messages_warning = []
+
         self.preparation_info_data_block()
         self.preparation_badissues_data_block()
         self.analytic_repository_block()
@@ -205,8 +206,8 @@ class GithubApiClient:
         self.repo_updated_at = fa.to_date(self.repo_updated_at)
         self.repo_pushed_at = fa.to_date(self.repo_pushed_at)
         self.request_reset = fa.to_date(self.request_reset)
-        self.bug_issues_open_total_count = 0
         self.bug_issues_closed_total_count = 0
+        self.bug_issues_open_total_count = 0
         self.bug_issues_duration_all_list = []
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
@@ -249,7 +250,7 @@ class GithubApiClient:
 
     def analytic_repository_block(self):
         self.repo_duration = (datetime.now() - self.repo_created_at).days
-        self.repo_last_updated = (datetime.now() - self.repo_updated_at).days
+        self.repo_updated_at = (datetime.now() - self.repo_updated_at).days
         self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
