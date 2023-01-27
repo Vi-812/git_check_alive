@@ -113,10 +113,7 @@ class UseGraphQL:
                         }
                         edges {
                             node {
-                                id
-                                title
                                 createdAt
-                                updatedAt
                                 closedAt
                                 closed
                                 comments(last: 1) {

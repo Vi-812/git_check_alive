@@ -1,10 +1,8 @@
-import sys
 import re
 import analytical.use_graphql as ug
 import analytical.func_api_client as fa
 import analytical.bug_issues as bi
 from datetime import datetime
-from statistics import median
 import logging
 logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
@@ -55,17 +53,14 @@ class GithubApiClient:
         self.repo_labels_name_list = []
 
         while True:
-
             data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
                                                  self.cursor,
                                                  self.token)
             self.data = data_github.get_info_labels_json()
-
             err = self.parse_info_labels()
             if err == 404:
                 return 404
-
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -126,6 +121,7 @@ class GithubApiClient:
     def get_bug_issues(self):
         self.cursor = None
         self.instance_b_i_a = bi.BugIssuesAnalytic()
+
         while True:
             data_github = ug.UseGraphQL(self.repository_owner,
                                                  self.repository_name,
@@ -134,18 +130,17 @@ class GithubApiClient:
                                                  self.repo_labels_bug_list)
             self.data = data_github.get_bug_issues_json()
             self.parse_bug_issues()
-
+            if not self.cursor and self.bug_issues_total_count > 200:
+                cost_multiplier = 3
+                r_time = (self.bug_issues_total_count // 100) * cost_multiplier
+                print(r_time + 5, '>', end=' ')
             if self.has_next_page:
-                if not self.cursor:
-                    self.bug_issues_total_count = self.data['data']['repository']['issues']['totalCount']
-                    cost_multiplier = 3
-                    r_time = (self.bug_issues_total_count // 100) * cost_multiplier
-                    print(r_time + 5, '>', end=' ')
                 self.cursor = self.end_cursor
             else:
                 break
 
     def parse_bug_issues(self):
+        self.bug_issues_total_count = self.data['data']['repository']['issues']['totalCount']
         self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
         self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
         self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
@@ -161,13 +156,20 @@ class GithubApiClient:
         self.messages_warning = []
 
         bug_analytic = self.instance_b_i_a.get_bug_analytic()
-        self.duration_closed_bug_min = bug_analytic[0]
-        self.duration_closed_bug_max = bug_analytic[1]
-        self.duration_closed_bug_95percent = bug_analytic[2]
-        self.duration_closed_bug_50percent = bug_analytic[3]
-        self.duration_open_bug_min = bug_analytic[4]
-        self.duration_open_bug_max = bug_analytic[5]
-        self.duration_open_bug_50percent = bug_analytic[6]
+        self.bug_issues_closed_total_count = bug_analytic[0]
+        self.bug_issues_open_total_count = bug_analytic[1]
+        if self.bug_issues_total_count:
+            self.bug_issues_no_comment = bug_analytic[2] / self.bug_issues_total_count * 100
+        else:
+            self.bug_issues_no_comment = None
+        self.duration_closed_bug_min = bug_analytic[3]
+        self.duration_closed_bug_max = bug_analytic[4]
+        self.duration_closed_bug_95percent = bug_analytic[5]
+        self.duration_closed_bug_50percent = bug_analytic[6]
+        self.duration_open_bug_min = bug_analytic[7]
+        self.duration_open_bug_max = bug_analytic[8]
+        self.duration_open_bug_50percent = bug_analytic[9]
+
         self.preparation_info_data_block()
         self.preparation_badissues_data_block()
         self.analytic_repository_block()
@@ -188,6 +190,9 @@ class GithubApiClient:
         self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
+        # print(self.repo_is_locked_bool)
+        # print(self.repo_is_empty_bool)
+        # print(self.repo_is_fork_bool)
         pass
 
     def forming_json(self):
