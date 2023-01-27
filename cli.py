@@ -5,6 +5,8 @@ import github_api_client as ga
 from dotenv import load_dotenv
 load_dotenv()
 
+# Подробная информация о данных которые возможно получить из экземпляра класса в файле '\app\templates\help.html'
+
 token = os.getenv('TOKEN')
 
 try:
