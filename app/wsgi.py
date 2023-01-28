@@ -2,7 +2,8 @@ from flask import render_template, request
 from app.forms import RepositoryPathForm
 import json
 from analytical import github_api_client
-from app import app_flask, token_flask
+from app import app_flask, token_flask, db
+import models
 
 
 @app_flask.route('/api', methods=['POST'])
@@ -29,14 +30,10 @@ def main_page():
         return render_template('index.html', form=form, json=json.dumps(return_json)), code
 
 
-
-
-
-
 @app_flask.errorhandler(404)
 def page_not_found(error):
     return 'Страницы не существует!!', 404
 
 
 if __name__ == '__main__':
-    app_flask.run(port=8080, debug=False)
+    app_flask.run(port=8080, debug=True)
