@@ -19,5 +19,5 @@ else:
     ]
 
 for path in repository_path:
-    return_json = check_output('python cli.py ' + path, shell=True).decode()
+    return_json = check_output('python ..\cli.py ' + path, shell=True).decode()
     print(return_json)

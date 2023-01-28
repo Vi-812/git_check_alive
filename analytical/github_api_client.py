@@ -1,4 +1,3 @@
-import re
 import analytical.use_graphql as ug
 import analytical.func_api_client as fa
 import analytical.bug_issues as bi
@@ -15,7 +14,7 @@ class GithubApiClient:
     def __init__(self, token):
         self.token = token
 
-    def get_report(self, repository_path):
+    def get_new_report(self, repository_path):
         """
 
         :param repository_path:
@@ -23,13 +22,11 @@ class GithubApiClient:
         """
         self.request_duration_time = datetime.now()
         self.bug_issues_total_count = None
-        repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
-        if repo_owner_name:
-            data = repo_owner_name.group(1)
-            self.repository_owner, self.repository_name = data.split('/', 2)
-        else:
-            logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
-            self.json_error_err400()
+        owner_name = fa.recognition(repository_path)
+        self.repository_owner = owner_name['repository_owner']
+        self.repository_name = owner_name['repository_name']
+        self.return_json = owner_name['return_json']
+        if not self.repository_owner and not self.repository_name:
             return self.return_json
         self.request_total_cost = 0
         err = self.get_info_labels()
@@ -249,14 +246,3 @@ class GithubApiClient:
             },
         }
         return 404
-
-    def json_error_err400(self):
-        self.return_json = {
-            'queryInfo': {
-                'code': 400,
-                'error': 'Bad adress',
-                'message': "Bad repository adress, enter the address in the format "
-                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
-            },
-        }
-        return 400

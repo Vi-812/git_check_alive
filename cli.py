@@ -25,6 +25,6 @@ if not namespace.repository_path:
     sys.exit()
 
 instance_g_a_c = ga.GithubApiClient(token)
-return_json = instance_g_a_c.get_report(namespace.repository_path)
+return_json = instance_g_a_c.get_new_report(namespace.repository_path)
 
 print(return_json)

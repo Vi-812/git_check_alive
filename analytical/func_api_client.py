@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from statistics import median
+import re
 import logging
 logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
@@ -88,3 +89,36 @@ def pull_request_analytics(data):
     median_closed_pr = median(duration_pullrequest) * 24
     median_closed_pr = median_closed_pr.days / 24
     return [count_closed_pr, median_closed_pr]
+
+
+def recognition(repository_path):
+    """
+    Распознование присланой строки. Ищем крайний правый слеш '/' и берем два слова вокруг него.
+    Все что слева отсекаем, разбиваем по слешу.
+    :param repository_path:
+    :return:
+    repository_owner: логин владельца репозитория
+    repository_name: имя репозитория
+    OR
+    return_json: json с ошибкой
+    """
+    repository_owner = repository_name = return_json = None
+    repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
+    if repo_owner_name:
+        data = repo_owner_name.group(1)
+        repository_owner, repository_name = data.split('/', 2)
+    else:
+        logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
+        return_json = {
+            'queryInfo': {
+                'code': 400,
+                'error': 'Bad adress',
+                'message': "Bad repository adress, enter the address in the format "
+                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
+            },
+        }
+    return {
+        'repository_owner': repository_owner,
+        'repository_name': repository_name,
+        'return_json': return_json,
+    }
