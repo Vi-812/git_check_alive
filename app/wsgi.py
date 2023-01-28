@@ -11,7 +11,7 @@ def api_request():
     repository_path = request.json['repository_path']
     instance_api_client = github_api_client.GithubApiClient(token_api)
     return_json = instance_api_client.get_report(repository_path)
-    code = return_json['code']
+    code = return_json['queryInfo']['code']
     return json.dumps(return_json), code
 
 
@@ -25,7 +25,7 @@ def main_page():
         repository_path = request.form['link_repository']
         instance_api_client = github_api_client.GithubApiClient(token_flask)
         return_json = instance_api_client.get_report(repository_path)
-        code = return_json['code']
+        code = return_json['queryInfo']['code']
         return render_template('index.html', form=form, json=json.dumps(return_json)), code
 
 

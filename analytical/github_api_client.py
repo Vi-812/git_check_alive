@@ -159,7 +159,7 @@ class GithubApiClient:
         self.bug_issues_closed_total_count = bug_analytic[0]
         self.bug_issues_open_total_count = bug_analytic[1]
         if self.bug_issues_total_count:
-            self.bug_issues_no_comment = bug_analytic[2] / self.bug_issues_total_count * 100
+            self.bug_issues_no_comment = round(bug_analytic[2] / self.bug_issues_total_count * 100, 2)
         else:
             self.bug_issues_no_comment = None
         self.duration_closed_bug_min = bug_analytic[3]
@@ -169,6 +169,12 @@ class GithubApiClient:
         self.duration_open_bug_min = bug_analytic[7]
         self.duration_open_bug_max = bug_analytic[8]
         self.duration_open_bug_50percent = bug_analytic[9]
+        self.bug_issues_closed_two_months = bug_analytic[10]
+        if self.bug_issues_closed_total_count and self.bug_issues_closed_two_months:
+             self.bug_issues_closed_two_months = round(self.bug_issues_closed_two_months \
+                                                 / self.bug_issues_closed_total_count * 100, 2)
+        else:
+            self.bug_issues_closed_two_months = None
 
         self.preparation_info_data_block()
         self.preparation_badissues_data_block()
@@ -190,9 +196,6 @@ class GithubApiClient:
         self.repo_pushed_at = (datetime.now() - self.repo_pushed_at).days
 
     def analytic_bug_issues_block(self):
-        # print(self.repo_is_locked_bool)
-        # print(self.repo_is_empty_bool)
-        # print(self.repo_is_fork_bool)
         pass
 
     def forming_json(self):
@@ -206,44 +209,54 @@ class GithubApiClient:
             'repositoryInfo': {
                 'name': self.repo_name,
                 'owner': self.repo_owner_login,
-            },
-            'parameters': {
+                'stars': self.repo_stars_count,
+                'version': self.repo_version,
+                'duration': self.repo_duration,
+                'pushedAt': self.repo_pushed_at,
                 'isArchived': self.repo_is_archived_bool,
+                'issuesTotalCount': self.repo_issues_total_count,
+                'bugIssuesCount': self.bug_issues_total_count,
+                'bugIssuesClosedCount': self.bug_issues_closed_total_count,
+                'bugIssuesOpenCount': self.bug_issues_open_total_count,
+            },
+            'analytic': {
                 'bugsClosedTime95percent': self.duration_closed_bug_95percent,
                 'bugsClosedTime50percent': self.duration_closed_bug_50percent,
-                'stars': self.repo_stars_count,
                 'majorDaysPassed': self.repo_major_version,
                 'minorDaysPassed': self.repo_minor_version,
                 'patchDaysPassed': self.repo_patch_version,
-                'pushedAt': self.repo_pushed_at,
+                'percentIssuesNoComment': self.bug_issues_no_comment,
+                'percentIssuesClosed2months': self.bug_issues_closed_two_months,
+                'pullRequestClosed2months': self.repo_pr_closed_count,
+                'medianDurationPullRequest': self.repo_pr_closed_duration,
             },
             'queryInfo': {
                 'time': str(self.request_duration_time),
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
+                'code': 200,
             },
-            'code': 200,
         }
 
     def json_error_err404(self, error):
         self.return_json = {
-            'errors': {
+            'queryInfo': {
+                'code': 404,
                 'error': 'Repository not found',
                 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
             },
-            'code': 404
         }
         return 404
 
     def json_error_err400(self):
         self.return_json = {
-            'errors': {
+            'queryInfo': {
+                'code': 400,
                 'error': 'Bad adress',
                 'message': "Bad repository adress, enter the address in the format "
                            "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
             },
-            'code': 400
         }
         return 400
