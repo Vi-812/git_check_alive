@@ -1,11 +1,10 @@
 from app import db
 from datetime import datetime
-from sqlalchemy import Column, ForeignKey, Integer, String
 
 
 class RepositoryInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    upd_date = db.Column(db.DateTime, nullable=False, onupdate=datetime.now)
+    upd_date = db.Column(db.DateTime, onupdate=datetime.utcnow())
     name = db.Column(db.String, nullable=False)
     owner_login = db.Column(db.String, nullable=False)  # unique=True
     description = db.Column(db.String, nullable=False)
@@ -30,18 +29,18 @@ class RepositoryInfo(db.Model):
     closed_bug_95percent = db.Column(db.Integer, nullable=True)
     bug_issues_no_comment = db.Column(db.Float, nullable=True)
     bug_issues_closed_two_months = db.Column(db.Float, nullable=True)
-    request_duration_time = db.Column(db.Float, nullable=False)
-    request_total_cost = db.Column(db.Integer, nullable=False)
+    request_time = db.Column(db.Float, nullable=False)
+    request_cost = db.Column(db.Integer, nullable=False)
 
 
 class QueryStatistics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    upd_date = db.Column(db.DateTime, onupdate=datetime.now)
+    crt_date = db.Column(db.DateTime, default=datetime.utcnow())
     name = db.Column(db.String, nullable=False)
     owner_login = db.Column(db.String, nullable=False)
     issues_count = db.Column(db.Integer, nullable=False)
     bug_issues_count = db.Column(db.Integer, nullable=False)
-    request_duration_time = db.Column(db.Float, nullable=False)
-    request_total_cost = db.Column(db.Integer, nullable=False)
+    request_time = db.Column(db.Float, nullable=False)
+    request_cost = db.Column(db.Integer, nullable=False)
     request_kf = db.Column(db.Float, nullable=False)
     rt = db.Column(db.String, nullable=True)

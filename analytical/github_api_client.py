@@ -201,7 +201,8 @@ class GithubApiClient:
     def forming_json(self):
         # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
-        self.request_duration_time = self.request_duration_time.seconds
+        self.request_duration_time = round(self.request_duration_time.seconds +
+                                           (self.request_duration_time.microseconds*0.000001), 2)
         if self.r_time:
             self.r_time = str(self.r_time) + '/' + str(self.request_duration_time)
         self.return_json = {

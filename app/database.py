@@ -29,15 +29,22 @@ class DataBaseHandler:
         return self.return_json
 
     def save_repository(self):
+        if self.return_json['queryInfo']['cost'] > 1:
+            print(">>")
+            self.save_statistic()
+
+    def save_statistic(self):
+        request_time = float(self.return_json['queryInfo']['time'])
+        request_cost = self.return_json['queryInfo']['cost']
         statistic = models.QueryStatistics(
-            name = self.return_json['repositoryInfo']['name'],
-            owner_login = self.return_json['repositoryInfo']['owner'],
-            issues_count = self.return_json['repositoryInfo']['issuesTotalCount'],
-            bug_issues_count = self.return_json['repositoryInfo']['bugIssuesCount'],
-            request_duration_time = self.return_json['queryInfo']['time'],
-            request_total_cost = self.return_json['queryInfo']['cost'],
-            request_kf = 3,
-            rt = self.return_json['queryInfo']['rt']
+            name=self.return_json['repositoryInfo']['name'],
+            owner_login=self.return_json['repositoryInfo']['owner'],
+            issues_count=self.return_json['repositoryInfo']['issuesTotalCount'],
+            bug_issues_count=self.return_json['repositoryInfo']['bugIssuesCount'],
+            request_time=request_time,
+            request_cost=request_cost,
+            request_kf=round(request_time/request_cost, 2),
+            rt=self.return_json['queryInfo']['rt']
         )
         db.session.add(statistic)
         db.session.commit()
