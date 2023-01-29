@@ -128,7 +128,7 @@ class GithubApiClient:
                 # Предварительный расчет времени запроса
                 cost_multiplier = 2.2
                 cost_upped = cost_multiplier * 2
-                self.r_time = ((self.bug_issues_total_count // 100) * cost_multiplier) + cost_upped
+                self.r_time = round(((self.bug_issues_total_count // 100) * cost_multiplier) + cost_upped, 2)
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
