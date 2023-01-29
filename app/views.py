@@ -13,21 +13,3 @@ class DataBaseHandler:
         self.return_json = owner_name['return_json']
         if not self.repository_owner and not self.repository_name:
             return self.return_json
-
-
-
-
-
-        instance_api_client = github_api_client.GithubApiClient(token)
-        return_json = instance_api_client.get_new_report(self.repository_owner + '/' + self.repository_name, json_type)
-
-        if return_json['queryInfo']['code'] == 200:
-            self.save_repository()
-
-
-
-
-        return return_json
-
-    def save_repository(self):
-        pass

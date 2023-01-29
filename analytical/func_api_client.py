@@ -6,11 +6,11 @@ logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
 
 def owner_name(owner, name):
-    # Однократно передаем владельца и имя репозитория, используется для логирования
-    global repo_owner
-    global repo_name
-    repo_owner = owner
-    repo_name = name
+    # Передаем владельца и имя репозитория, используется для логирования
+    global log_repo_owner
+    global log_repo_name
+    log_repo_owner = owner
+    log_repo_name = name
 
 
 def to_date(date_str):
@@ -55,7 +55,7 @@ def parsing_version(data):
     else:
         if len(data) == 100:
             logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
-                          f'Owner="{repo_owner}", name="{repo_name}". ')
+                          f'Owner="{log_repo_owner}", name="{log_repo_name}". ')
     if not major_v:
         major_v = published_date
     if not minor_v:
@@ -107,6 +107,7 @@ def recognition(repository_path):
     if repo_owner_name:
         data = repo_owner_name.group(1)
         repository_owner, repository_name = data.split('/', 2)
+        owner_name(repository_owner, repository_name)
     else:
         logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
         return_json = {

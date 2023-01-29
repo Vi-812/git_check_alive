@@ -14,7 +14,7 @@ class GithubApiClient:
     def __init__(self, token):
         self.token = token
 
-    def get_new_report(self, repository_path):
+    def get_new_report(self, repository_path, json_type):
         """
 
         :param repository_path:
@@ -29,6 +29,8 @@ class GithubApiClient:
         if not self.repository_owner and not self.repository_name:
             return self.return_json
         self.request_total_cost = 0
+        self.json_type = json_type
+
         err = self.get_info_labels()
         if err == 404:
             logging.error(f'ERR404!ok Не найден репозиторий. Owner="{self.repository_owner}", '

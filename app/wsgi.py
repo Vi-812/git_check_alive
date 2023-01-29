@@ -1,10 +1,11 @@
+from app import app_flask, token_flask
+import json
+
 from flask import render_template, request
 from app.forms import RepositoryPathForm
-import json
+
 import database
-from analytical import github_api_client
-from app import app_flask, token_flask, db
-import models
+
 
 
 @app_flask.route('/api', methods=['POST'])
