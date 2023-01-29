@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy import func
 from dotenv import load_dotenv
 import logging
 
@@ -22,7 +23,7 @@ app_flask.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(db_dir, 'db_migrate')
 db = SQLAlchemy(app_flask)
 migrate = Migrate(app_flask, db)
 
-from app import views, models
+from app import models, database
 
 with app_flask.app_context():
     db.create_all()

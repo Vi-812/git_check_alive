@@ -14,7 +14,7 @@ class GithubApiClient:
     def __init__(self, token):
         self.token = token
 
-    def get_new_report(self, repository_path, json_type):
+    def get_new_report(self, repository_path, json_type='full'):
         """
 
         :param repository_path:
@@ -26,7 +26,7 @@ class GithubApiClient:
         self.repository_owner = owner_name['repository_owner']
         self.repository_name = owner_name['repository_name']
         self.return_json = owner_name['return_json']
-        if not self.repository_owner and not self.repository_name:
+        if not self.repository_owner or not self.repository_name:
             return self.return_json
         self.request_total_cost = 0
         self.json_type = json_type
@@ -78,18 +78,12 @@ class GithubApiClient:
                 self.repo_owner_login = self.data['data']['repository']['owner']['login']
                 fa.owner_name(self.repo_owner_login, self.repo_name)
                 self.repo_description = self.data['data']['repository']['description']
-                self.repo_homepage_url = self.data['data']['repository']['homepageUrl']
-                self.repo_in_organization = self.data['data']['repository']['isInOrganization']
-                self.repo_license_have = bool(self.data['data']['repository']['licenseInfo'])
                 self.repo_stars_count = self.data['data']['repository']['stargazerCount']
                 self.repo_created_at = self.data['data']['repository']['createdAt']
                 self.repo_updated_at = self.data['data']['repository']['updatedAt']
                 self.repo_pushed_at = self.data['data']['repository']['pushedAt']
                 self.repo_is_archived_bool = self.data['data']['repository']['isArchived']
-                self.repo_is_disabled_bool = self.data['data']['repository']['isDisabled']
                 self.repo_is_locked_bool = self.data['data']['repository']['isLocked']
-                self.repo_is_empty_bool = self.data['data']['repository']['isEmpty']
-                self.repo_is_fork_bool = self.data['data']['repository']['isFork']
                 self.repo_issues_total_count = self.data['data']['repository']['issues']['totalCount']
                 self.repo_watchers_total_count = self.data['data']['repository']['watchers']['totalCount']
                 self.repo_fork_total_count = self.data['data']['repository']['forkCount']
@@ -132,8 +126,9 @@ class GithubApiClient:
             self.parse_bug_issues()
             if not self.cursor and self.bug_issues_total_count > 200:
                 # Предварительный расчет времени запроса
-                cost_multiplier = 3
-                self.r_time = ((self.bug_issues_total_count // 100) * cost_multiplier) + 5
+                cost_multiplier = 2.2
+                cost_upped = cost_multiplier * 2
+                self.r_time = ((self.bug_issues_total_count // 100) * cost_multiplier) + cost_upped
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -205,19 +200,26 @@ class GithubApiClient:
                                            (self.request_duration_time.microseconds*0.000001), 2)
         if self.r_time:
             self.r_time = str(self.r_time) + '/' + str(self.request_duration_time)
+
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
                 'owner': self.repo_owner_login,
+                'description': self.repo_description,
                 'stars': self.repo_stars_count,
                 'version': self.repo_version,
+                'createdAt': str(self.repo_created_at),
                 'duration': self.repo_duration,
+                'updatedAt': self.repo_updated_at,
                 'pushedAt': self.repo_pushed_at,
                 'isArchived': self.repo_is_archived_bool,
-                'issuesTotalCount': self.repo_issues_total_count,
+                'isLocked': self.repo_is_locked_bool,
+                'issuesCount': self.repo_issues_total_count,
                 'bugIssuesCount': self.bug_issues_total_count,
                 'bugIssuesClosedCount': self.bug_issues_closed_total_count,
                 'bugIssuesOpenCount': self.bug_issues_open_total_count,
+                'watchersCount': self.repo_watchers_total_count,
+                'forkCount': self.repo_fork_total_count,
             },
             'analytic': {
                 'bugsClosedTime95percent': self.duration_closed_bug_95percent,
@@ -231,11 +233,13 @@ class GithubApiClient:
                 'medianDurationPullRequest': self.repo_pr_closed_duration,
             },
             'queryInfo': {
+
                 'time': str(self.request_duration_time),
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
                 'rt': self.r_time,
+                'database': None,
                 'code': 200,
             },
         }

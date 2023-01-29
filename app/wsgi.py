@@ -1,8 +1,8 @@
 import json
 from flask import render_template, request
 from app.forms import RepositoryPathForm
-from app import app_flask, token_flask
-import database
+from app import app_flask, token_flask, database
+
 
 
 @app_flask.route('/api', methods=['POST'])
@@ -35,4 +35,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app_flask.run(port=8080, debug=True)
+    app_flask.run(port=8080, debug=False)

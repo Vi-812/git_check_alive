@@ -10,7 +10,7 @@ token = os.getenv('TOKEN')
 
 if not mega_test:
     testing = [
-        'vi-812/empty',
+        'Vi-812/empty',
         'vi-812/git_check_alive',
         'https://github.com/pallets/flask',
     ]
@@ -22,9 +22,10 @@ else:
         'vi-812/git_check_alive',
         'https://github.com/pallets/flask',
         'facebook/jest',
+        'https://github.com/dbeaver/dbeaver',
     ]
     yyy = [
-        'https://github.com/dbeaver/dbeaver',
+
         'https://github.com/kubernetes/kubernetes',
         'https://github.com/apache/spark',
         'github.com/Microsoft/vscode',
