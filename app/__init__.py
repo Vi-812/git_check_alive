@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from app import views, models
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 import logging
 
@@ -17,8 +17,12 @@ app_flask.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 db_dir = os.path.abspath(os.path.dirname('__init__.py')) + r'\instance'
 if not os.path.exists(db_dir):
     os.makedirs(db_dir)
-app_flask.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'saved_repositories.db')
-app_flask.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(db_dir, 'db_repository')
-db = SQLAlchemy()
-db.init_app(app_flask)
+app_flask.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'repositories.db')
+app_flask.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(db_dir, 'db_migrate')
+db = SQLAlchemy(app_flask)
+migrate = Migrate(app_flask, db)
 
+from app import views, models
+
+with app_flask.app_context():
+    db.create_all()

@@ -1,11 +1,8 @@
-from app import app_flask, token_flask
 import json
-
 from flask import render_template, request
 from app.forms import RepositoryPathForm
-
+from app import app_flask, token_flask
 import database
-
 
 
 @app_flask.route('/api', methods=['POST'])

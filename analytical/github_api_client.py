@@ -43,6 +43,7 @@ class GithubApiClient:
 
     def get_info_labels(self):
         self.cursor = None
+        self.r_time = None
         self.repo_version = None
         self.repo_major_version = None
         self.repo_minor_version = None
@@ -130,9 +131,9 @@ class GithubApiClient:
             self.data = data_github.get_bug_issues_json()
             self.parse_bug_issues()
             if not self.cursor and self.bug_issues_total_count > 200:
+                # Предварительный расчет времени запроса
                 cost_multiplier = 3
-                r_time = (self.bug_issues_total_count // 100) * cost_multiplier
-                print(r_time + 5, '>', end=' ')
+                self.r_time = ((self.bug_issues_total_count // 100) * cost_multiplier) + 5
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -200,10 +201,9 @@ class GithubApiClient:
     def forming_json(self):
         # datetime str ???
         self.request_duration_time = datetime.now() - self.request_duration_time
-        print(self.request_duration_time.seconds, end='||')
-        if self.request_total_cost > 10:
-            logging.error(f't_ratio_c={self.request_duration_time.seconds / self.request_total_cost} '
-                          f'({self.request_total_cost}/{self.request_duration_time.seconds}) {self.repo_name}')
+        self.request_duration_time = self.request_duration_time.seconds
+        if self.r_time:
+            self.r_time = str(self.r_time) + '/' + str(self.request_duration_time)
         self.return_json = {
             'repositoryInfo': {
                 'name': self.repo_name,
@@ -234,6 +234,7 @@ class GithubApiClient:
                 'cost': self.request_total_cost,
                 'remaining': self.request_balance,
                 'resetAt': str(self.request_reset),
+                'rt': self.r_time,
                 'code': 200,
             },
         }
