@@ -25,9 +25,8 @@ class GithubApiClient:
         owner_name = fa.recognition(repository_path)
         self.repository_owner = owner_name['repository_owner']
         self.repository_name = owner_name['repository_name']
-        self.return_json = owner_name['return_json']
         if not self.repository_owner or not self.repository_name:
-            return self.return_json
+            return owner_name['return_json']
         self.request_total_cost = 0
         self.json_type = json_type
 
@@ -126,7 +125,7 @@ class GithubApiClient:
             self.parse_bug_issues()
             if not self.cursor and self.bug_issues_total_count > 200:
                 # Предварительный расчет времени запроса
-                cost_multiplier = 2.2
+                cost_multiplier = 2.7
                 cost_upped = cost_multiplier * 2
                 self.r_time = round(((self.bug_issues_total_count // 100) * cost_multiplier) + cost_upped, 2)
             if self.has_next_page:

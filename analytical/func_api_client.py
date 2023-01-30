@@ -99,14 +99,15 @@ def recognition(repository_path):
     :return:
     repository_owner: логин владельца репозитория
     repository_name: имя репозитория
+    repository_path: логин/имя
     OR
     return_json: json с ошибкой
     """
     repository_owner = repository_name = return_json = None
     repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
     if repo_owner_name:
-        data = repo_owner_name.group(1)
-        repository_owner, repository_name = data.split('/', 2)
+        repository_path = repo_owner_name.group(1)
+        repository_owner, repository_name = repository_path.split('/', 2)
         owner_name(repository_owner, repository_name)
     else:
         logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
@@ -121,5 +122,6 @@ def recognition(repository_path):
     return {
         'repository_owner': repository_owner,
         'repository_name': repository_name,
+        'repository_path': repository_path,
         'return_json': return_json,
     }

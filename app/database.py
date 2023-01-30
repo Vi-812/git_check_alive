@@ -10,20 +10,18 @@ class DataBaseHandler:
 
     def get_report(self, token, repository_path, json_type='full', force=False):
         owner_name = fa.recognition(repository_path)
-        self.repository_owner = owner_name['repository_owner']
-        self.repository_name = owner_name['repository_name']
-        self.return_json = owner_name['return_json']
-        if not self.repository_owner or not self.repository_name:
-            return self.return_json
+        self.repository_path = owner_name['repository_path']
+        if not self.repository_path:
+            return owner_name['return_json']
 
-        self.find_repository(self.repository_owner, self.repository_name)
+        self.find_repository()
         if self.repo_find and not force and self.repo_find.request_cost > 2:
             if (datetime.utcnow() - self.repo_find.upd_date).days < (self.repo_find.request_cost / 24):
                 self.load_repo_data()
                 return self.load_json
 
         instance_api_client = ga.GithubApiClient(token)
-        self.return_json = instance_api_client.get_new_report(self.repository_owner + '/' + self.repository_name, json_type)
+        self.return_json = instance_api_client.get_new_report(self.repository_path, json_type)
         if self.return_json['queryInfo']['code'] == 200:
             self.save_upd_repo_data()
             if self.return_json['queryInfo']['cost'] > 2:
@@ -31,7 +29,8 @@ class DataBaseHandler:
         return self.return_json
 
     def save_upd_repo_data(self):
-        self.find_repository(self.return_json['repositoryInfo']['owner'], self.return_json['repositoryInfo']['name'])
+        self.repository_path = self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name']
+        self.find_repository()
         if self.repo_find:
             self.repo_find.description = self.return_json['repositoryInfo']['description']
             self.repo_find.stars_count = self.return_json['repositoryInfo']['stars']
@@ -65,8 +64,7 @@ class DataBaseHandler:
             #
             # }
             repo_data = models.RepositoryInfo(
-                name=self.return_json['repositoryInfo']['name'],
-                owner_login=self.return_json['repositoryInfo']['owner'],
+                repo_path=self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name'],
                 description=self.return_json['repositoryInfo']['description'],
                 stars_count=self.return_json['repositoryInfo']['stars'],
                 version=self.return_json['repositoryInfo']['version'],
@@ -101,8 +99,7 @@ class DataBaseHandler:
         request_time = float(self.return_json['queryInfo']['time'])
         request_cost = self.return_json['queryInfo']['cost']
         statistic = models.QueryStatistics(
-            name=self.return_json['repositoryInfo']['name'],
-            owner_login=self.return_json['repositoryInfo']['owner'],
+            repo_path=self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name'],
             issues_count=self.return_json['repositoryInfo']['issuesCount'],
             bug_issues_count=self.return_json['repositoryInfo']['bugIssuesCount'],
             request_time=request_time,
@@ -114,10 +111,11 @@ class DataBaseHandler:
         db.session.commit()
 
     def load_repo_data(self):
+        repo_owner, repo_name = self.repo_find.repo_path.split('/', 2)
         self.load_json = {
             'repositoryInfo': {
-                'name': self.repo_find.name,
-                'owner': self.repo_find.owner_login,
+                'name': repo_name,
+                'owner': repo_owner,
                 'description': self.repo_find.description,
                 'stars': self.repo_find.stars_count,
                 'version': self.repo_find.version,
@@ -151,13 +149,12 @@ class DataBaseHandler:
                 'remaining': None,
                 'resetAt': None,
                 'rt': None,
-                'database': 'Information from the database for ' + str(self.repo_find.upd_date),
+                'database': f'Information from the database for {str(self.repo_find.upd_date)} UTC',
                 'code': 200,
             },
         }
 
-    def find_repository(self, owner, name):
+    def find_repository(self):
         self.repo_find = models.RepositoryInfo.query.filter(
-            func.lower(models.RepositoryInfo.owner_login) == owner.lower(),
-            func.lower(models.RepositoryInfo.name) == name.lower(),
+            func.lower(models.RepositoryInfo.repo_path) == self.repository_path.lower(),
         ).first()

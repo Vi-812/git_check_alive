@@ -3,10 +3,9 @@ from datetime import datetime
 
 
 class RepositoryInfo(db.Model):
-    id = db.Column(db.Integer, db.Sequence('seq_id', start=1, increment=1), autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
     upd_date = db.Column(db.DateTime, onupdate=datetime.utcnow(), default=datetime.utcnow())
-    name = db.Column(db.String, primary_key=True)
-    owner_login = db.Column(db.String, primary_key=True)
+    repo_path = db.Column(db.String, unique=True)
     description = db.Column(db.String, nullable=True)
     stars_count = db.Column(db.Integer, nullable=False)
     version = db.Column(db.String, nullable=True)
@@ -41,8 +40,7 @@ class RepositoryInfo(db.Model):
 class QueryStatistics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     crt_date = db.Column(db.DateTime, default=datetime.utcnow())
-    name = db.Column(db.String, nullable=False)
-    owner_login = db.Column(db.String, nullable=False)
+    repo_path = db.Column(db.String, unique=True)
     issues_count = db.Column(db.Integer, nullable=False)
     bug_issues_count = db.Column(db.Integer, nullable=False)
     request_time = db.Column(db.Float, nullable=False)
