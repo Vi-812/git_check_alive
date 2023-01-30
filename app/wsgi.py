@@ -11,7 +11,6 @@ def api_request():
     instance_db_client = database.DataBaseHandler()
     return_json = instance_db_client.get_report(token_api, repository_path)
     code = return_json['queryInfo']['code']
-    print(return_json, code)
     return json.dumps(return_json), code
 
 

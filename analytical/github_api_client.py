@@ -57,7 +57,6 @@ class GithubApiClient:
                                                  self.cursor,
                                                  self.token)
             self.data = data_github.get_info_labels_json()
-            print((self.data))
             if self.data.get('queryInfo'):
                 if self.data.get('queryInfo').get('code') == 500:
                     self.return_json = self.data
