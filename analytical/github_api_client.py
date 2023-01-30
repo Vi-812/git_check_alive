@@ -2,8 +2,7 @@ import analytical.use_graphql as ug
 import analytical.func_api_client as fa
 import analytical.bug_issues as bi
 from datetime import datetime
-import logging
-logging.basicConfig(filename='../logs.log', level=logging.ERROR)
+from app import logger
 
 
 class GithubApiClient:
@@ -21,6 +20,7 @@ class GithubApiClient:
         :return:
         """
         self.request_duration_time = datetime.now()
+        self.return_json = {}
         self.bug_issues_total_count = None
         owner_name = fa.recognition(repository_path)
         self.repository_owner = owner_name['repository_owner']
@@ -30,11 +30,11 @@ class GithubApiClient:
         self.request_total_cost = 0
         self.json_type = json_type
 
-        err = self.get_info_labels()
-        if err == 404:
-            logging.error(f'ERR404!ok Не найден репозиторий. Owner="{self.repository_owner}", '
-                          f'name="{self.repository_name}".')
-            return self.return_json
+        self.get_info_labels()
+        if self.return_json.get('queryInfo'):
+            if self.return_json.get('queryInfo').get('code') == 404 \
+                    or self.return_json.get('queryInfo').get('code') == 500:
+                return self.return_json
         self.get_bug_issues()
         self.main_analytic_unit()
         self.forming_json()
@@ -57,9 +57,15 @@ class GithubApiClient:
                                                  self.cursor,
                                                  self.token)
             self.data = data_github.get_info_labels_json()
-            err = self.parse_info_labels()
-            if err == 404:
-                return 404
+            print((self.data))
+            if self.data.get('queryInfo'):
+                if self.data.get('queryInfo').get('code') == 500:
+                    self.return_json = self.data
+                    return
+            self.parse_info_labels()
+            if self.return_json.get('queryInfo'):
+                if self.return_json.get('queryInfo').get('code') == 404:
+                    return
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -107,9 +113,7 @@ class GithubApiClient:
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
         except TypeError as err:
-            err = self.json_error_err404(err)
-            if err == 404:
-                return 404
+            self.json_error_err404(err)
 
     def get_bug_issues(self):
         self.cursor = None
@@ -244,6 +248,7 @@ class GithubApiClient:
         }
 
     def json_error_err404(self, error):
+        logger.error(f'E404! Не найден репозиторий "{self.repository_owner}/{self.repository_name}".')
         self.return_json = {
             'queryInfo': {
                 'code': 404,
@@ -252,4 +257,3 @@ class GithubApiClient:
                 'message': self.data['errors'][0]['message'],
             },
         }
-        return 404

@@ -4,7 +4,6 @@ from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
 
 
-
 @app_flask.route('/api', methods=['POST'])
 def api_request():
     token_api = request.json['token']
@@ -12,6 +11,7 @@ def api_request():
     instance_db_client = database.DataBaseHandler()
     return_json = instance_db_client.get_report(token_api, repository_path)
     code = return_json['queryInfo']['code']
+    print(return_json, code)
     return json.dumps(return_json), code
 
 

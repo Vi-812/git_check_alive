@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from statistics import median
 import re
-import logging
-logging.basicConfig(filename='../logs.log', level=logging.ERROR)
+from app import logger
 
 
 def owner_name(owner, name):
@@ -54,7 +53,7 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
+            logger.error(f'ERROR! Не найдено версии, проверено 100 записей. '
                           f'Owner="{log_repo_owner}", name="{log_repo_name}". ')
     if not major_v:
         major_v = published_date
@@ -110,7 +109,8 @@ def recognition(repository_path):
         repository_owner, repository_name = repository_path.split('/', 2)
         owner_name(repository_owner, repository_name)
     else:
-        logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
+        logger.error(f'E400! Не распознан repository_path="{repository_path}".')
+        repository_path = None
         return_json = {
             'queryInfo': {
                 'code': 400,

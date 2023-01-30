@@ -4,18 +4,18 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import func
 from dotenv import load_dotenv
-import logging
+from loguru import logger
+logger.add('errors.log', format='{time:DD-MM HH:mm} {message}', level='ERROR')
 
 # Достаем токен для работы программы через главную страницу (не API)
 load_dotenv()
-logger = logging.getLogger('werkzeug')
-logger.setLevel(logging.ERROR)
 token_flask = os.getenv('TOKEN')
 
 app_flask = Flask(__name__)
 app_flask.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-db_dir = os.path.abspath(os.path.dirname('__init__.py')) + r'\instance'
+app_dir = os.path.abspath(os.path.dirname('__init__.py'))
+db_dir = os.path.join(app_dir, 'instance')
 if not os.path.exists(db_dir):
     os.makedirs(db_dir)
 app_flask.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'repositories.db')

@@ -1,7 +1,6 @@
 import requests
 import sys
-import logging
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+from app import logger
 
 # Формировать json тут (кнопка Explorer)
 # https://docs.github.com/ru/graphql/overview/explorer
@@ -147,5 +146,12 @@ class Link:
             data = requests.post(url=self.url, headers=self.headers, json=self.json)
             return data.json()
         except requests.exceptions.ConnectionError as err:
-            logging.error(f'Ошибка ссоединения с сервером. Исключение: {err}')
-            sys.exit()
+            logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {err}')
+            return_json = {
+                'queryInfo': {
+                    'code': 500,
+                    'error': 'ConnectionError',
+                    'message': str(err),
+                },
+            }
+            return return_json
