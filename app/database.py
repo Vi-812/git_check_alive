@@ -15,7 +15,9 @@ class DataBaseHandler:
             return owner_name['return_json']
 
         self.find_repository()
-        if self.repo_find and not force and self.repo_find.request_cost > 2:
+        # Проверка что репозиторий найден в БД и forse=False
+        if self.repo_find and not force:
+            # !!!!!!!!!!!!!!---------------------------------
             if (datetime.utcnow() - self.repo_find.upd_date).days < (self.repo_find.request_cost / 24):
                 self.load_repo_data()
                 return self.load_json
@@ -24,7 +26,8 @@ class DataBaseHandler:
         self.return_json = instance_api_client.get_new_report(self.repository_path, json_type)
         if self.return_json['queryInfo']['code'] == 200:
             self.save_upd_repo_data()
-            if self.return_json['queryInfo']['cost'] > 2:
+            # Проверка стоимости запроса, записывать ли в статистику
+            if self.return_json['queryInfo']['cost'] > 10:
                 self.save_statistic()
         return self.return_json
 
@@ -98,6 +101,10 @@ class DataBaseHandler:
     def save_statistic(self):
         request_time = float(self.return_json['queryInfo']['time'])
         request_cost = self.return_json['queryInfo']['cost']
+        if self.return_json['queryInfo']['remaining'] < 3000:
+            query_limit = self.return_json['queryInfo']['remaining']
+        else:
+            query_limit = None
         statistic = models.QueryStatistics(
             repo_path=self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name'],
             issues_count=self.return_json['repositoryInfo']['issuesCount'],
@@ -105,6 +112,7 @@ class DataBaseHandler:
             request_time=request_time,
             request_cost=request_cost,
             request_kf=round(request_time/request_cost, 3),
+            query_limit=query_limit,
             rt=self.return_json['queryInfo']['rt']
         )
         db.session.add(statistic)

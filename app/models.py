@@ -39,11 +39,12 @@ class RepositoryInfo(db.Model):
 
 class QueryStatistics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    crt_date = db.Column(db.DateTime, default=datetime.utcnow())
-    repo_path = db.Column(db.String, unique=True)
+    day_hour_of_week = db.Column(db.String, default=datetime.utcnow().strftime('dayOfWeek:%a hours:%H'))
+    repo_path = db.Column(db.String, nullable=False)
     issues_count = db.Column(db.Integer, nullable=False)
     bug_issues_count = db.Column(db.Integer, nullable=False)
     request_time = db.Column(db.Float, nullable=False)
     request_cost = db.Column(db.Integer, nullable=False)
     request_kf = db.Column(db.Float, nullable=False)
+    query_limit = db.Column(db.Integer, nullable=True)
     rt = db.Column(db.String, nullable=True)
