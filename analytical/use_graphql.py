@@ -29,20 +29,12 @@ class UseGraphQL:
                         login
                     }
                     description                    
-                    homepageUrl
-                    isInOrganization
-                    licenseInfo {
-                        name
-                    }                    
                     stargazerCount
                     createdAt
                     updatedAt
                     pushedAt
                     isArchived
-                    isDisabled
                     isLocked
-                    isEmpty
-                    isFork
                     issues {
                         totalCount
                     }
@@ -113,10 +105,7 @@ class UseGraphQL:
                         }
                         edges {
                             node {
-                                id
-                                title
                                 createdAt
-                                updatedAt
                                 closedAt
                                 closed
                                 comments(last: 1) {

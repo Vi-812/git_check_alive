@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
 from statistics import median
+import re
 import logging
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+logging.basicConfig(filename='../logs.log', level=logging.ERROR)
 
 
 def owner_name(owner, name):
-    # Однократно передаем владельца и имя репозитория, используется для логирования
-    global repo_owner
-    global repo_name
-    repo_owner = owner
-    repo_name = name
+    # Передаем владельца и имя репозитория, используется для логирования
+    global log_repo_owner
+    global log_repo_name
+    log_repo_owner = owner
+    log_repo_name = name
 
 
 def to_date(date_str):
@@ -54,7 +55,7 @@ def parsing_version(data):
     else:
         if len(data) == 100:
             logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
-                          f'Owner="{repo_owner}", name="{repo_name}". ')
+                          f'Owner="{log_repo_owner}", name="{log_repo_name}". ')
     if not major_v:
         major_v = published_date
     if not minor_v:
@@ -88,3 +89,39 @@ def pull_request_analytics(data):
     median_closed_pr = median(duration_pullrequest) * 24
     median_closed_pr = median_closed_pr.days / 24
     return [count_closed_pr, median_closed_pr]
+
+
+def recognition(repository_path):
+    """
+    Распознование присланой строки. Ищем крайний правый слеш '/' и берем два слова вокруг него.
+    Все что слева отсекаем, разбиваем по слешу.
+    :param repository_path:
+    :return:
+    repository_owner: логин владельца репозитория
+    repository_name: имя репозитория
+    repository_path: логин/имя
+    OR
+    return_json: json с ошибкой
+    """
+    repository_owner = repository_name = return_json = None
+    repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
+    if repo_owner_name:
+        repository_path = repo_owner_name.group(1)
+        repository_owner, repository_name = repository_path.split('/', 2)
+        owner_name(repository_owner, repository_name)
+    else:
+        logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
+        return_json = {
+            'queryInfo': {
+                'code': 400,
+                'error': 'Bad adress',
+                'message': "Bad repository adress, enter the address in the format "
+                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
+            },
+        }
+    return {
+        'repository_owner': repository_owner,
+        'repository_name': repository_name,
+        'repository_path': repository_path,
+        'return_json': return_json,
+    }

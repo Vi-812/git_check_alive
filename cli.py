@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-import github_api_client as ga
+import analytical.github_api_client as ga
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,7 +24,7 @@ if not namespace.repository_path:
     print('"https://github.com/Vi-812/git_check_alive" or "vi-812/git_check_alive"')
     sys.exit()
 
-instance_api_client = ga.GithubApiClient(token)
-return_json = instance_api_client.get_report(namespace.repository_path)
+instance_g_a_c = ga.GithubApiClient(token)
+return_json = instance_g_a_c.get_new_report(namespace.repository_path)
 
 print(return_json)
