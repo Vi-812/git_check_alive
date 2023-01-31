@@ -78,6 +78,7 @@ class GithubApiClient:
     def parse_info_labels(self):
         try:
             if not self.cursor:
+                print(self.data)
                 self.repo_name = self.data['data']['repository']['name']
                 self.repo_owner_login = self.data['data']['repository']['owner']['login']
                 fa.owner_name(self.repo_owner_login, self.repo_name)
@@ -111,7 +112,7 @@ class GithubApiClient:
             self.request_total_cost += self.request_cost
             self.request_balance = self.data['data']['rateLimit']['remaining']
             self.request_reset = self.data['data']['rateLimit']['resetAt']
-        except TypeError as err:
+        except (TypeError, KeyError) as err:
             self.json_error_err404(err)
 
     def get_bug_issues(self):
@@ -252,7 +253,7 @@ class GithubApiClient:
             'queryInfo': {
                 'code': 404,
                 'error': 'Repository not found',
-                'type': self.data['errors'][0]['type'],
+                # 'type': self.data['errors'][0]['type'],
                 'message': self.data['errors'][0]['message'],
             },
         }
