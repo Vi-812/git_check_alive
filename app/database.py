@@ -19,6 +19,7 @@ class DataBaseHandler:
             # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
+            hours = 9999
             if hours < self.repo_find.request_cost:
                 self.load_repo_data()
                 return self.load_json
@@ -69,6 +70,12 @@ class DataBaseHandler:
         self.repo_find.request_time = self.return_json['queryInfo']['time']
         self.repo_find.request_cost = self.return_json['queryInfo']['cost']
         db.session.commit()
+
+        from answer import Answer
+        a = Answer()
+        a.query_info.cost = self.return_json['queryInfo']['code']
+        print('Answer', a)
+
 
     def create_repo(self):
         repo_data = models.RepositoryInfo(
