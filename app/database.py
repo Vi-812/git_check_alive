@@ -17,8 +17,11 @@ class DataBaseHandler:
         self.find_repository()
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not force:
-            # !!!!!!!!!!!!!!---------------------------------
-            if (datetime.utcnow() - self.repo_find.upd_date).days < (self.repo_find.request_cost / 24):
+            # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
+            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
+            # Если времени прошло не достаточно, данные загружаются из БД
+            hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
+            if hours < self.repo_find.request_cost:
                 self.load_repo_data()
                 return self.load_json
 
@@ -32,7 +35,8 @@ class DataBaseHandler:
         return self.return_json
 
     def save_upd_repo_data(self):
-        self.repository_path = self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name']
+        self.repository_path = self.return_json['repositoryInfo']['owner'] +\
+                               '/' + self.return_json['repositoryInfo']['name']
         self.find_repository()
         if self.repo_find:
             self.repo_find.description = self.return_json['repositoryInfo']['description']
@@ -63,9 +67,8 @@ class DataBaseHandler:
             self.repo_find.request_cost = self.return_json['queryInfo']['cost']
             db.session.commit()
         else:
-            # repo_data_insid = {
-            #
-            # }
+            # self.repo_find.repo_path=self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name']
+            # print(self.repo_find)
             repo_data = models.RepositoryInfo(
                 repo_path=self.return_json['repositoryInfo']['owner'] + '/' + self.return_json['repositoryInfo']['name'],
                 description=self.return_json['repositoryInfo']['description'],
@@ -95,6 +98,7 @@ class DataBaseHandler:
                 request_time=self.return_json['queryInfo']['time'],
                 request_cost=self.return_json['queryInfo']['cost'],
             )
+            # print(type(repo_data))
             db.session.add(repo_data)
             db.session.commit()
 
