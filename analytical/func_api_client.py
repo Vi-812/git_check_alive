@@ -1,14 +1,7 @@
 from datetime import datetime, timedelta
 from statistics import median
 from app import logger
-
-
-def owner_name(owner, name):
-    # Передаем владельца и имя репозитория, используется для логирования
-    global log_repo_owner
-    global log_repo_name
-    log_repo_owner = owner
-    log_repo_name = name
+from req_response import resp_json
 
 
 def to_date(date_str):
@@ -52,8 +45,9 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logger.error(f'ERROR! Не найдено версии, проверено 100 записей. '
-                          f'Owner="{log_repo_owner}", name="{log_repo_name}". ')
+            logger.error(f'ERROR! Не найдено версии (100 записей), '
+                         f'"{resp_json.repository_info.owner}/{resp_json.repository_info.name}".')
+    # Упростить??
     if not major_v:
         major_v = published_date
     if not minor_v:
@@ -63,7 +57,9 @@ def parsing_version(data):
     major_v = datetime.now() - to_date(major_v)
     minor_v = datetime.now() - to_date(minor_v)
     patch_v = datetime.now() - to_date(patch_v)
-    return [major_v.days, minor_v.days, patch_v.days]
+    resp_json.analytic.major_days_passed = major_v
+    resp_json.analytic.minor_days_passed = minor_v
+    resp_json.analytic.patch_days_passed = patch_v
 
 
 def pull_request_analytics(data):
@@ -85,8 +81,8 @@ def pull_request_analytics(data):
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
     median_closed_pr = median(duration_pullrequest) * 24
-    median_closed_pr = median_closed_pr.days / 24
-    return [count_closed_pr, median_closed_pr]
+    resp_json.analytic.median_duration_pull_request = median_closed_pr.days / 24
+    resp_json.analytic.pull_request_closed_2months = count_closed_pr
 
 
 def path_error_400(repository_path, e):

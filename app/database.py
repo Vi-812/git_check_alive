@@ -30,8 +30,8 @@ class DataBaseHandler:
                 return self.load_json
 
         instance_api_client = ga.GithubApiClient(token)
-        self.return_json = instance_api_client.get_new_report(self.repository_path, json_type)
-        if self.return_json['queryInfo']['code'] == 200:
+        instance_api_client.get_new_report(self.repository_path, json_type)
+        if resp_json.query_info.code == 200:
             self.save_or_upd_repo_data()
             # Проверка стоимости запроса, записывать ли в статистику
             if self.return_json['queryInfo']['cost'] > 10:
@@ -39,8 +39,7 @@ class DataBaseHandler:
         return self.return_json
 
     def save_or_upd_repo_data(self):
-        self.repository_path = self.return_json['repositoryInfo']['owner'] +\
-                               '/' + self.return_json['repositoryInfo']['name']
+        self.repository_path = resp_json.repository_info.owner + '/' + resp_json.repository_info.name
         self.find_repository()
         if self.repo_find:
             self.update_repo()

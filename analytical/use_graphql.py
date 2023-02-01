@@ -1,6 +1,6 @@
 import requests
-import sys
 from app import logger
+from req_response import resp_json
 
 # Формировать json тут (кнопка Explorer)
 # https://docs.github.com/ru/graphql/overview/explorer
@@ -23,10 +23,10 @@ class UseGraphQL:
             """
             query GetInfo ($owner: String!, $name: String!, $cursor: String) {
                 repository(name: $name, owner: $owner) {                    
-                    name
                     owner {
                         login
                     }
+                    name
                     description                    
                     stargazerCount
                     createdAt
@@ -145,13 +145,8 @@ class Link:
         try:
             data = requests.post(url=self.url, headers=self.headers, json=self.json)
             return data.json()
-        except requests.exceptions.ConnectionError as err:
-            logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {err}')
-            return_json = {
-                'queryInfo': {
-                    'code': 500,
-                    'error': 'ConnectionError',
-                    'message': str(err),
-                },
-            }
-            return return_json
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
+            resp_json.query_info.code = 500
+            resp_json.query_info.error_desc = 'ConnectionError'
+            resp_json.query_info.error_message = str(e)
