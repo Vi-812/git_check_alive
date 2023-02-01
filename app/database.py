@@ -2,11 +2,17 @@ from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, func
 from datetime import datetime
+# from app import resp_json
 
 
 class DataBaseHandler:
-
     def get_report(self, token, repository_path, json_type='full', force=False):
+
+        # resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
+        # resp_json.repository_info.owner = repository_path
+        # print(resp_json)
+
+
         owner_name = fa.recognition(repository_path)
         self.repository_path = owner_name['repository_path']
         if not self.repository_path:
@@ -19,7 +25,7 @@ class DataBaseHandler:
             # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
-            hours = 9999
+            # hours = 9999
             if hours < self.repo_find.request_cost:
                 self.load_repo_data()
                 return self.load_json
@@ -70,12 +76,6 @@ class DataBaseHandler:
         self.repo_find.request_time = self.return_json['queryInfo']['time']
         self.repo_find.request_cost = self.return_json['queryInfo']['cost']
         db.session.commit()
-
-        from answer import Answer
-        a = Answer()
-        a.query_info.cost = self.return_json['queryInfo']['code']
-        print('Answer', a)
-
 
     def create_repo(self):
         repo_data = models.RepositoryInfo(

@@ -17,6 +17,7 @@ class GithubApiClient:
         """
 
         :param repository_path:
+        :param json_type:
         :return:
         """
         self.request_duration_time = datetime.now()
