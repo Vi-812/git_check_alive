@@ -22,12 +22,15 @@ class GithubApiClient:
         """
         self.request_duration_time = datetime.now()
         self.return_json = {}
-        self.bug_issues_total_count = None
-        owner_name = fa.recognition(repository_path)
-        self.repository_owner = owner_name['repository_owner']
-        self.repository_name = owner_name['repository_name']
-        if not self.repository_owner or not self.repository_name:
-            return owner_name['return_json']
+        self.bug_issues_total_count = 0
+        try:
+            repository_path = repository_path.split('/')
+            self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
+        except IndexError as e:
+            print(repository_path + ' DDD')
+            fa.path_error_400(e)
+            return fa.path_error_400(e)
+
         self.request_total_cost = 0
         self.json_type = json_type
 

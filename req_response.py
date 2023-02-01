@@ -51,3 +51,5 @@ class RequestResponse(BaseModel):
     repository_info: RepositoryInfo
     analytic: Analytic
     query_info: QueryInfo
+
+resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})

@@ -2,21 +2,18 @@ from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, func
 from datetime import datetime
-# from app import resp_json
-
+from req_response import resp_json
 
 class DataBaseHandler:
-    def get_report(self, token, repository_path, json_type='full', force=False):
+    def get_report(self, repository_path, token, json_type='full', force=True):
+        try:
+            repository_path = repository_path.split('/')
+            repository_path = repository_path[-2] + '/' + repository_path[-1]
+        except IndexError as e:
+            print(repository_path)
+            return fa.path_error_400(e)
 
-        # resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
-        # resp_json.repository_info.owner = repository_path
-        # print(resp_json)
-
-
-        owner_name = fa.recognition(repository_path)
-        self.repository_path = owner_name['repository_path']
-        if not self.repository_path:
-            return owner_name['return_json']
+        self.repository_path = repository_path
 
         self.find_repository()
         # Проверка что репозиторий найден в БД и forse=False
@@ -25,7 +22,6 @@ class DataBaseHandler:
             # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
-            # hours = 9999
             if hours < self.repo_find.request_cost:
                 self.load_repo_data()
                 return self.load_json

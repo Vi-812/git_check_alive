@@ -16,16 +16,15 @@ if not mega_test:
     ]
 else:
     testing = [
-        'zero',
-        'vi-812/git_',
-        'vi-812/empty',
-        'vi-812/git_check_alive',
+        '--sub--zero--',
+        'https://github.com/vi-812/git_',
+        'https://github.com/vi-812/empty',
+        'https://github.com/vi-812/git_check_alive',
         'https://github.com/pallets/flask',
-        'facebook/jest',
-        'https://github.com/dbeaver/dbeaver',
+        'https://github.com/facebook/jest',
     ]
     yyy = [
-
+        'https://github.com/dbeaver/dbeaver',
         'https://github.com/kubernetes/kubernetes',
         'https://github.com/apache/spark',
         'github.com/Microsoft/vscode',
