@@ -19,14 +19,8 @@ class GithubApiClient:
         except IndexError as e:
             return fa.path_error_400(repository_path, e)
         self.get_info_labels()
-
-
-
-
-        if self.return_json.get('queryInfo'):
-            if self.return_json.get('queryInfo').get('code') == 404 \
-                    or self.return_json.get('queryInfo').get('code') == 500:
-                return self.return_json
+        if resp_json.query_info.code:
+            return
         self.get_bug_issues()
         self.main_analytic_unit()
         self.forming_json()

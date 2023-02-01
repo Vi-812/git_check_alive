@@ -2,6 +2,7 @@ import json
 from flask import render_template, request
 from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
+from req_response import resp_json
 
 
 @app_flask.route('/api', methods=['POST'])
@@ -9,9 +10,10 @@ def api_request():
     token_api = request.json['token']
     repository_path = request.json['repository_path']
     instance_db_client = database.DataBaseHandler()
-    return_json = instance_db_client.get_report(repository_path, token_api)
-    code = return_json['queryInfo']['code']
-    return json.dumps(return_json), code
+    instance_db_client.get_report(repository_path, token_api)
+    code = resp_json.query_info.code
+    print(resp_json)
+    return json.dumps(resp_json), code
 
 
 @app_flask.route('/', methods=['GET', 'POST'])
