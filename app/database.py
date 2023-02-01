@@ -10,8 +10,11 @@ class DataBaseHandler:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
         except IndexError as e:
-            print(repository_path)
-            return fa.path_error_400(e)
+            return fa.path_error_400(repository_path, e)
+
+
+
+
 
         self.repository_path = repository_path
 

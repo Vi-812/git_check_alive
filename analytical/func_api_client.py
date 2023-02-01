@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from statistics import median
-import re
 from app import logger
 
 
@@ -90,8 +89,8 @@ def pull_request_analytics(data):
     return [count_closed_pr, median_closed_pr]
 
 
-def path_error_400(repository_path):
-    logger.error(f'E400! Не распознан repository_path="{repository_path}".')
+def path_error_400(repository_path, e):
+    logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
     return_json = {
         'queryInfo': {
             'code': 400,

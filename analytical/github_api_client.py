@@ -3,33 +3,26 @@ import analytical.func_api_client as fa
 import analytical.bug_issues as bi
 from datetime import datetime
 from app import logger
+from req_response import resp_json
 
 
 class GithubApiClient:
-    """
-    ОПИСАТЕЛЬНОЕ ОПИСАНИЕ
-    """
-
     def __init__(self, token):
         self.token = token
 
     def get_new_report(self, repository_path, json_type='full'):
-        """
-
-        :param repository_path:
-        :param json_type:
-        :return:
-        """
         self.request_duration_time = datetime.now()
+
+
+
+        print(resp_json.repository_info.bug_issues_count)
         self.return_json = {}
-        self.bug_issues_total_count = 0
+        self.bug_issues_total_count = resp_json.repository_info.bug_issues_count
         try:
             repository_path = repository_path.split('/')
             self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
         except IndexError as e:
-            print(repository_path + ' DDD')
-            fa.path_error_400(e)
-            return fa.path_error_400(e)
+            return fa.path_error_400(repository_path, e)
 
         self.request_total_cost = 0
         self.json_type = json_type
