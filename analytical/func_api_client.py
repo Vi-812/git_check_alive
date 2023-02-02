@@ -87,12 +87,6 @@ def pull_request_analytics(data):
 
 def path_error_400(repository_path, e):
     logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
-    return_json = {
-        'queryInfo': {
-            'code': 400,
-            'error': 'Bad adress',
-            'message': "Bad repository adress, enter the address in the format "
-                       "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
-        },
-    }
-    return return_json
+    resp_json.query_info.code = 400
+    resp_json.query_info.error_desc = 'Bad adress'
+    resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."

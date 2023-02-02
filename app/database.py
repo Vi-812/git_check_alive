@@ -6,7 +6,7 @@ from req_response import resp_json, reset_resp_json
 
 
 class DataBaseHandler:
-    def get_report(self, repository_path, token, json_type='full', force=True):
+    def get_report(self, repository_path, token, json_type='full', force=False):
         reset_resp_json()
         try:
             repository_path = repository_path.split('/')
@@ -23,7 +23,7 @@ class DataBaseHandler:
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.request_cost:
                 self.load_repo_data()
-                return self.load_json
+                return
 
         instance_api_client = ga.GithubApiClient(token)
         instance_api_client.get_new_report(self.repository_path, json_type)
@@ -125,48 +125,34 @@ class DataBaseHandler:
         db.session.commit()
 
     def load_repo_data(self):
-        repo_owner, repo_name = self.repo_find.repo_path.split('/', 2)
-        self.load_json = {
-            'repositoryInfo': {
-                'name': repo_name,
-                'owner': repo_owner,
-                'description': self.repo_find.description,
-                'stars': self.repo_find.stars_count,
-                'version': self.repo_find.version,
-                'createdAt': str(self.repo_find.created_at),
-                'duration': self.repo_find.duration,
-                'updatedAt': self.repo_find.updated_at,
-                'pushedAt': self.repo_find.pushed_at,
-                'isArchived': self.repo_find.is_archived,
-                'isLocked': self.repo_find.is_locked,
-                'issuesCount': self.repo_find.issues_count,
-                'bugIssuesCount': self.repo_find.bug_issues_count,
-                'bugIssuesClosedCount': self.repo_find.bug_issues_closed_count,
-                'bugIssuesOpenCount': self.repo_find.bug_issues_open_count,
-                'watchersCount': self.repo_find.watchers_count,
-                'forkCount': self.repo_find.fork_count,
-            },
-            'analytic': {
-                'bugsClosedTime95percent': self.repo_find.closed_bug_95percent,
-                'bugsClosedTime50percent': self.repo_find.closed_bug_50percent,
-                'majorDaysPassed': self.repo_find.upd_major_ver,
-                'minorDaysPassed': self.repo_find.upd_minor_ver,
-                'patchDaysPassed': self.repo_find.upd_path_ver,
-                'percentIssuesNoComment': self.repo_find.bug_issues_no_comment,
-                'percentIssuesClosed2months': self.repo_find.bug_issues_closed_two_months,
-                'pullRequestClosed2months': self.repo_find.pr_closed_count,
-                'medianDurationPullRequest': self.repo_find.pr_closed_duration,
-            },
-            'queryInfo': {
-                'time': None,
-                'cost': None,
-                'remaining': None,
-                'resetAt': None,
-                'rt': None,
-                'database': f'Information from the database for {str(self.repo_find.upd_date)} UTC',
-                'code': 200,
-            },
-        }
+        resp_json.repository_info.owner, resp_json.repository_info.name = self.repo_find.repo_path.split('/', 2)
+        resp_json.repository_info.description = self.repo_find.description
+        resp_json.repository_info.stars = self.repo_find.stars_count
+        resp_json.repository_info.version = self.repo_find.version
+        resp_json.repository_info.created_at = self.repo_find.created_at
+        resp_json.repository_info.duration = self.repo_find.duration
+        resp_json.repository_info.updated_at = self.repo_find.updated_at
+        resp_json.repository_info.pushed_at = self.repo_find.pushed_at
+        resp_json.repository_info.archived = self.repo_find.is_archived
+        resp_json.repository_info.locked = self.repo_find.is_locked
+        resp_json.repository_info.issues_count = self.repo_find.issues_count
+        resp_json.repository_info.bug_issues_count = self.repo_find.bug_issues_count
+        resp_json.repository_info.bug_issues_closed_count = self.repo_find.bug_issues_closed_count
+        resp_json.repository_info.bug_issues_open_count = self.repo_find.bug_issues_open_count
+        resp_json.repository_info.watchers_count = self.repo_find.watchers_count
+        resp_json.repository_info.fork_count = self.repo_find.fork_count
+        resp_json.analytic.bugs_closed_time_95percent = self.repo_find.closed_bug_95percent
+        resp_json.analytic.bugs_closed_time_50percent = self.repo_find.closed_bug_50percent
+        resp_json.analytic.major_days_passed = self.repo_find.upd_major_ver
+        resp_json.analytic.minor_days_passed = self.repo_find.upd_minor_ver
+        resp_json.analytic.patch_days_passed = self.repo_find.upd_path_ver
+        resp_json.analytic.percent_issues_no_comment = self.repo_find.bug_issues_no_comment
+        resp_json.analytic.percent_issues_closed_2months = self.repo_find.bug_issues_closed_two_months
+        resp_json.analytic.pull_request_closed_2months = self.repo_find.pr_closed_count
+        resp_json.analytic.median_duration_pull_request = self.repo_find.pr_closed_duration
+        resp_json.query_info.code = 200
+        resp_json.query_info.cost = 0
+        resp_json.query_info.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
 
     def find_repository(self):
         self.repo_find = models.RepositoryInfo.query.filter(

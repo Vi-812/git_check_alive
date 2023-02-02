@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-mega_test = False
+mega_test = True
 
 url = 'http://localhost:8080/api'
 token = os.getenv('TOKEN')
