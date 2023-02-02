@@ -2,12 +2,12 @@ from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, func
 from datetime import datetime
-from req_response import resp_json, RequestResponse
+from req_response import resp_json, reset_resp_json
+
 
 class DataBaseHandler:
     def get_report(self, repository_path, token, json_type='full', force=True):
-        import req_response
-        print(resp_json)
+        reset_resp_json()
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]

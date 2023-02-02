@@ -57,9 +57,9 @@ def parsing_version(data):
     major_v = datetime.now() - to_date(major_v)
     minor_v = datetime.now() - to_date(minor_v)
     patch_v = datetime.now() - to_date(patch_v)
-    resp_json.analytic.major_days_passed = major_v
-    resp_json.analytic.minor_days_passed = minor_v
-    resp_json.analytic.patch_days_passed = patch_v
+    resp_json.analytic.major_days_passed = major_v.days
+    resp_json.analytic.minor_days_passed = minor_v.days
+    resp_json.analytic.patch_days_passed = patch_v.days
 
 
 def pull_request_analytics(data):

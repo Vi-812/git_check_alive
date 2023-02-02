@@ -54,3 +54,7 @@ class RequestResponse(BaseModel):
 
 
 resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
+
+
+def reset_resp_json():
+    resp_json.__init__(repository_info={}, analytic={}, query_info={})
