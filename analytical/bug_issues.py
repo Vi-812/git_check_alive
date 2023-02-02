@@ -39,9 +39,9 @@ class BugIssuesAnalytic():
         if closed_list_len >= 10:
             bug_issues_closed_two_months = 0
             self.bug_issues_duration_closed_list.sort()
-            resp_json.analytic.bugs_closed_time_95percent = \
+            resp_json.analytic.closed_bug_95perc = \
                 self.bug_issues_duration_closed_list[round((closed_list_len - 1) * 0.95)].days
-            resp_json.analytic.bugs_closed_time_50percent = median(self.bug_issues_duration_closed_list).days
+            resp_json.analytic.closed_bug_50perc = median(self.bug_issues_duration_closed_list).days
             for i in range(closed_list_len):
                 if self.bug_issues_duration_closed_list[i].days < 60:
                     bug_issues_closed_two_months += 1
@@ -50,8 +50,8 @@ class BugIssuesAnalytic():
         resp_json.repository_info.bug_issues_closed_count = self.bug_issues_closed_total_count
         resp_json.repository_info.bug_issues_open_count = self.bug_issues_open_total_count
         if resp_json.repository_info.bug_issues_count:
-            resp_json.analytic.percent_issues_no_comment = \
+            resp_json.analytic.bug_issues_no_comment = \
                 round(self.bug_issues_no_comment / resp_json.repository_info.bug_issues_count * 100, 2)
         if resp_json.repository_info.bug_issues_closed_count and bug_issues_closed_two_months:
-             resp_json.analytic.percent_issues_closed_2months = \
+             resp_json.analytic.bug_issues_closed_2months = \
                  round(bug_issues_closed_two_months / resp_json.repository_info.bug_issues_closed_count * 100, 2)

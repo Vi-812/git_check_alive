@@ -12,7 +12,6 @@ def api_request():
     instance_db_client = database.DataBaseHandler()
     instance_db_client.get_report(repository_path, token_api)
     code = resp_json.query_info.code
-    print(resp_json.json())
     return resp_json.json(), code
 
 
@@ -25,9 +24,9 @@ def main_page():
         form = RepositoryPathForm()
         repository_path = request.form['link_repository']
         instance_db_client = database.DataBaseHandler()
-        return_json = instance_db_client.get_report(repository_path, token_flask)
-        code = return_json['queryInfo']['code']
-        return render_template('index.html', form=form, json=json.dumps(return_json)), code
+        instance_db_client.get_report(repository_path, token_flask)
+        code = resp_json.query_info.code
+        return render_template('index.html', form=form, json=resp_json.json()), code
 
 
 @app_flask.errorhandler(404)

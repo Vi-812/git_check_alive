@@ -57,9 +57,9 @@ def parsing_version(data):
     major_v = datetime.now() - to_date(major_v)
     minor_v = datetime.now() - to_date(minor_v)
     patch_v = datetime.now() - to_date(patch_v)
-    resp_json.analytic.major_days_passed = major_v.days
-    resp_json.analytic.minor_days_passed = minor_v.days
-    resp_json.analytic.patch_days_passed = patch_v.days
+    resp_json.analytic.upd_major_ver = major_v.days
+    resp_json.analytic.upd_minor_ver = minor_v.days
+    resp_json.analytic.upd_patch_ver = patch_v.days
 
 
 def pull_request_analytics(data):
@@ -81,8 +81,8 @@ def pull_request_analytics(data):
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
     median_closed_pr = median(duration_pullrequest) * 24
-    resp_json.analytic.median_duration_pull_request = median_closed_pr.days / 24
-    resp_json.analytic.pull_request_closed_2months = count_closed_pr
+    resp_json.analytic.pr_closed_duration = median_closed_pr.days / 24
+    resp_json.analytic.pr_closed_count = count_closed_pr
 
 
 def path_error_400(repository_path, e):

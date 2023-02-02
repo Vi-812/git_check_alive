@@ -24,15 +24,15 @@ class RepositoryInfo(BaseModel):
 
 
 class Analytic(BaseModel):
-    bugs_closed_time_95percent: Optional[int]
-    bugs_closed_time_50percent: Optional[int]
-    major_days_passed: Optional[int]
-    minor_days_passed: Optional[int]
-    patch_days_passed: Optional[int]
-    percent_issues_no_comment: Optional[float]
-    percent_issues_closed_2months: Optional[float]
-    pull_request_closed_2months: Optional[int]
-    median_duration_pull_request: Optional[float]
+    closed_bug_95perc: Optional[int]
+    closed_bug_50perc: Optional[int]
+    upd_major_ver: Optional[int]
+    upd_minor_ver: Optional[int]
+    upd_patch_ver: Optional[int]
+    bug_issues_no_comment: Optional[float]
+    bug_issues_closed_2months: Optional[float]
+    pr_closed_count: Optional[int]
+    pr_closed_duration: Optional[float]
 
 
 class QueryInfo(BaseModel):
