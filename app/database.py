@@ -2,22 +2,18 @@ from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, func
 from datetime import datetime
-from req_response import resp_json
+from req_response import resp_json, RequestResponse
 
 class DataBaseHandler:
     def get_report(self, repository_path, token, json_type='full', force=True):
+        import req_response
+        print(resp_json)
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
         except IndexError as e:
             return fa.path_error_400(repository_path, e)
-
-
-
-
-
         self.repository_path = repository_path
-
         self.find_repository()
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not force:
@@ -46,10 +42,11 @@ class DataBaseHandler:
             self.create_repo()
 
     def update_repo(self):
+        pass
         self.repo_find.description = resp_json.repository_info.description
         self.repo_find.stars_count = resp_json.repository_info.stars # name----------------
         self.repo_find.version = resp_json.repository_info.version
-        self.repo_find.created_at = resp_json.repository_info.created_at
+        self.repo_find.created_at = str(resp_json.repository_info.created_at)
         self.repo_find.duration = resp_json.repository_info.duration
         self.repo_find.updated_at = resp_json.repository_info.updated_at
         self.repo_find.pushed_at = resp_json.repository_info.pushed_at

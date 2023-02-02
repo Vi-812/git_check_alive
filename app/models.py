@@ -29,7 +29,7 @@ class RepositoryInfo(db.Model):
     bug_issues_no_comment = db.Column(db.Float, nullable=True)
     bug_issues_closed_two_months = db.Column(db.Float, nullable=True)
     pr_closed_count = db.Column(db.Integer, nullable=True)
-    pr_closed_duration = db.Column(db.Integer, nullable=True)
+    pr_closed_duration = db.Column(db.Float, nullable=True)
     request_time = db.Column(db.Float, nullable=False)
     request_cost = db.Column(db.Integer, nullable=False)
 

@@ -13,7 +13,7 @@ def api_request():
     instance_db_client.get_report(repository_path, token_api)
     code = resp_json.query_info.code
     print(resp_json)
-    return json.dumps(resp_json), code
+    return resp_json.json(), code
 
 
 @app_flask.route('/', methods=['GET', 'POST'])

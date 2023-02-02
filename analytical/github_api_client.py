@@ -11,6 +11,7 @@ class GithubApiClient:
         self.token = token
 
     def get_new_report(self, repository_path, response_type='full'):
+        print(resp_json)
         self.response_duration_time = datetime.now()
         self.response_type = response_type
         try:
