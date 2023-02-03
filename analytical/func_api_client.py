@@ -47,19 +47,12 @@ def parsing_version(data):
         if len(data) == 100:
             logger.error(f'ERROR! Не найдено версии (100 записей), '
                          f'"{resp_json.repository_info.owner}/{resp_json.repository_info.name}".')
-    # Упростить??
-    if not major_v:
-        major_v = published_date
-    if not minor_v:
-        minor_v = published_date
-    if not patch_v:
-        patch_v = published_date
-    major_v = datetime.now() - to_date(major_v)
-    minor_v = datetime.now() - to_date(minor_v)
-    patch_v = datetime.now() - to_date(patch_v)
-    resp_json.analytic.upd_major_ver = major_v.days
-    resp_json.analytic.upd_minor_ver = minor_v.days
-    resp_json.analytic.upd_patch_ver = patch_v.days
+    if not major_v: major_v = published_date
+    if not minor_v: minor_v = published_date
+    if not patch_v: patch_v = published_date
+    resp_json.analytic.upd_major_ver = (datetime.now() - to_date(major_v)).days
+    resp_json.analytic.upd_minor_ver = (datetime.now() - to_date(minor_v)).days
+    resp_json.analytic.upd_patch_ver = (datetime.now() - to_date(patch_v)).days
 
 
 def pull_request_analytics(data):
@@ -67,9 +60,6 @@ def pull_request_analytics(data):
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
     :param data: данные о 100 последних PR (json/GitHub)
-    :return:
-    count_closed_pr: количество закрытых PR за последние 2 месяца (из 100 последних)
-    median_closed_pr: медиана обработки PR в днях, от публикации до согласования (вещественное число)
     """
     duration_pullrequest = []
     count_closed_pr = 0
@@ -90,3 +80,19 @@ def path_error_400(repository_path, e):
     resp_json.query_info.code = 400
     resp_json.query_info.error_desc = 'Bad adress'
     resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
+
+
+
+def json_error_401(repository_owner, repository_name, e_data):
+    logger.error(f'E401! Ошибка токена, обращались к "{repository_owner}/{repository_name}", e_data="{e_data}".')
+    resp_json.query_info.code = 401
+    resp_json.query_info.error_desc = 'Token error, invalid token'
+    resp_json.query_info.error_message = str(e_data)
+
+
+def json_error_404(repository_owner, repository_name, error):
+    logger.error(f'E404! Не найден репозиторий "{repository_owner}/{repository_name}".')
+    resp_json.query_info.code = 404
+    resp_json.query_info.error_desc = 'Repository not found'
+    resp_json.query_info.error_message = str(error)
+    resp_json.query_info.cost = 1

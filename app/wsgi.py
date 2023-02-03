@@ -1,4 +1,3 @@
-import json
 from flask import render_template, request
 from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
@@ -12,6 +11,9 @@ def api_request():
     instance_db_client = database.DataBaseHandler()
     instance_db_client.get_report(repository_path, token_api)
     code = resp_json.query_info.code
+    if code != 200:
+        resp_json.__delattr__('repository_info')
+        resp_json.__delattr__('analytic')
     return resp_json.json(), code
 
 
@@ -26,6 +28,9 @@ def main_page():
         instance_db_client = database.DataBaseHandler()
         instance_db_client.get_report(repository_path, token_flask)
         code = resp_json.query_info.code
+        if code != 200:
+            resp_json.__delattr__('repository_info')
+            resp_json.__delattr__('analytic')
         return render_template('index.html', form=form, json=resp_json.json()), code
 
 

@@ -85,8 +85,13 @@ class GithubApiClient:
             resp_json.query_info.cost += self.request_cost
             resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
             resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
-        except (TypeError, KeyError) as err:
-            self.json_error_401_404(err)
+        except (TypeError, KeyError) as e:
+            if str(e) == "'data'":
+                fa.json_error_401(self.repository_owner, self.repository_name, self.data)
+            if str(e) == "'NoneType' object is not subscriptable":
+                fa.json_error_404(self.repository_owner, self.repository_name, self.data['errors'][0]['message'])
+
+
 
     def get_bug_issues(self):
         self.cursor = None
@@ -135,10 +140,3 @@ class GithubApiClient:
         if resp_json.query_info.rt:
             resp_json.query_info.rt += '/' + str(resp_json.query_info.time)
         resp_json.query_info.code = 200
-
-    def json_error_401_404(self, error):
-        logger.error(f'E404! Не найден репозиторий "{self.repository_owner}/{self.repository_name}".')
-        # Переписать логику 401, перекинуть кудато?
-        resp_json.query_info.code = 404
-        resp_json.query_info.error_desc = 'Repository not found'
-        resp_json.query_info.error_message = self.data['errors'][0]['message']
