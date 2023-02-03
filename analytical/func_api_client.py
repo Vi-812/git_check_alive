@@ -1,16 +1,7 @@
 from datetime import datetime, timedelta
 from statistics import median
-import re
-import logging
-logging.basicConfig(filename='../logs.log', level=logging.ERROR)
-
-
-def owner_name(owner, name):
-    # Передаем владельца и имя репозитория, используется для логирования
-    global log_repo_owner
-    global log_repo_name
-    log_repo_owner = owner
-    log_repo_name = name
+from app import logger
+from req_response import resp_json
 
 
 def to_date(date_str):
@@ -54,18 +45,14 @@ def parsing_version(data):
         published_date = release['node']['publishedAt']
     else:
         if len(data) == 100:
-            logging.error(f'ERROR! Не найдено версии, проверено 100 записей. '
-                          f'Owner="{log_repo_owner}", name="{log_repo_name}". ')
-    if not major_v:
-        major_v = published_date
-    if not minor_v:
-        minor_v = published_date
-    if not patch_v:
-        patch_v = published_date
-    major_v = datetime.now() - to_date(major_v)
-    minor_v = datetime.now() - to_date(minor_v)
-    patch_v = datetime.now() - to_date(patch_v)
-    return [major_v.days, minor_v.days, patch_v.days]
+            logger.error(f'ERROR! Не найдено версии (100 записей), '
+                         f'"{resp_json.repository_info.owner}/{resp_json.repository_info.name}".')
+    if not major_v: major_v = published_date
+    if not minor_v: minor_v = published_date
+    if not patch_v: patch_v = published_date
+    resp_json.analytic.upd_major_ver = (datetime.now() - to_date(major_v)).days
+    resp_json.analytic.upd_minor_ver = (datetime.now() - to_date(minor_v)).days
+    resp_json.analytic.upd_patch_ver = (datetime.now() - to_date(patch_v)).days
 
 
 def pull_request_analytics(data):
@@ -73,9 +60,7 @@ def pull_request_analytics(data):
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
     :param data: данные о 100 последних PR (json/GitHub)
-    :return:
-    count_closed_pr: количество закрытых PR за последние 2 месяца (из 100 последних)
-    median_closed_pr: медиана обработки PR в днях, от публикации до согласования (вещественное число)
+    :return: количество PR закрытых за последние 2 месяца, медиану времени закрытия
     """
     duration_pullrequest = []
     count_closed_pr = 0
@@ -87,41 +72,27 @@ def pull_request_analytics(data):
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
     median_closed_pr = median(duration_pullrequest) * 24
-    median_closed_pr = median_closed_pr.days / 24
-    return [count_closed_pr, median_closed_pr]
+    resp_json.analytic.pr_closed_duration = median_closed_pr.days / 24
+    resp_json.analytic.pr_closed_count = count_closed_pr
 
 
-def recognition(repository_path):
-    """
-    Распознование присланой строки. Ищем крайний правый слеш '/' и берем два слова вокруг него.
-    Все что слева отсекаем, разбиваем по слешу.
-    :param repository_path:
-    :return:
-    repository_owner: логин владельца репозитория
-    repository_name: имя репозитория
-    repository_path: логин/имя
-    OR
-    return_json: json с ошибкой
-    """
-    repository_owner = repository_name = return_json = None
-    repo_owner_name = re.search('([^/]+/[^/]+)$', repository_path)
-    if repo_owner_name:
-        repository_path = repo_owner_name.group(1)
-        repository_owner, repository_name = repository_path.split('/', 2)
-        owner_name(repository_owner, repository_name)
-    else:
-        logging.error(f'ERR400!ok Не распознан repository_path="{repository_path}".')
-        return_json = {
-            'queryInfo': {
-                'code': 400,
-                'error': 'Bad adress',
-                'message': "Bad repository adress, enter the address in the format "
-                           "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'.",
-            },
-        }
-    return {
-        'repository_owner': repository_owner,
-        'repository_name': repository_name,
-        'repository_path': repository_path,
-        'return_json': return_json,
-    }
+def path_error_400(repository_path, e):
+    logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
+    resp_json.query_info.code = 400
+    resp_json.query_info.error_desc = 'Bad adress'
+    resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
+
+
+def json_error_401(repository_owner, repository_name, e_data):
+    logger.error(f'E401! Ошибка токена, обращались к "{repository_owner}/{repository_name}", e_data="{e_data}".')
+    resp_json.query_info.code = 401
+    resp_json.query_info.error_desc = 'Token error, invalid token'
+    resp_json.query_info.error_message = str(e_data)
+
+
+def json_error_404(repository_owner, repository_name, error):
+    logger.error(f'E404! Не найден репозиторий "{repository_owner}/{repository_name}".')
+    resp_json.query_info.code = 404
+    resp_json.query_info.error_desc = 'Repository not found'
+    resp_json.query_info.error_message = str(error)
+    resp_json.query_info.cost = 1
