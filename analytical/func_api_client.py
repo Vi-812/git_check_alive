@@ -60,6 +60,7 @@ def pull_request_analytics(data):
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
     :param data: данные о 100 последних PR (json/GitHub)
+    :return: количество PR закрытых за последние 2 месяца, медиану времени закрытия
     """
     duration_pullrequest = []
     count_closed_pr = 0
@@ -80,7 +81,6 @@ def path_error_400(repository_path, e):
     resp_json.query_info.code = 400
     resp_json.query_info.error_desc = 'Bad adress'
     resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
-
 
 
 def json_error_401(repository_owner, repository_name, e_data):

@@ -3,9 +3,8 @@ import os
 import argparse
 import analytical.github_api_client as ga
 from dotenv import load_dotenv
+from req_response import resp_json
 load_dotenv()
-
-# Подробная информация о данных которые возможно получить из экземпляра класса в файле '\app\templates\help.html'
 
 token = os.getenv('TOKEN')
 
@@ -25,6 +24,7 @@ if not namespace.repository_path:
     sys.exit()
 
 instance_g_a_c = ga.GithubApiClient(token)
-return_json = instance_g_a_c.get_new_report(namespace.repository_path)
+instance_g_a_c.get_new_report(namespace.repository_path)
 
-print(return_json)
+print(resp_json.repository_info.name)
+print(resp_json.json())

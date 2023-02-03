@@ -2,8 +2,8 @@ import analytical.use_graphql as ug
 import analytical.func_api_client as fa
 import analytical.bug_issues as bi
 from datetime import datetime
-from app import logger
 from req_response import resp_json
+from app import logger
 
 
 class GithubApiClient:
@@ -22,8 +22,8 @@ class GithubApiClient:
         if resp_json.query_info.code:
             return
         self.get_bug_issues()
-        self.main_analytic_unit()
-        self.forming_json()
+        self.instance_b_i_a.get_bug_analytic()
+        self.final_block()
 
     def get_info_labels(self):
         self.cursor = None
@@ -91,8 +91,6 @@ class GithubApiClient:
             if str(e) == "'NoneType' object is not subscriptable":
                 fa.json_error_404(self.repository_owner, self.repository_name, self.data['errors'][0]['message'])
 
-
-
     def get_bug_issues(self):
         self.cursor = None
         self.instance_b_i_a = bi.BugIssuesAnalytic()
@@ -130,10 +128,7 @@ class GithubApiClient:
         resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
         resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
 
-    def main_analytic_unit(self):
-        self.instance_b_i_a.get_bug_analytic()
-
-    def forming_json(self):
+    def final_block(self):
         self.response_duration_time = datetime.now() - self.response_duration_time
         resp_json.query_info.time = round(self.response_duration_time.seconds +
                                            (self.response_duration_time.microseconds*0.000001), 2)
