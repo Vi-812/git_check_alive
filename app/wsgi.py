@@ -14,7 +14,7 @@ def api_request():
     if code != 200:
         resp_json.__delattr__('repository_info')
         resp_json.__delattr__('analytic')
-    return resp_json.json(), code
+    return resp_json.json(by_alias=True), code
 
 
 @app_flask.route('/', methods=['GET', 'POST'])
