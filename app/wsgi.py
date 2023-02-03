@@ -1,5 +1,5 @@
 from flask import render_template, request
-from forms import RepositoryPathForm
+from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
 from req_response import resp_json
 
