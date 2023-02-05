@@ -1,7 +1,12 @@
+import os
+import sys
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(PROJECT_ROOT, "..")))
 from flask import render_template, request
 from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
 from req_response import resp_json
+# проверочный коммент
 
 
 @app_flask.route('/api', methods=['POST'])
