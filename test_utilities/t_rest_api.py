@@ -5,7 +5,7 @@ load_dotenv()
 
 mega_test = True
 
-url = 'http://localhost:8080/api'
+url = 'http://localhost:5000/api'
 token = os.getenv('TOKEN')
 
 if not mega_test:
