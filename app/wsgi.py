@@ -40,4 +40,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app_flask.run(port=8080, debug=False)
+    app_flask.run()
