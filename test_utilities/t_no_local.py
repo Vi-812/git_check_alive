@@ -41,5 +41,5 @@ json = {
 
 print(random_repo, json['repository_path'])
 
-response = requests.post(url=url, json=json)
+response = requests.post(url=url, json=json, timeout=900)
 print(response.status_code, response.text)
