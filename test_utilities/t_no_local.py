@@ -32,7 +32,7 @@ test_repo = [
 ]
 
 random_repo = random.randint(0, len(test_repo)-1)
-random_repo = 1
+random_repo = 3
 
 json = {
     'token': token,
@@ -41,5 +41,5 @@ json = {
 
 print(random_repo, json['repository_path'])
 
-response = requests.post(url=url, json=json, timeout=900)
+response = requests.post(url=url, json=json)
 print(response.status_code, response.text)

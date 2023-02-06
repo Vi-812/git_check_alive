@@ -6,7 +6,7 @@ from req_response import resp_json, reset_resp_json
 
 
 class DataBaseHandler:
-    def get_report(self, repository_path, token, response_type='full', force=False):
+    def get_report(self, repository_path, token, response_type='full', force=True):
         reset_resp_json()
         try:
             repository_path = repository_path.split('/')
