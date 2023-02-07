@@ -72,7 +72,7 @@ def pull_request_analytics(data):
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
     median_closed_pr = median(duration_pullrequest) * 24
-    resp_json.analytic.pr_closed_duration = median_closed_pr.days / 24
+    resp_json.analytic.pr_closed_duration = round(median_closed_pr.days / 24, 3)
     resp_json.analytic.pr_closed_count = count_closed_pr
 
 

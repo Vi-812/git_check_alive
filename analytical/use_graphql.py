@@ -2,15 +2,23 @@ import requests
 from app import logger
 from req_response import resp_json
 
-# Формировать json тут (кнопка Explorer)
+# Сформировать json можно тут (кнопка Explorer)
 # https://docs.github.com/ru/graphql/overview/explorer
 
 
 class UseGraphQL:
     """
-    ТОЖЕ ОПИСАТЕЛЬНОЕ
+    Формирует json запрос к GraphQL GitHub'а, отправляет через класс Link.
+    :return: информацию о репозитории полученную от Link
     """
     def __init__(self, repository_owner, repository_name, cursor, token, labels_bug=None):
+        """
+        :param repository_owner: логин владельца репозитория
+        :param repository_name: имя репозитория
+        :param cursor: курсор, для последовотельного запроса данных
+        :param token: токен, для получения доступа
+        :param labels_bug: наименования bug меток, список
+        """
         self.repository_owner = repository_owner
         self.repository_name = repository_name
         self.cursor = cursor
@@ -137,6 +145,11 @@ class UseGraphQL:
 
 
 class Link:
+    """
+    Делает запрос к GraphQL GitHub'а используя полученый json.
+    В случае ошибки записывает ошибку в resp_json и возвращает None.
+    :return: информацию полученную от GitHub'а в формате словаря python
+    """
     def __init__(self, token, json):
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + token}
