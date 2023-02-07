@@ -43,7 +43,7 @@ while True:
     ]
 
     random_repo = random.randint(0, len(test_repo)-1)
-    # random_repo = 15
+    # random_repo = 0
 
     json = {
         'token': token,
@@ -60,9 +60,10 @@ while True:
         logger.error(f'code="{response.status_code}", repo="{logg_repo}", response="{response.text}"')
         sys.exit()
     else:
+        print(response.status_code, data)
         time = datetime.utcnow() - time
         time = round(time.seconds + time.microseconds * 0.000001, 2)
         if data['query_info']['time']:
-            print('Погрешность:', (time - data['query_info']['time']))
+            print('Погрешность:', round(time - data['query_info']['time'], 2))
         if data['query_info']['database'] == None:
             break
