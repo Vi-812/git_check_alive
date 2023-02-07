@@ -1,12 +1,11 @@
 import os
-import sys
+# import sys
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.abspath(os.path.join(PROJECT_ROOT, "..")))
+# sys.path.insert(0, os.path.abspath(os.path.join(PROJECT_ROOT, "..")))
 from flask import render_template, request
 from app.forms import RepositoryPathForm
 from app import app_flask, token_flask, database
 from req_response import resp_json
-# проверочный коммент
 
 
 @app_flask.route('/api', methods=['POST'])
@@ -36,7 +35,7 @@ def main_page():
         if code != 200:
             resp_json.__delattr__('repository_info')
             resp_json.__delattr__('analytic')
-        return render_template('index.html', form=form, json=resp_json.json()), code
+        return render_template('index.html', form=form, json=resp_json.json(by_alias=True)), code
 
 
 @app_flask.errorhandler(404)
