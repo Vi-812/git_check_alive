@@ -13,7 +13,7 @@ class BugIssuesAnalytic():
         self.bug_issues_duration_open_list = []
 
     def push_bug_issues(self, data):
-        now_time = datetime.now()
+        now_time = datetime.utcnow()
         for bug_issue in data:
             created_at = fa.to_date(bug_issue['node']['createdAt'])
             comment_count = bug_issue['node']['comments']['totalCount']

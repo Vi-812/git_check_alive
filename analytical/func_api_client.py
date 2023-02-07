@@ -50,9 +50,9 @@ def parsing_version(data):
     if not major_v: major_v = published_date
     if not minor_v: minor_v = published_date
     if not patch_v: patch_v = published_date
-    resp_json.analytic.upd_major_ver = (datetime.now() - to_date(major_v)).days
-    resp_json.analytic.upd_minor_ver = (datetime.now() - to_date(minor_v)).days
-    resp_json.analytic.upd_patch_ver = (datetime.now() - to_date(patch_v)).days
+    resp_json.analytic.upd_major_ver = (datetime.utcnow() - to_date(major_v)).days
+    resp_json.analytic.upd_minor_ver = (datetime.utcnow() - to_date(minor_v)).days
+    resp_json.analytic.upd_patch_ver = (datetime.utcnow() - to_date(patch_v)).days
 
 
 def pull_request_analytics(data):
@@ -66,7 +66,7 @@ def pull_request_analytics(data):
     count_closed_pr = 0
     for pullrequest in data:
         if pullrequest['closed'] and bool(pullrequest['closedAt']):
-            if to_date(pullrequest['closedAt']) + timedelta(60) > datetime.now():
+            if to_date(pullrequest['closedAt']) + timedelta(60) > datetime.utcnow():
                 duration_pullrequest.append(to_date(pullrequest['closedAt']) - to_date(pullrequest['publishedAt']))
                 count_closed_pr += 1
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)

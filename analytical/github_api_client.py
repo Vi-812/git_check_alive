@@ -11,7 +11,7 @@ class GithubApiClient:
         self.token = token
 
     def get_new_report(self, repository_path, response_type='full'):
-        self.response_duration_time = datetime.now()
+        self.response_duration_time = datetime.utcnow()
         self.response_type = response_type
         try:
             repository_path = repository_path.split('/')
@@ -61,11 +61,11 @@ class GithubApiClient:
                 resp_json.repository_info.stars = self.data['data']['repository']['stargazerCount']
                 resp_json.repository_info.created_at = fa.to_date(self.data['data']['repository']['createdAt'])
                 resp_json.repository_info.duration = \
-                    (datetime.now() - resp_json.repository_info.created_at).days
+                    (datetime.utcnow() - resp_json.repository_info.created_at).days
                 resp_json.repository_info.updated_at = \
-                    (datetime.now() - fa.to_date(self.data['data']['repository']['updatedAt'])).days
+                    (datetime.utcnow() - fa.to_date(self.data['data']['repository']['updatedAt'])).days
                 resp_json.repository_info.pushed_at = \
-                    (datetime.now() - fa.to_date(self.data['data']['repository']['pushedAt'])).days
+                    (datetime.utcnow() - fa.to_date(self.data['data']['repository']['pushedAt'])).days
                 resp_json.repository_info.archived = self.data['data']['repository']['isArchived']
                 resp_json.repository_info.locked = self.data['data']['repository']['isLocked']
                 resp_json.repository_info.issues_count = self.data['data']['repository']['issues']['totalCount']
@@ -129,7 +129,7 @@ class GithubApiClient:
         resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
 
     def final_block(self):
-        self.response_duration_time = datetime.now() - self.response_duration_time
+        self.response_duration_time = datetime.utcnow() - self.response_duration_time
         resp_json.query_info.time = round(self.response_duration_time.seconds +
                                            (self.response_duration_time.microseconds*0.000001), 2)
         if resp_json.query_info.rt:
