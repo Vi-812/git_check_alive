@@ -1,6 +1,7 @@
 from analytical import github_api_client as ga
 from analytical import func_api_client as fa
-from app import models, db, func
+from app import models, db
+from sqlalchemy import func
 from datetime import datetime
 from req_response import resp_json, reset_resp_json
 
