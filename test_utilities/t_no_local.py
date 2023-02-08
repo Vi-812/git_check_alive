@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 import random
 from datetime import datetime
@@ -12,9 +13,9 @@ logger.add(
     level='INFO',
     )
 
-
 url = 'http://51.68.189.155/api'
 token = os.getenv('TOKEN')
+
 while True:
     time = datetime.utcnow()
     test_repo = [
@@ -42,20 +43,27 @@ while True:
     ]
 
     random_repo = random.randint(0, len(test_repo)-1)
-    # random_repo = 5
+    # random_repo = 0
 
     json = {
         'token': token,
         'repository_path': test_repo[random_repo]
     }
 
-    print(random_repo, json['repository_path'])
     logg_repo = str(random_repo) + ' => ' + json['repository_path']
+    print(logg_repo)
 
     response = requests.post(url=url, json=json)
-    print(response.status_code, response.text)
-    if response.status_code != 200:
-        logger.info(logg_repo + ' ' + str(response.status_code))
-    time = datetime.utcnow() - time
-    if time.seconds > 2:
-        break
+    try:
+        data = response.json()
+    except:
+        logger.error(f'code="{response.status_code}", repo="{logg_repo}", response="{response.text}"')
+        sys.exit()
+    else:
+        print(response.status_code, data)
+        time = datetime.utcnow() - time
+        time = round(time.seconds + time.microseconds * 0.000001, 2)
+        if data['query_info']['time']:
+            print('Погрешность:', round(time - data['query_info']['time'], 2))
+        if data['query_info']['database'] == None:
+            break

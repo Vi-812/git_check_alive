@@ -1,11 +1,11 @@
 from app import db
-from datetime import datetime
+from sqlalchemy import Column, DateTime, func
 
 
 class RepositoryInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    upd_date = db.Column(db.DateTime, onupdate=datetime.utcnow(), default=datetime.utcnow())
-    repo_path = db.Column(db.String, unique=True)
+    upd_date = db.Column(db.DateTime, onupdate=func.now(), default=func.now(), nullable=False)
+    repo_path = db.Column(db.String, unique=True, nullable=False)
     description = db.Column(db.String, nullable=True)
     stars = db.Column(db.Integer, nullable=False)
     version = db.Column(db.String, nullable=True)
@@ -34,12 +34,12 @@ class RepositoryInfo(db.Model):
     cost = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f'<{self.owner_login}/{self.name}>'
+        return f'<{self.repo_path}>'
 
 
 class QueryStatistics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    crt_date = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    crt_date = db.Column(db.DateTime, default=func.now(), nullable=False)
     repo_path = db.Column(db.String, nullable=False)
     issues_count = db.Column(db.Integer, nullable=False)
     bug_issues_count = db.Column(db.Integer, nullable=False)
@@ -48,3 +48,11 @@ class QueryStatistics(db.Model):
     request_kf = db.Column(db.Float, nullable=False)
     query_limit = db.Column(db.Integer, nullable=True)
     rt = db.Column(db.String, nullable=True)
+
+
+class RepositoryCollection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    crt_date = db.Column(db.DateTime, default=func.now(), nullable=False)
+    repo_path = db.Column(db.String, unique=True, nullable=False)
+    token_hash = db.Column(db.String, nullable=False)
+    saved = db.Column(db.Boolean, default=False, nullable=False)

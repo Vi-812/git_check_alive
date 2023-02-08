@@ -1,5 +1,5 @@
 import requests
-from app import logger
+from loguru import logger
 from req_response import resp_json
 
 # Сформировать json можно тут (кнопка Explorer)
