@@ -3,13 +3,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-from loguru import logger
-logger.add(
-    'errors.log',
-    format='{time:DD-MM HH:mm} {message}',
-    level='ERROR',
-    )
-
 
 # Достаем токен для работы программы через главную страницу (не API)
 load_dotenv()

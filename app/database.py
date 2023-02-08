@@ -164,7 +164,7 @@ class DataBaseHandler:
             load_dotenv()
             hasher = os.getenv('HASHER')
             token_hash = blake2s(digest_size=32)
-            token_hash.update((self.token + hasher).encode('utf-8'))
+            token_hash.update((hasher + self.token + hasher).encode('utf-8'))
             token_hash = (token_hash.digest()).decode('ascii', errors='ignore')
 
             new_repo = models.RepositoryCollection(

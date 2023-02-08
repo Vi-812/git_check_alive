@@ -3,7 +3,6 @@ import analytical.func_api_client as fa
 import analytical.bug_issues as bi
 from datetime import datetime
 from req_response import resp_json
-from app import logger
 
 
 class GithubApiClient:

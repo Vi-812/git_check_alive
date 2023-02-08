@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from statistics import median
-from app import logger
+from loguru import logger
 from req_response import resp_json
 
 
