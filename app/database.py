@@ -169,7 +169,7 @@ class DataBaseHandler:
 
             new_repo = models.RepositoryCollection(
                 repo_path=resp_json.repository_info.owner + '/' + resp_json.repository_info.name,
-                token_hash=token_hash,
+                token_hash=str(token_hash),
             )
             db.session.add(new_repo)
             db.session.commit()
