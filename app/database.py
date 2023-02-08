@@ -5,6 +5,7 @@ from app import models, db, load_dotenv
 from sqlalchemy import func
 from datetime import datetime
 from req_response import resp_json, reset_resp_json
+from hashlib import blake2s
 
 
 class DataBaseHandler:
@@ -158,31 +159,21 @@ class DataBaseHandler:
         db.session.commit()
 
     def collection_repo(self):
-
-        import binascii
-        import hashlib
-
-
-
-
         self.find_repository('RepositoryCollection')
         if not self.repo_find:
             load_dotenv()
             hasher = os.getenv('HASHER')
-            dk = hashlib.pbkdf2_hmac(hash_name='sha256',
-                                     password=b'bad_password34',
-                                     salt=hasher,
-                                     iterations=100000)
+            token_hash = blake2s(digest_size=32)
+            token_hash.update((self.token + hasher).encode('utf-8'))
+            token_hash = (token_hash.digest()).decode('ascii', errors='ignore')
 
-            result = binascii.hexlify(dk)
-            print(result)
             new_repo = models.RepositoryCollection(
                 repo_path=resp_json.repository_info.owner + '/' + resp_json.repository_info.name,
-                token_hash=bcrypt.hashpw(self.token.encode(), hasher.gensalt()),
+                token_hash=token_hash,
             )
             db.session.add(new_repo)
             db.session.commit()
 
     def find_repository(self, table):
-        self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == self.repository_path.lower(),).first()')
-        print(self.repo_find, '2')
+        self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == '
+                              f'self.repository_path.lower(),).first()')
