@@ -9,7 +9,7 @@ from hashlib import blake2s
 
 
 class DataBaseHandler:
-    def get_report(self, repository_path, token, response_type='full', force=False):
+    def get_report(self, session, repository_path, token, response_type='full', force=True):
         reset_resp_json()
         self.token = token
         try:
@@ -30,7 +30,7 @@ class DataBaseHandler:
                 return
 
         instance_api_client = ga.GithubApiClient(self.token)
-        instance_api_client.get_new_report(self.repository_path, response_type)
+        instance_api_client.get_new_report(session, self.repository_path, response_type)
         if resp_json.query_info.code == 200:
             self.save_or_upd_repo_data()
             self.collection_repo()
