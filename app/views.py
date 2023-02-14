@@ -2,6 +2,8 @@ from app import app_flask
 from flask import request, render_template
 from app import token_flask, database, forms
 from req_response import resp_json
+import asyncio
+import aiohttp
 
 
 @app_flask.route('/api', methods=['POST'])

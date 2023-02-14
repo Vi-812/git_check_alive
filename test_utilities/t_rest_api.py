@@ -10,8 +10,6 @@ token = os.getenv('TOKEN')
 
 if not mega_test:
     testing = [
-        'Vi-812/empty',
-        'vi-812/git_check_alive',
         'https://github.com/pallets/flask',
     ]
 else:
