@@ -98,7 +98,7 @@ class UseGraphQL:
             }
         }
         instance_link = Link(self.token, json)
-        data = asyncio.run(instance_link.link())
+        data = instance_link.link()
         return data
 
     def get_bug_issues_json(self):
@@ -144,7 +144,7 @@ class UseGraphQL:
             }
         }
         instance_link = Link(self.token, json)
-        data = asyncio.run(instance_link.link())
+        data = instance_link.link()
         return data
 
 
@@ -159,15 +159,13 @@ class Link:
         self.headers = {'Authorization': 'token ' + token}
         self.json = json
 
-    async def link(self):
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url=self.url, headers=self.headers, json=self.json) as resp:
-                    data = await resp.read()
-                    data = json.loads(data.decode())
-                    return data
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
-                resp_json.query_info.code = 500
-                resp_json.query_info.error_desc = 'ConnectionError'
-                resp_json.query_info.error_message = str(e)
+    def link(self):
+
+        try:
+            data = requests.post(url=self.url, headers=self.headers, json=self.json)
+            return data.json()
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
+            resp_json.query_info.code = 500
+            resp_json.query_info.error_desc = 'ConnectionError'
+            resp_json.query_info.error_message = str(e)

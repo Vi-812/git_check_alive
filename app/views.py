@@ -20,7 +20,9 @@ def api_request():
 
 
 @app_flask.route('/', methods=['GET', 'POST'])
-def main_page():
+async def main_page():
+    session = aiohttp.ClientSession()
+    print(session.__dict__)
     if request.method == 'GET':
         form = forms.RepositoryPathForm()
         return render_template('index.html', form=form), 200
