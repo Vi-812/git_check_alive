@@ -29,7 +29,7 @@ class UseGraphQL:
         self.token = token
         self.labels_bug = labels_bug
 
-    def get_info_labels_json(self, session):
+    def get_info_labels_json(self):
         json = {
             'query':
             """
@@ -98,7 +98,7 @@ class UseGraphQL:
             }
         }
         instance_link = Link(self.token, json)
-        data = asyncio.run(instance_link.link(session))
+        data = instance_link.link()
         return data
 
     def get_bug_issues_json(self):
@@ -159,10 +159,9 @@ class Link:
         self.headers = {'Authorization': 'token ' + token}
         self.json = json
 
-    async def link(self, session):
+    def link(self):
         try:
-            data = await session.post(url=self.url, headers=self.headers, json=self.json)
-            # data = requests.post(url=self.url, headers=self.headers, json=self.json)
+            data = requests.post(url=self.url, headers=self.headers, json=self.json)
             return data.json()
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
