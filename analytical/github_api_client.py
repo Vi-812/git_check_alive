@@ -9,8 +9,9 @@ class GithubApiClient:
     def __init__(self, token):
         self.token = token
 
-    def get_new_report(self, repository_path, response_type='full'):
+    def get_new_report(self, session, repository_path, response_type='full'):
         self.response_duration_time = datetime.utcnow()
+        self.session = session
         self.response_type = response_type
         try:
             repository_path = repository_path.split('/')
@@ -35,7 +36,7 @@ class GithubApiClient:
                 self.cursor,
                 self.token,
             )
-            self.data = data_github.get_info_labels_json()
+            self.data = data_github.get_info_labels_json(self.session)
             if resp_json.query_info.code:
                 return
             self.parse_info_labels()
