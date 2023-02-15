@@ -1,9 +1,7 @@
+import aiohttp
 import requests
 from loguru import logger
 from req_response import resp_json
-import asyncio
-import aiohttp
-import json
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -29,7 +27,7 @@ class UseGraphQL:
         self.token = token
         self.labels_bug = labels_bug
 
-    def get_info_labels_json(self):
+    async def get_info_labels_json(self):
         json = {
             'query':
             """
@@ -98,10 +96,10 @@ class UseGraphQL:
             }
         }
         instance_link = Link(self.token, json)
-        data = instance_link.link()
+        data = await instance_link.link()
         return data
 
-    def get_bug_issues_json(self):
+    async def get_bug_issues_json(self):
         json = {
             'query':
             """
@@ -144,7 +142,7 @@ class UseGraphQL:
             }
         }
         instance_link = Link(self.token, json)
-        data = instance_link.link()
+        data = await instance_link.link()
         return data
 
 
@@ -159,10 +157,12 @@ class Link:
         self.headers = {'Authorization': 'token ' + token}
         self.json = json
 
-    def link(self):
+    async def link(self):
         try:
-            data = requests.post(url=self.url, headers=self.headers, json=self.json)
-            return data.json()
+            async with aiohttp.ClientSession() as session:
+                data = await session.post(url=self.url, headers=self.headers, json=self.json)
+                # data = await requests.post(url=self.url, headers=self.headers, json=self.json)
+                return data.json()
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
             resp_json.query_info.code = 500
