@@ -9,7 +9,7 @@ from hashlib import blake2s
 
 
 class DataBaseHandler:
-    def get_report(self, repository_path, token, response_type='full', force=False):
+    def get_report(self, repository_path, token, response_type='full', force=True):
         reset_resp_json()
         self.token = token
         try:
