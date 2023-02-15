@@ -2,6 +2,7 @@ import aiohttp
 import requests
 from loguru import logger
 from req_response import resp_json
+import json
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -162,7 +163,7 @@ class Link:
             async with aiohttp.ClientSession() as session:
                 data = await session.post(url=self.url, headers=self.headers, json=self.json)
                 # data = await requests.post(url=self.url, headers=self.headers, json=self.json)
-                return data.json()
+                return json.dumps(data)
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
             resp_json.query_info.code = 500
