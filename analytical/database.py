@@ -9,14 +9,14 @@ from hashlib import blake2s
 
 
 class DataBaseHandler:
-    async def get_report(self, repository_path, token, response_type='full', force=True):
+    async def get_report(self, repository_path, token, response_type='full', force=False):
         reset_resp_json()
         self.token = token
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
         except IndexError as e:
-            return fa.path_error_400(repository_path, e)
+            return await fa.path_error_400(repository_path, e)
         self.repository_path = repository_path
         await self.find_repository('RepositoryInfo')
         # Проверка что репозиторий найден в БД и forse=False

@@ -161,9 +161,9 @@ class Link:
     async def link(self):
         try:
             async with aiohttp.ClientSession() as session:
-                data = await session.post(url=self.url, headers=self.headers, json=self.json)
-                # data = await requests.post(url=self.url, headers=self.headers, json=self.json)
-                return json.dumps(data)
+                async with session.post(url=self.url, headers=self.headers, json=self.json) as resp:
+                    data = json.loads(await resp.read())
+                return data
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
             resp_json.query_info.code = 500

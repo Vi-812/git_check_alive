@@ -20,7 +20,7 @@ app_flask.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(db_dir, 'db_migrate')
 db = SQLAlchemy(app_flask)
 migrate = Migrate(app_flask, db)
 
-from app import models, database
+from app import models
 
 with app_flask.app_context():
     db.create_all()

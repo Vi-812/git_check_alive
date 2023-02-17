@@ -36,13 +36,11 @@ class GithubApiClient:
                 self.token,
             )
             self.data = await data_github.get_info_labels_json()
-            print(self.data)
             if resp_json.query_info.code:
                 return
             await self.parse_info_labels()
             if resp_json.query_info.code:
                 return
-            print('YZZ')
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -56,7 +54,6 @@ class GithubApiClient:
     async def parse_info_labels(self):
         try:
             if not self.cursor:
-                print('SD', self.data)
                 resp_json.repository_info.owner = self.data['data']['repository']['owner']['login']
                 resp_json.repository_info.name = self.data['data']['repository']['name']
                 resp_json.repository_info.description = self.data['data']['repository']['description']
@@ -88,13 +85,13 @@ class GithubApiClient:
             resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
             resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
         except (TypeError, KeyError) as e:
+            print('KE strE', str(e))
             if str(e) == "'data'":
                 await fa.json_error_401(self.repository_owner, self.repository_name, self.data)
             if str(e) == "'NoneType' object is not subscriptable":
                 await fa.json_error_404(self.repository_owner, self.repository_name, self.data['errors'][0]['message'])
 
     async def get_bug_issues(self):
-        print('YOYO')
         self.cursor = None
         self.instance_b_i_a = bi.BugIssuesAnalytic()
 
