@@ -9,16 +9,16 @@ from hashlib import blake2s
 
 
 class DataBaseHandler:
-    def get_report(self, repository_path, token, response_type='full', force=False):
+    async def get_report(self, repository_path, token, response_type='full', force=False):
         reset_resp_json()
         self.token = token
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
         except IndexError as e:
-            return fa.path_error_400(repository_path, e)
+            return await fa.path_error_400(repository_path, e)
         self.repository_path = repository_path
-        self.find_repository('RepositoryInfo')
+        await self.find_repository('RepositoryInfo')
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not force:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
@@ -26,27 +26,27 @@ class DataBaseHandler:
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
-                self.load_repo_data()
+                await self.load_repo_data()
                 return
 
         instance_api_client = ga.GithubApiClient(self.token)
-        instance_api_client.get_new_report(self.repository_path, response_type)
+        await instance_api_client.get_new_report(self.repository_path, response_type)
         if resp_json.query_info.code == 200:
-            self.save_or_upd_repo_data()
-            self.collection_repo()
+            await self.save_or_upd_repo_data()
+            await self.collection_repo()
             # Валидация стоимости запроса, записывать ли в статистику
             if resp_json.query_info.cost > 10:
-                self.save_statistics_my_method()
+                await self.save_statistics_my_method()
 
-    def save_or_upd_repo_data(self):
+    async def save_or_upd_repo_data(self):
         self.repository_path = resp_json.repository_info.owner + '/' + resp_json.repository_info.name
-        self.find_repository('RepositoryInfo')
+        await self.find_repository('RepositoryInfo')
         if self.repo_find:
-            self.update_repo_data()
+            await self.update_repo_data()
         else:
-            self.create_repo_data()
+            await self.create_repo_data()
 
-    def create_repo_data(self):
+    async def create_repo_data(self):
         repo_data = models.RepositoryInfo(
             repo_path=resp_json.repository_info.owner + '/' + resp_json.repository_info.name,
             description=resp_json.repository_info.description,
@@ -79,7 +79,7 @@ class DataBaseHandler:
         db.session.add(repo_data)
         db.session.commit()
 
-    def update_repo_data(self):
+    async def update_repo_data(self):
         self.repo_find.description = resp_json.repository_info.description
         self.repo_find.stars = resp_json.repository_info.stars
         self.repo_find.version = resp_json.repository_info.version
@@ -108,7 +108,7 @@ class DataBaseHandler:
         self.repo_find.cost = resp_json.query_info.cost
         db.session.commit()
 
-    def load_repo_data(self):
+    async def load_repo_data(self):
         resp_json.repository_info.owner, resp_json.repository_info.name = self.repo_find.repo_path.split('/', 2)
         resp_json.repository_info.description = self.repo_find.description
         resp_json.repository_info.stars = self.repo_find.stars
@@ -138,7 +138,7 @@ class DataBaseHandler:
         resp_json.query_info.cost = 0
         resp_json.query_info.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
 
-    def save_statistics_my_method(self):
+    async def save_statistics_my_method(self):
         time = resp_json.query_info.time
         cost = resp_json.query_info.cost
         if resp_json.query_info.remains < 3000:
@@ -158,8 +158,8 @@ class DataBaseHandler:
         db.session.add(statistic)
         db.session.commit()
 
-    def collection_repo(self):
-        self.find_repository('RepositoryCollection')
+    async def collection_repo(self):
+        await self.find_repository('RepositoryCollection')
         if not self.repo_find:
             load_dotenv()
             hasher = os.getenv('HASHER')
@@ -174,6 +174,6 @@ class DataBaseHandler:
             db.session.add(new_repo)
             db.session.commit()
 
-    def find_repository(self, table):
+    async def find_repository(self, table):
         self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == '
                               f'self.repository_path.lower(),).first()')

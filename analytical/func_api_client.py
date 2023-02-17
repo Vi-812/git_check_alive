@@ -4,11 +4,11 @@ from loguru import logger
 from req_response import resp_json
 
 
-def to_date(date_str):
+async def to_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
 
 
-def parsing_version(data):
+async def parsing_version(data):
     """
     Распарсиваем, дополняем до 3х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
     Если в считанных записях не находится изменений версии, присваивается самая ранняя считанная дата.
@@ -50,12 +50,12 @@ def parsing_version(data):
     if not major_v: major_v = published_date
     if not minor_v: minor_v = published_date
     if not patch_v: patch_v = published_date
-    resp_json.analytic.upd_major_ver = (datetime.utcnow() - to_date(major_v)).days
-    resp_json.analytic.upd_minor_ver = (datetime.utcnow() - to_date(minor_v)).days
-    resp_json.analytic.upd_patch_ver = (datetime.utcnow() - to_date(patch_v)).days
+    resp_json.analytic.upd_major_ver = (datetime.utcnow() - await to_date(major_v)).days
+    resp_json.analytic.upd_minor_ver = (datetime.utcnow() - await to_date(minor_v)).days
+    resp_json.analytic.upd_patch_ver = (datetime.utcnow() - await to_date(patch_v)).days
 
 
-def pull_request_analytics(data):
+async def pull_request_analytics(data):
     """
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
@@ -66,8 +66,8 @@ def pull_request_analytics(data):
     count_closed_pr = 0
     for pullrequest in data:
         if pullrequest['closed'] and bool(pullrequest['closedAt']):
-            if to_date(pullrequest['closedAt']) + timedelta(60) > datetime.utcnow():
-                duration_pullrequest.append(to_date(pullrequest['closedAt']) - to_date(pullrequest['publishedAt']))
+            if await to_date(pullrequest['closedAt']) + timedelta(60) > datetime.utcnow():
+                duration_pullrequest.append(await to_date(pullrequest['closedAt']) - await to_date(pullrequest['publishedAt']))
                 count_closed_pr += 1
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
@@ -76,21 +76,21 @@ def pull_request_analytics(data):
     resp_json.analytic.pr_closed_count = count_closed_pr
 
 
-def path_error_400(repository_path, e):
+async def path_error_400(repository_path, e):
     logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
     resp_json.query_info.code = 400
     resp_json.query_info.error_desc = 'Bad adress'
     resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
 
 
-def json_error_401(repository_owner, repository_name, e_data):
+async def json_error_401(repository_owner, repository_name, e_data):
     logger.error(f'E401! Ошибка токена, обращались к "{repository_owner}/{repository_name}", e_data="{e_data}".')
     resp_json.query_info.code = 401
     resp_json.query_info.error_desc = 'Token error, invalid token'
     resp_json.query_info.error_message = str(e_data)
 
 
-def json_error_404(repository_owner, repository_name, error):
+async def json_error_404(repository_owner, repository_name, error):
     logger.error(f'E404! Не найден репозиторий "{repository_owner}/{repository_name}".')
     resp_json.query_info.code = 404
     resp_json.query_info.error_desc = 'Repository not found'

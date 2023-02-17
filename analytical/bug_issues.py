@@ -12,10 +12,10 @@ class BugIssuesAnalytic():
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
 
-    def push_bug_issues(self, data):
+    async def push_bug_issues(self, data):
         now_time = datetime.utcnow()
         for bug_issue in data:
-            created_at = fa.to_date(bug_issue['node']['createdAt'])
+            created_at = await fa.to_date(bug_issue['node']['createdAt'])
             comment_count = bug_issue['node']['comments']['totalCount']
             if bug_issue['node']['comments']['nodes']:
                 last_comment = bug_issue['node']['comments']['nodes'][0]['createdAt']
@@ -23,7 +23,7 @@ class BugIssuesAnalytic():
                 last_comment = None
 
             if bug_issue['node']['closed']:
-                closed_at = fa.to_date(bug_issue['node']['closedAt'])
+                closed_at = await fa.to_date(bug_issue['node']['closedAt'])
                 self.bug_issues_closed_total_count += 1
                 self.bug_issues_duration_closed_list.append(closed_at - created_at)
             else:
@@ -32,7 +32,7 @@ class BugIssuesAnalytic():
             if not comment_count:
                 self.bug_issues_no_comment += 1
 
-    def get_bug_analytic(self):
+    async def get_bug_analytic(self):
         closed_list_len = len(self.bug_issues_duration_closed_list)
         open_list_len = len(self.bug_issues_duration_open_list)
         bug_issues_closed_two_months = None
