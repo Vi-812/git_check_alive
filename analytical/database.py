@@ -1,22 +1,35 @@
+
 import os
 from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, load_dotenv
 from sqlalchemy import func
 from datetime import datetime
-from req_response import resp_json, reset_resp_json
+
 from hashlib import blake2s
+
+from req_response import resp_json, reset_resp_json
 
 
 class DataBaseHandler:
     async def get_report(self, repository_path, token, response_type='full', force=False):
-        reset_resp_json()
+        # print(resp_json)
+        await reset_resp_json()
+
+        # global resp_json
+        # from req_response import RequestResponse
+        # resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
+
+        # resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
+        # print('POS', resp_json)
+
         self.token = token
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
         except IndexError as e:
-            return await fa.path_error_400(repository_path, e)
+            await fa.path_error_400(repository_path, e)
+            return await self.db_response()
         self.repository_path = repository_path
         await self.find_repository('RepositoryInfo')
         # Проверка что репозиторий найден в БД и forse=False
@@ -27,7 +40,7 @@ class DataBaseHandler:
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
-                return
+                return await self.db_response()
 
         instance_api_client = ga.GithubApiClient(self.token)
         await instance_api_client.get_new_report(self.repository_path, response_type)
@@ -37,6 +50,7 @@ class DataBaseHandler:
             # Валидация стоимости запроса, записывать ли в статистику
             if resp_json.query_info.cost > 10:
                 await self.save_statistics_my_method()
+        return await self.db_response()
 
     async def save_or_upd_repo_data(self):
         self.repository_path = resp_json.repository_info.owner + '/' + resp_json.repository_info.name
@@ -177,3 +191,10 @@ class DataBaseHandler:
     async def find_repository(self, table):
         self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == '
                               f'self.repository_path.lower(),).first()')
+
+    async def db_response(self):
+        code = resp_json.query_info.code
+        if code != 200:
+            resp_json.__delattr__('repository_info')
+            resp_json.__delattr__('analytic')
+        return resp_json.json(by_alias=True), code

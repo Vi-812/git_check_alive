@@ -1,8 +1,8 @@
 import aiohttp
 import requests
 from loguru import logger
-from req_response import resp_json
 import json
+from req_response import resp_json
 
 
 # Сформировать json можно тут (кнопка Explorer)
