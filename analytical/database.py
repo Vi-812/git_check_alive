@@ -13,8 +13,11 @@ from req_response import resp_json, reset_resp_json
 
 class DataBaseHandler:
     async def get_report(self, repository_path, token, response_type='full', force=False):
-        # print(resp_json)
+        # print(type(get_report))
+        print('rrj-', type(reset_resp_json))
         await reset_resp_json()
+
+
 
         # global resp_json
         # from req_response import RequestResponse

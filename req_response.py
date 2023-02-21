@@ -57,4 +57,5 @@ resp_json = RequestResponse(repository_info={}, analytic={}, query_info={}) #, b
 
 
 async def reset_resp_json():
+    # print('RRJ_', type(reset_resp_json()))
     resp_json.__init__(repository_info={}, analytic={}, query_info={})

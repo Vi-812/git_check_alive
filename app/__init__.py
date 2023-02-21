@@ -1,4 +1,4 @@
-import asyncio
+# import asyncio
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 token_flask = os.getenv('TOKEN')
 
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
 
 
 app_flask = Flask(__name__)

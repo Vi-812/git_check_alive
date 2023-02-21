@@ -7,9 +7,11 @@ import asyncio
 
 @app_flask.route('/api', methods=['POST'])
 def api_request():
+
     token_api = request.json['token']
     repository_path = request.json['repository_path']
     instance_db_client = database.DataBaseHandler()
+    print('db-', type(instance_db_client.get_report))
     return asyncio.run(instance_db_client.get_report(repository_path, token_api))
 
 
