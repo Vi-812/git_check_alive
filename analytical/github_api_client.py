@@ -85,7 +85,6 @@ class GithubApiClient:
             resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
             resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
         except (TypeError, KeyError) as e:
-            print('KE strE', str(e))
             if str(e) == "'data'":
                 await fa.json_error_401(self.repository_owner, self.repository_name, self.data)
             if str(e) == "'NoneType' object is not subscriptable":
