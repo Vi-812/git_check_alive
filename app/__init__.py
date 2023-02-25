@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 
-# Достаем токен для работы программы через главную страницу (не API)
 load_dotenv()
 token_flask = os.getenv('TOKEN')
 

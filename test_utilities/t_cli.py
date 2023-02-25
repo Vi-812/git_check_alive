@@ -5,7 +5,6 @@ testing = False
 if not testing:
     repository_path = [
         'https://github.com/Vi-812/git_check_alive',
-        'https://github.com/pallets/flask',
     ]
 else:
     repository_path = [
