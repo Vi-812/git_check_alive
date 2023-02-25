@@ -1,10 +1,9 @@
 from statistics import median
 from datetime import datetime
 import analytical.func_api_client as fa
-from req_response import resp_json
 
 
-class BugIssuesAnalytic():
+class BugIssuesAnalytic:
     def __init__(self):
         self.bug_issues_closed_total_count = 0
         self.bug_issues_open_total_count = 0
@@ -32,15 +31,16 @@ class BugIssuesAnalytic():
             if not comment_count:
                 self.bug_issues_no_comment += 1
 
-    async def get_bug_analytic(self):
+    async def get_bug_analytic(self, resp_json):
         closed_list_len = len(self.bug_issues_duration_closed_list)
         open_list_len = len(self.bug_issues_duration_open_list)
         bug_issues_closed_two_months = None
         if closed_list_len >= 10:
             bug_issues_closed_two_months = 0
             self.bug_issues_duration_closed_list.sort()
-            resp_json.analytic.closed_bug_95perc = \
-                self.bug_issues_duration_closed_list[round((closed_list_len - 1) * 0.95)].days
+            resp_json.analytic.closed_bug_95perc = self.bug_issues_duration_closed_list[
+                round((closed_list_len - 1) * 0.95)
+            ].days
             resp_json.analytic.closed_bug_50perc = median(self.bug_issues_duration_closed_list).days
             for i in range(closed_list_len):
                 if self.bug_issues_duration_closed_list[i].days < 60:
@@ -50,8 +50,11 @@ class BugIssuesAnalytic():
         resp_json.repository_info.bug_issues_closed_count = self.bug_issues_closed_total_count
         resp_json.repository_info.bug_issues_open_count = self.bug_issues_open_total_count
         if resp_json.repository_info.bug_issues_count:
-            resp_json.analytic.bug_issues_no_comment = \
-                round(self.bug_issues_no_comment / resp_json.repository_info.bug_issues_count * 100, 2)
+            resp_json.analytic.bug_issues_no_comment = round(
+                self.bug_issues_no_comment / resp_json.repository_info.bug_issues_count * 100, 2
+            )
         if resp_json.repository_info.bug_issues_closed_count and bug_issues_closed_two_months:
-             resp_json.analytic.bug_issues_closed_2months = \
-                 round(bug_issues_closed_two_months / resp_json.repository_info.bug_issues_closed_count * 100, 2)
+             resp_json.analytic.bug_issues_closed_2months = round(
+                 bug_issues_closed_two_months / resp_json.repository_info.bug_issues_closed_count * 100, 2
+             )
+        return resp_json

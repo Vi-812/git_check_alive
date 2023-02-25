@@ -1,8 +1,8 @@
 import aiohttp
 import requests
-from loguru import logger
 import json
-from req_response import resp_json
+from datetime import datetime
+from loguru import logger
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -28,8 +28,8 @@ class UseGraphQL:
         self.token = token
         self.labels_bug = labels_bug
 
-    async def get_info_labels_json(self):
-        json = {
+    async def get_info_labels_json(self, resp_json):
+        json_gql = {
             'query':
             """
             query GetInfo ($owner: String!, $name: String!, $cursor: String) {
@@ -96,12 +96,11 @@ class UseGraphQL:
                 "cursor": self.cursor
             }
         }
-        instance_link = Link(self.token, json)
-        data = await instance_link.link()
-        return data
+        instance_link = Link(token=self.token)
+        return await instance_link.link(resp_json=resp_json, json_gql=json_gql)
 
-    async def get_bug_issues_json(self):
-        json = {
+    async def get_bug_issues_json(self, resp_json):
+        json_gql = {
             'query':
             """
             query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {
@@ -142,9 +141,8 @@ class UseGraphQL:
                 "cursor": self.cursor
             }
         }
-        instance_link = Link(self.token, json)
-        data = await instance_link.link()
-        return data
+        instance_link = Link(self.token)
+        return await instance_link.link(resp_json=resp_json, json_gql=json_gql)
 
 
 class Link:
@@ -153,19 +151,23 @@ class Link:
     В случае ошибки записывает ошибку в resp_json и возвращает None.
     :return: информацию полученную от GitHub'а в формате словаря python
     """
-    def __init__(self, token, json):
+    def __init__(self, token):
         self.url = 'https://api.github.com/graphql'
         self.headers = {'Authorization': 'token ' + token}
-        self.json = json
 
-    async def link(self):
+    async def link(self, resp_json, json_gql):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(url=self.url, headers=self.headers, json=self.json) as resp:
+                ght = datetime.utcnow()
+                async with session.post(url=self.url, headers=self.headers, json=json_gql) as resp:
                     data = json.loads(await resp.read())
-                return data
+                resp_json.query_info.ght += datetime.utcnow() - ght
+                return resp_json, data
+                # task = [await session.post(url=self.url, headers=self.headers, json=self.json)]
+                # data = await asyncio.gather(*task, return_exceptions=True)
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
             resp_json.query_info.code = 500
             resp_json.query_info.error_desc = 'ConnectionError'
             resp_json.query_info.error_message = str(e)
+            return resp_json, data
