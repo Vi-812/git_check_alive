@@ -3,9 +3,9 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-mega_test = True
+mega_test = False
 
-url = 'http://127.0.0.1:5000/api'
+url = 'http://127.0.0.1:8000/api'
 token = os.getenv('TOKEN')
 
 if not mega_test:
@@ -51,4 +51,5 @@ for test in testing:
         'repository_path': test
     }
     response = requests.post(url=url, json=body)
+    # print(type(response))
     print(response.status_code, response.text)

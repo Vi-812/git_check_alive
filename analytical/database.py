@@ -25,7 +25,8 @@ class DataBaseHandler:
             )
             return await self.final_block()
         self.repository_path = repository_path
-        await self.find_repository('RepositoryInfo')
+        # await self.find_repository('RepositoryInfo')
+        self.repo_find = None
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not force:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
@@ -45,19 +46,15 @@ class DataBaseHandler:
         final_block_r = await self.final_block()
 
         if self.resp_json.query_info.code == 200:
-            await self.save_or_upd_repo_data()
-            await self.collection_repo()
-            # Валидация стоимости запроса, записывать ли в статистику
-            if self.resp_json.query_info.cost > 10:
-                await self.save_statistics()
+            pass
+            # await self.save_or_upd_repo_data()
+            # await self.collection_repo()
+            # # Валидация стоимости запроса, записывать ли в статистику
+            # if self.resp_json.query_info.cost > 10:
+            #     await self.save_statistics()
         return final_block_r
 
     async def save_or_upd_repo_data(self):
-
-
-
-
-
         self.repository_path = self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name
         await self.find_repository('RepositoryInfo')
         if self.repo_find:
