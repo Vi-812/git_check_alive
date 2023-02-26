@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class RepositoryInfo(BaseModel):
@@ -45,16 +45,10 @@ class QueryInfo(BaseModel):
     reset_at: Optional[str] = Field(alias='resetAt')
     database: Optional[str]
     rt: Optional[str]
+    ght: Optional[datetime] = timedelta(seconds=0)
 
 
 class RequestResponse(BaseModel):
     repository_info: RepositoryInfo
     analytic: Analytic
     query_info: QueryInfo
-
-
-resp_json = RequestResponse(repository_info={}, analytic={}, query_info={}) #, by_alias=False
-
-
-async def reset_resp_json():
-    resp_json.__init__(repository_info={}, analytic={}, query_info={})

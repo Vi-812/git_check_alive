@@ -1,31 +1,31 @@
-from app import app_flask
-from flask import request, render_template
-from app import token_flask, forms
+from app import app_sanic, jinja, token_app, forms
+from sanic import HTTPResponse
 from analytical import database
-import asyncio
 
 
-@app_flask.route('/api', methods=['POST'])
-def api_request():
+session = {}
+@app_sanic.middleware('request')
+async def add_session(request):
+    request.ctx.session = session
+
+
+@app_sanic.route('/api', methods=['POST'])
+async def api_request(request):
     token_api = request.json['token']
     repository_path = request.json['repository_path']
     instance_db_client = database.DataBaseHandler()
-    return asyncio.run(instance_db_client.get_report(repository_path, token_api))
+    resp_json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_api)
+    return HTTPResponse(resp_json, status=code)
 
 
-@app_flask.route('/', methods=['GET', 'POST'])
-def main_page():
+@app_sanic.route('/', methods=['GET', 'POST'])
+async def main_page(request):
     if request.method == 'GET':
-        form = forms.RepositoryPathForm()
-        return render_template('index.html', form=form), 200
+        form = forms.RepositoryPathForm(request)
+        return jinja.render('index.html', request, form=form)
     elif request.method == 'POST':
-        form = forms.RepositoryPathForm()
-        repository_path = request.form['link_repository']
+        form = forms.RepositoryPathForm(request)
+        repository_path = request.form['link_repository'][0]
         instance_db_client = database.DataBaseHandler()
-        json, code = asyncio.run(instance_db_client.get_report(repository_path, token_flask))
-        return render_template('index.html', form=form, json=json), code
-
-
-@app_flask.errorhandler(404)
-def page_not_found(error):
-    return 'Страницы не существует!!', 404
+        json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_app)
+        return jinja.render('index.html', request, form=form, json=json)
