@@ -1,6 +1,12 @@
-from app import app_sanic, jinja, token_flask, forms
+from app import app_sanic, jinja, token_app, forms
 from sanic import HTTPResponse
 from analytical import database
+
+
+session = {}
+@app_sanic.middleware('request')
+async def add_session(request):
+    request.ctx.session = session
 
 
 @app_sanic.route('/api', methods=['POST'])
@@ -15,17 +21,11 @@ async def api_request(request):
 @app_sanic.route('/', methods=['GET', 'POST'])
 async def main_page(request):
     if request.method == 'GET':
-        form = forms.RepositoryPathForm()
-        print(1112)
-        return jinja.render('index.html', request, form=form), 200
+        form = forms.RepositoryPathForm(request)
+        return jinja.render('index.html', request, form=form)
     elif request.method == 'POST':
-        form = forms.RepositoryPathForm()
-        repository_path = request.form['link_repository']
+        form = forms.RepositoryPathForm(request)
+        repository_path = request.form['link_repository'][0]
         instance_db_client = database.DataBaseHandler()
-        json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_flask)
-        return jinja.render('index.html', request, form=form, json=json), code
-
-
-# @app_sanic.error_handler(404)
-# async def page_not_found(error):
-#     return 'Страницы не существует!!', 404
+        json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_app)
+        return jinja.render('index.html', request, form=form, json=json)

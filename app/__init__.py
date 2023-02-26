@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
 load_dotenv()
-token_flask = os.getenv('TOKEN')
+token_app = os.getenv('TOKEN')
 
 app_sanic = Sanic(name='git_check_alive')
-jinja = SanicJinja2(app_sanic, pkg_name="main")
+app_sanic.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
+jinja = SanicJinja2(app_sanic, pkg_name='app')
 
 APP_DIR = os.path.abspath(os.path.dirname('__init__.py'))
 DB_DIR = os.path.join(APP_DIR, 'instance')
@@ -17,6 +19,7 @@ if not os.path.exists(DB_DIR):
 
 db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repositories.db'))
 from app import models
+
 
 
 

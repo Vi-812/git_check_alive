@@ -201,8 +201,12 @@ class DataBaseHandler:
             self.resp_json.__delattr__('repository_info')
             self.resp_json.__delattr__('analytic')
         self.response_duration_time = datetime.utcnow() - self.response_duration_time
-        self.resp_json.query_info.time = round(self.response_duration_time.seconds +
-                                               (self.response_duration_time.microseconds * 0.000001), 2)
+        self.resp_json.query_info.time = round(
+            self.response_duration_time.seconds + (self.response_duration_time.microseconds * 0.000001), 2
+        )
+        self.resp_json.query_info.ght = round(
+            self.resp_json.query_info.ght.seconds + (self.resp_json.query_info.ght.microseconds * 0.000001), 2
+        )
         if self.resp_json.query_info.rt:
             self.resp_json.query_info.rt += '/' + str(self.resp_json.query_info.time)
         return self.resp_json.json(by_alias=True), code
