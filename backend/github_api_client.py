@@ -1,6 +1,6 @@
-import analytical.use_graphql as ug
-import analytical.func_api_client as fa
-import analytical.bug_issues as bi
+import backend.use_graphql as ug
+import backend.func_api_client as fa
+import backend.bug_issues as bi
 from datetime import datetime
 
 

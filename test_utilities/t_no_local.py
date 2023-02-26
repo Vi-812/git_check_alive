@@ -42,22 +42,20 @@ while True:
         'github.com/jlippold/tweakCompatible',
     ]
 
-    random_repo = random.randint(0, len(test_repo)-1)
-    # random_repo = 0
+    random_repo = random.choice(test_repo)
 
     json = {
         'token': token,
-        'repository_path': test_repo[random_repo]
+        'repository_path': random_repo
     }
 
-    logg_repo = str(random_repo) + ' => ' + json['repository_path']
-    print(logg_repo)
+    print(random_repo)
 
     response = requests.post(url=url, json=json)
     try:
         data = response.json()
     except:
-        logger.error(f'code="{response.status_code}", repo="{logg_repo}", response="{response.text}"')
+        logger.error(f'code="{response.status_code}", repo="{random_repo}", response="{response.text}"')
         sys.exit()
     else:
         print(response.status_code, data)

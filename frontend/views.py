@@ -1,6 +1,6 @@
-from app import app_sanic, jinja, token_app, forms
+from frontend import app_sanic, jinja, token_app, forms
 from sanic import HTTPResponse
-from analytical import database
+from backend import database
 
 
 session = {}
@@ -18,14 +18,19 @@ async def api_request(request):
     return HTTPResponse(resp_json, status=code)
 
 
-@app_sanic.route('/', methods=['GET', 'POST'])
-async def main_page(request):
-    if request.method == 'GET':
-        form = forms.RepositoryPathForm(request)
-        return jinja.render('index.html', request, form=form)
-    elif request.method == 'POST':
-        form = forms.RepositoryPathForm(request)
-        repository_path = request.form['link_repository'][0]
+@app_sanic.route('/', methods=['GET'])
+async def index(request):
+    form = forms.RepositoryPathForm(request)
+    return jinja.render('index.html', request, form=form)
+
+
+@app_sanic.route('/', methods=['POST'])
+async def index_resp(request):
+    form = forms.RepositoryPathForm(request)
+    repository_path = request.form.get(['link_repository'][0], None)
+    if repository_path:
         instance_db_client = database.DataBaseHandler()
         json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_app)
-        return jinja.render('index.html', request, form=form, json=json)
+    else:
+        json = None
+    return jinja.render('index.html', request, form=form, json=json)

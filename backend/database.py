@@ -1,11 +1,10 @@
 import os
-from analytical import github_api_client as ga
-from analytical import func_api_client as fa
-from app import models, db, load_dotenv
-from sqlalchemy import func
+from backend import github_api_client as ga
+from backend import func_api_client as fa
+from frontend import models, db, load_dotenv
 from datetime import datetime
 from hashlib import blake2s
-from req_response import RequestResponse
+from dto.req_response import RequestResponse
 
 
 class DataBaseHandler:
@@ -25,8 +24,7 @@ class DataBaseHandler:
             )
             return await self.final_block()
         self.repository_path = repository_path
-        # await self.find_repository('RepositoryInfo')
-        self.repo_find = None
+        await self.find_repository('RepositoryInfo')
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not force:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
@@ -46,12 +44,11 @@ class DataBaseHandler:
         final_block_r = await self.final_block()
 
         if self.resp_json.query_info.code == 200:
-            pass
-            # await self.save_or_upd_repo_data()
-            # await self.collection_repo()
-            # # Валидация стоимости запроса, записывать ли в статистику
-            # if self.resp_json.query_info.cost > 10:
-            #     await self.save_statistics()
+            await self.save_or_upd_repo_data()
+            await self.collection_repo()
+            # Валидация стоимости запроса, записывать ли в статистику
+            if self.resp_json.query_info.cost > 10:
+                await self.save_statistics()
         return final_block_r
 
     async def save_or_upd_repo_data(self):
@@ -191,9 +188,9 @@ class DataBaseHandler:
             db.session.commit()
 
     async def find_repository(self, table):
-        self.repo_find = eval(f'models.{table}.query.filter('
-                              f'func.lower(models.{table}.repo_path) == self.repository_path.lower()'
-                              f',).first()')
+
+
+        self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == self.repository_path.lower(),).first()')
 
     async def final_block(self):
         code = self.resp_json.query_info.code
