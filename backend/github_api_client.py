@@ -78,7 +78,8 @@ class GithubApiClient:
                 self.resp_json.repository_info.watchers_count = self.data['data']['repository']['watchers']['totalCount']
                 self.resp_json.repository_info.fork_count = self.data['data']['repository']['forkCount']
                 if self.data['data']['repository']['releases']['edges']:
-                    self.resp_json.repository_info.version = self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
+                    self.resp_json.repository_info.version = \
+                        self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
                     self.resp_json = await fa.parsing_version(
                         resp_json=self.resp_json,
                         data=self.data['data']['repository']['releases']['edges'],

@@ -1,14 +1,16 @@
 import os
-from backend import github_api_client as ga
-from backend import func_api_client as fa
-from frontend import models, db, load_dotenv
 from datetime import datetime
 from hashlib import blake2s
+from backend import github_api_client as ga
+from backend import func_api_client as fa
+from frontend import load_dotenv, db, models
 from dto.req_response import RequestResponse
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 
 class DataBaseHandler:
-    async def get_report(self, repository_path, token, force=True, response_type='full'):
+    async def get_report(self, repository_path, token, force=False, response_type='full'):
         self.response_duration_time = datetime.utcnow()
         self.resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
         self.token = token
@@ -60,6 +62,7 @@ class DataBaseHandler:
             await self.create_repo_data()
 
     async def create_repo_data(self):
+        session = Session(bind=db)
         repo_data = models.RepositoryInfo(
             repo_path=self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name,
             description=self.resp_json.repository_info.description,
@@ -89,10 +92,11 @@ class DataBaseHandler:
             time=self.resp_json.query_info.time,
             cost=self.resp_json.query_info.cost,
         )
-        db.session.add(repo_data)
-        db.session.commit()
+        session.add(repo_data)
+        session.commit()
 
     async def update_repo_data(self):
+        session = Session(bind=db)
         self.repo_find.description = self.resp_json.repository_info.description
         self.repo_find.stars = self.resp_json.repository_info.stars
         self.repo_find.version = self.resp_json.repository_info.version
@@ -119,7 +123,8 @@ class DataBaseHandler:
         self.repo_find.pr_closed_duration = self.resp_json.analytic.pr_closed_duration
         self.repo_find.time = self.resp_json.query_info.time
         self.repo_find.cost = self.resp_json.query_info.cost
-        db.session.commit()
+        session.add(self.repo_find)
+        session.commit()
 
     async def load_repo_data(self):
         self.resp_json.repository_info.owner, self.resp_json.repository_info.name = self.repo_find.repo_path.split('/', 2)
@@ -152,6 +157,7 @@ class DataBaseHandler:
         self.resp_json.query_info.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
 
     async def save_statistics(self):
+        session = Session(bind=db)
         time = self.resp_json.query_info.time
         cost = self.resp_json.query_info.cost
         if self.resp_json.query_info.remains < 3000:
@@ -168,12 +174,13 @@ class DataBaseHandler:
             query_limit=query_limit,
             rt=self.resp_json.query_info.rt
         )
-        db.session.add(statistic)
-        db.session.commit()
+        session.add(statistic)
+        session.commit()
 
     async def collection_repo(self):
         await self.find_repository('RepositoryCollection')
         if not self.repo_find:
+            session = Session(bind=db)
             load_dotenv()
             hasher = os.getenv('HASHER')
             token_hash = blake2s(digest_size=32)
@@ -184,13 +191,13 @@ class DataBaseHandler:
                 repo_path=self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name,
                 token_hash=str(token_hash),
             )
-            db.session.add(new_repo)
-            db.session.commit()
+            session.add(new_repo)
+            session.commit()
 
     async def find_repository(self, table):
-
-
-        self.repo_find = eval(f'models.{table}.query.filter(func.lower(models.{table}.repo_path) == self.repository_path.lower(),).first()')
+        session = Session(bind=db)
+        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == self.repository_path.lower()).first()')
+        session.close()
 
     async def final_block(self):
         code = self.resp_json.query_info.code

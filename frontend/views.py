@@ -3,10 +3,10 @@ from sanic import HTTPResponse
 from backend import database
 
 
-session = {}
+session_req = {}
 @app_sanic.middleware('request')
 async def add_session(request):
-    request.ctx.session = session
+    request.ctx.session = session_req
 
 
 @app_sanic.route('/api', methods=['POST'])

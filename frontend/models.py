@@ -1,18 +1,8 @@
-from sqlalchemy import DateTime
-from sqlalchemy import Float
-from sqlalchemy import Text
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-
 from frontend import db
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, func
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
-
-
-
 
 
 class RepositoryInfo(Base):
@@ -50,10 +40,6 @@ class RepositoryInfo(Base):
     def __repr__(self):
         return f'<{self.repo_path}>'
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
-
 
 class QueryStatistics(Base):
     __tablename__ = 'query_stat'
@@ -68,10 +54,6 @@ class QueryStatistics(Base):
     query_limit = Column(Integer, nullable=True)
     rt = Column(String, nullable=True)
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
-
 
 class RepositoryCollection(Base):
     __tablename__ = 'repo_collection'
@@ -81,7 +63,5 @@ class RepositoryCollection(Base):
     token_hash = Column(String, nullable=False)
     saved = Column(Boolean, default=False, nullable=False)
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
 
+Base.metadata.create_all(db)

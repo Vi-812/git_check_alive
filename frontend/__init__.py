@@ -9,6 +9,8 @@ token_app = os.getenv('TOKEN')
 
 app_sanic = Sanic(name='git_check_alive')
 app_sanic.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app_sanic.config.REQUEST_TIMEOUT = 1800
+app_sanic.config.RESPONSE_TIMEOUT = 1800
 
 jinja = SanicJinja2(app_sanic, pkg_name='frontend')
 
@@ -19,6 +21,3 @@ if not os.path.exists(DB_DIR):
 
 db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repo.db'), echo=True, future=True)
 from frontend import models
-
-metadata_obj = MetaData()
-metadata_obj.create_all(db)
