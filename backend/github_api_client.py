@@ -21,11 +21,11 @@ class GithubApiClient:
                 e=e,
             )
         await self.get_info_labels()
-        if resp_json.query_info.code:
+        if resp_json.meta.code:
             return self.resp_json
         await self.get_bug_issues()
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
-        self.resp_json.query_info.code = 200
+        self.resp_json.meta.code = 200
         return self.resp_json
 
     async def get_info_labels(self):
@@ -40,10 +40,10 @@ class GithubApiClient:
                 token=self.token,
             )
             self.resp_json, self.data = await data_github.get_info_labels_json(resp_json=self.resp_json)
-            if self.resp_json.query_info.code:
+            if self.resp_json.meta.code:
                 return self.resp_json
             await self.parse_info_labels()
-            if self.resp_json.query_info.code:
+            if self.resp_json.meta.code:
                 return self.resp_json
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -58,27 +58,27 @@ class GithubApiClient:
     async def parse_info_labels(self):
         try:
             if not self.cursor:
-                self.resp_json.repository_info.owner = self.data['data']['repository']['owner']['login']
-                self.resp_json.repository_info.name = self.data['data']['repository']['name']
-                self.resp_json.repository_info.description = self.data['data']['repository']['description']
-                self.resp_json.repository_info.stars = self.data['data']['repository']['stargazerCount']
-                self.resp_json.repository_info.created_at = await fa.to_date(self.data['data']['repository']['createdAt'])
-                self.resp_json.repository_info.duration = (
-                        datetime.utcnow() - self.resp_json.repository_info.created_at
+                self.resp_json.data.owner = self.data['data']['repository']['owner']['login']
+                self.resp_json.data.name = self.data['data']['repository']['name']
+                self.resp_json.data.description = self.data['data']['repository']['description']
+                self.resp_json.data.stars = self.data['data']['repository']['stargazerCount']
+                self.resp_json.data.created_at = await fa.to_date(self.data['data']['repository']['createdAt'])
+                self.resp_json.data.duration = (
+                        datetime.utcnow() - self.resp_json.data.created_at
                 ).days
-                self.resp_json.repository_info.updated_at = (
+                self.resp_json.data.updated_at = (
                         datetime.utcnow() - await fa.to_date(self.data['data']['repository']['updatedAt'])
                 ).days
-                self.resp_json.repository_info.pushed_at = (
+                self.resp_json.data.pushed_at = (
                         datetime.utcnow() - await fa.to_date(self.data['data']['repository']['pushedAt'])
                 ).days
-                self.resp_json.repository_info.archived = self.data['data']['repository']['isArchived']
-                self.resp_json.repository_info.locked = self.data['data']['repository']['isLocked']
-                self.resp_json.repository_info.issues_count = self.data['data']['repository']['issues']['totalCount']
-                self.resp_json.repository_info.watchers_count = self.data['data']['repository']['watchers']['totalCount']
-                self.resp_json.repository_info.fork_count = self.data['data']['repository']['forkCount']
+                self.resp_json.data.archived = self.data['data']['repository']['isArchived']
+                self.resp_json.data.locked = self.data['data']['repository']['isLocked']
+                self.resp_json.data.issues_count = self.data['data']['repository']['issues']['totalCount']
+                self.resp_json.data.watchers_count = self.data['data']['repository']['watchers']['totalCount']
+                self.resp_json.data.fork_count = self.data['data']['repository']['forkCount']
                 if self.data['data']['repository']['releases']['edges']:
-                    self.resp_json.repository_info.version = \
+                    self.resp_json.data.version = \
                         self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
                     self.resp_json = await fa.parsing_version(
                         resp_json=self.resp_json,
@@ -95,9 +95,9 @@ class GithubApiClient:
             for label in self.data['data']['repository']['labels']['edges']:
                 self.repo_labels_name_list.append(label['node']['name'])
             self.request_cost = self.data['data']['rateLimit']['cost']
-            self.resp_json.query_info.cost += self.request_cost
-            self.resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
-            self.resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
+            self.resp_json.meta.cost += self.request_cost
+            self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
+            self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
         except (TypeError, KeyError) as e:
             if str(e) == "'data'":
                 return await fa.json_error_401(
@@ -128,12 +128,12 @@ class GithubApiClient:
             )
             self.resp_json, self.data = await data_github.get_bug_issues_json(resp_json=self.resp_json)
             await self.parse_bug_issues()
-            if not self.cursor and self.resp_json.repository_info.bug_issues_count > 200:
+            if not self.cursor and self.resp_json.data.bug_issues_count > 200:
                 # Предварительный расчет времени запроса
                 cost_multiplier = 2.9
                 cost_upped = cost_multiplier * 2
-                self.resp_json.query_info.rt = str(round(
-                    ((self.resp_json.repository_info.bug_issues_count // 100) * cost_multiplier) + cost_upped
+                self.resp_json.meta.rt = str(round(
+                    ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped
                     , 2))
             if self.has_next_page:
                 self.cursor = self.end_cursor
@@ -141,13 +141,13 @@ class GithubApiClient:
                 break
 
     async def parse_bug_issues(self):
-        self.resp_json.repository_info.bug_issues_count = self.data['data']['repository']['issues']['totalCount']
+        self.resp_json.data.bug_issues_count = self.data['data']['repository']['issues']['totalCount']
         self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
         self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
         self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
         if self.data['data']['repository']['issues']['edges']:
             await self.instance_b_i_a.push_bug_issues(self.data['data']['repository']['issues']['edges'])
         self.request_cost = self.data['data']['rateLimit']['cost']
-        self.resp_json.query_info.cost += self.request_cost
-        self.resp_json.query_info.remains = self.data['data']['rateLimit']['remaining']
-        self.resp_json.query_info.reset_at = self.data['data']['rateLimit']['resetAt']
+        self.resp_json.meta.cost += self.request_cost
+        self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
+        self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']

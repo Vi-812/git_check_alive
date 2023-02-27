@@ -47,14 +47,14 @@ class BugIssuesAnalytic:
                     bug_issues_closed_two_months += 1
                 else:
                     break
-        resp_json.repository_info.bug_issues_closed_count = self.bug_issues_closed_total_count
-        resp_json.repository_info.bug_issues_open_count = self.bug_issues_open_total_count
-        if resp_json.repository_info.bug_issues_count:
+        resp_json.data.bug_issues_closed_count = self.bug_issues_closed_total_count
+        resp_json.data.bug_issues_open_count = self.bug_issues_open_total_count
+        if resp_json.data.bug_issues_count:
             resp_json.analytic.bug_issues_no_comment = round(
-                self.bug_issues_no_comment / resp_json.repository_info.bug_issues_count * 100, 2
+                self.bug_issues_no_comment / resp_json.data.bug_issues_count * 100, 2
             )
-        if resp_json.repository_info.bug_issues_closed_count and bug_issues_closed_two_months:
+        if resp_json.data.bug_issues_closed_count and bug_issues_closed_two_months:
              resp_json.analytic.bug_issues_closed_2months = round(
-                 bug_issues_closed_two_months / resp_json.repository_info.bug_issues_closed_count * 100, 2
+                 bug_issues_closed_two_months / resp_json.data.bug_issues_closed_count * 100, 2
              )
         return resp_json

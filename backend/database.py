@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 class DataBaseHandler:
     async def get_report(self, repository_path, token, force=False, response_type='full'):
         self.response_duration_time = datetime.utcnow()
-        self.resp_json = RequestResponse(repository_info={}, analytic={}, query_info={})
+        self.resp_json = RequestResponse(data={}, analytic={}, meta={})
         self.token = token
         self.response_type = response_type
         try:
@@ -45,16 +45,16 @@ class DataBaseHandler:
         )
         final_block_r = await self.final_block()
 
-        if self.resp_json.query_info.code == 200:
+        if self.resp_json.meta.code == 200:
             await self.save_or_upd_repo_data()
             await self.collection_repo()
             # Валидация стоимости запроса, записывать ли в статистику
-            if self.resp_json.query_info.cost > 10:
+            if self.resp_json.meta.cost > 10:
                 await self.save_statistics()
         return final_block_r
 
     async def save_or_upd_repo_data(self):
-        self.repository_path = self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name
+        self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
         await self.find_repository('RepositoryInfo')
         if self.repo_find:
             await self.update_repo_data()
@@ -64,22 +64,22 @@ class DataBaseHandler:
     async def create_repo_data(self):
         session = Session(bind=db)
         repo_data = models.RepositoryInfo(
-            repo_path=self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name,
-            description=self.resp_json.repository_info.description,
-            stars=self.resp_json.repository_info.stars,
-            version=self.resp_json.repository_info.version,
-            created_at=self.resp_json.repository_info.created_at,
-            duration=self.resp_json.repository_info.duration,
-            updated_at=self.resp_json.repository_info.updated_at,
-            pushed_at=self.resp_json.repository_info.pushed_at,
-            archived=self.resp_json.repository_info.archived,
-            locked=self.resp_json.repository_info.locked,
-            issues_count=self.resp_json.repository_info.issues_count,
-            bug_issues_count=self.resp_json.repository_info.bug_issues_count,
-            bug_issues_closed_count=self.resp_json.repository_info.bug_issues_closed_count,
-            bug_issues_open_count=self.resp_json.repository_info.bug_issues_open_count,
-            watchers_count=self.resp_json.repository_info.watchers_count,
-            fork_count=self.resp_json.repository_info.fork_count,
+            repo_path=self.resp_json.data.owner + '/' + self.resp_json.data.name,
+            description=self.resp_json.data.description,
+            stars=self.resp_json.data.stars,
+            version=self.resp_json.data.version,
+            created_at=self.resp_json.data.created_at,
+            duration=self.resp_json.data.duration,
+            updated_at=self.resp_json.data.updated_at,
+            pushed_at=self.resp_json.data.pushed_at,
+            archived=self.resp_json.data.archived,
+            locked=self.resp_json.data.locked,
+            issues_count=self.resp_json.data.issues_count,
+            bug_issues_count=self.resp_json.data.bug_issues_count,
+            bug_issues_closed_count=self.resp_json.data.bug_issues_closed_count,
+            bug_issues_open_count=self.resp_json.data.bug_issues_open_count,
+            watchers_count=self.resp_json.data.watchers_count,
+            fork_count=self.resp_json.data.fork_count,
             closed_bug_95perc=self.resp_json.analytic.closed_bug_95perc,
             closed_bug_50perc=self.resp_json.analytic.closed_bug_50perc,
             upd_major_ver=self.resp_json.analytic.upd_major_ver,
@@ -89,29 +89,29 @@ class DataBaseHandler:
             bug_issues_closed_2months=self.resp_json.analytic.bug_issues_closed_2months,
             pr_closed_count=self.resp_json.analytic.pr_closed_count,
             pr_closed_duration=self.resp_json.analytic.pr_closed_duration,
-            time=self.resp_json.query_info.time,
-            cost=self.resp_json.query_info.cost,
+            time=self.resp_json.meta.time,
+            cost=self.resp_json.meta.cost,
         )
         session.add(repo_data)
         session.commit()
 
     async def update_repo_data(self):
         session = Session(bind=db)
-        self.repo_find.description = self.resp_json.repository_info.description
-        self.repo_find.stars = self.resp_json.repository_info.stars
-        self.repo_find.version = self.resp_json.repository_info.version
-        self.repo_find.created_at = self.resp_json.repository_info.created_at
-        self.repo_find.duration = self.resp_json.repository_info.duration
-        self.repo_find.updated_at = self.resp_json.repository_info.updated_at
-        self.repo_find.pushed_at = self.resp_json.repository_info.pushed_at
-        self.repo_find.archived = self.resp_json.repository_info.archived
-        self.repo_find.locked = self.resp_json.repository_info.locked
-        self.repo_find.issues_count = self.resp_json.repository_info.issues_count
-        self.repo_find.bug_issues_count = self.resp_json.repository_info.bug_issues_count
-        self.repo_find.bug_issues_closed_count = self.resp_json.repository_info.bug_issues_closed_count
-        self.repo_find.bug_issues_open_count = self.resp_json.repository_info.bug_issues_open_count
-        self.repo_find.watchers_count = self.resp_json.repository_info.watchers_count
-        self.repo_find.fork_count = self.resp_json.repository_info.fork_count
+        self.repo_find.description = self.resp_json.data.description
+        self.repo_find.stars = self.resp_json.data.stars
+        self.repo_find.version = self.resp_json.data.version
+        self.repo_find.created_at = self.resp_json.data.created_at
+        self.repo_find.duration = self.resp_json.data.duration
+        self.repo_find.updated_at = self.resp_json.data.updated_at
+        self.repo_find.pushed_at = self.resp_json.data.pushed_at
+        self.repo_find.archived = self.resp_json.data.archived
+        self.repo_find.locked = self.resp_json.data.locked
+        self.repo_find.issues_count = self.resp_json.data.issues_count
+        self.repo_find.bug_issues_count = self.resp_json.data.bug_issues_count
+        self.repo_find.bug_issues_closed_count = self.resp_json.data.bug_issues_closed_count
+        self.repo_find.bug_issues_open_count = self.resp_json.data.bug_issues_open_count
+        self.repo_find.watchers_count = self.resp_json.data.watchers_count
+        self.repo_find.fork_count = self.resp_json.data.fork_count
         self.repo_find.closed_bug_95perc = self.resp_json.analytic.closed_bug_95perc
         self.repo_find.closed_bug_50perc = self.resp_json.analytic.closed_bug_50perc
         self.repo_find.upd_major_ver = self.resp_json.analytic.upd_major_ver
@@ -121,28 +121,28 @@ class DataBaseHandler:
         self.repo_find.bug_issues_closed_2months = self.resp_json.analytic.bug_issues_closed_2months
         self.repo_find.pr_closed_count = self.resp_json.analytic.pr_closed_count
         self.repo_find.pr_closed_duration = self.resp_json.analytic.pr_closed_duration
-        self.repo_find.time = self.resp_json.query_info.time
-        self.repo_find.cost = self.resp_json.query_info.cost
+        self.repo_find.time = self.resp_json.meta.time
+        self.repo_find.cost = self.resp_json.meta.cost
         session.add(self.repo_find)
         session.commit()
 
     async def load_repo_data(self):
-        self.resp_json.repository_info.owner, self.resp_json.repository_info.name = self.repo_find.repo_path.split('/', 2)
-        self.resp_json.repository_info.description = self.repo_find.description
-        self.resp_json.repository_info.stars = self.repo_find.stars
-        self.resp_json.repository_info.version = self.repo_find.version
-        self.resp_json.repository_info.created_at = self.repo_find.created_at
-        self.resp_json.repository_info.duration = self.repo_find.duration
-        self.resp_json.repository_info.updated_at = self.repo_find.updated_at
-        self.resp_json.repository_info.pushed_at = self.repo_find.pushed_at
-        self.resp_json.repository_info.archived = self.repo_find.archived
-        self.resp_json.repository_info.locked = self.repo_find.locked
-        self.resp_json.repository_info.issues_count = self.repo_find.issues_count
-        self.resp_json.repository_info.bug_issues_count = self.repo_find.bug_issues_count
-        self.resp_json.repository_info.bug_issues_closed_count = self.repo_find.bug_issues_closed_count
-        self.resp_json.repository_info.bug_issues_open_count = self.repo_find.bug_issues_open_count
-        self.resp_json.repository_info.watchers_count = self.repo_find.watchers_count
-        self.resp_json.repository_info.fork_count = self.repo_find.fork_count
+        self.resp_json.data.owner, self.resp_json.data.name = self.repo_find.repo_path.split('/', 2)
+        self.resp_json.data.description = self.repo_find.description
+        self.resp_json.data.stars = self.repo_find.stars
+        self.resp_json.data.version = self.repo_find.version
+        self.resp_json.data.created_at = self.repo_find.created_at
+        self.resp_json.data.duration = self.repo_find.duration
+        self.resp_json.data.updated_at = self.repo_find.updated_at
+        self.resp_json.data.pushed_at = self.repo_find.pushed_at
+        self.resp_json.data.archived = self.repo_find.archived
+        self.resp_json.data.locked = self.repo_find.locked
+        self.resp_json.data.issues_count = self.repo_find.issues_count
+        self.resp_json.data.bug_issues_count = self.repo_find.bug_issues_count
+        self.resp_json.data.bug_issues_closed_count = self.repo_find.bug_issues_closed_count
+        self.resp_json.data.bug_issues_open_count = self.repo_find.bug_issues_open_count
+        self.resp_json.data.watchers_count = self.repo_find.watchers_count
+        self.resp_json.data.fork_count = self.repo_find.fork_count
         self.resp_json.analytic.closed_bug_95perc = self.repo_find.closed_bug_95perc
         self.resp_json.analytic.closed_bug_50perc = self.repo_find.closed_bug_50perc
         self.resp_json.analytic.upd_major_ver = self.repo_find.upd_major_ver
@@ -152,27 +152,27 @@ class DataBaseHandler:
         self.resp_json.analytic.bug_issues_closed_2months = self.repo_find.bug_issues_closed_2months
         self.resp_json.analytic.pr_closed_count = self.repo_find.pr_closed_count
         self.resp_json.analytic.pr_closed_duration = self.repo_find.pr_closed_duration
-        self.resp_json.query_info.code = 200
-        self.resp_json.query_info.cost = 0
-        self.resp_json.query_info.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
+        self.resp_json.meta.code = 200
+        self.resp_json.meta.cost = 0
+        self.resp_json.meta.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
 
     async def save_statistics(self):
         session = Session(bind=db)
-        time = self.resp_json.query_info.time
-        cost = self.resp_json.query_info.cost
-        if self.resp_json.query_info.remains < 3000:
-            query_limit = self.resp_json.query_info.remains
+        time = self.resp_json.meta.time
+        cost = self.resp_json.meta.cost
+        if self.resp_json.meta.remains < 3000:
+            query_limit = self.resp_json.meta.remains
         else:
             query_limit = None
         statistic = models.QueryStatistics(
-            repo_path=self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name,
-            issues_count=self.resp_json.repository_info.issues_count,
-            bug_issues_count=self.resp_json.repository_info.bug_issues_count,
+            repo_path=self.resp_json.data.owner + '/' + self.resp_json.data.name,
+            issues_count=self.resp_json.data.issues_count,
+            bug_issues_count=self.resp_json.data.bug_issues_count,
             time=time,
             cost=cost,
             request_kf=round(time/cost, 3),
             query_limit=query_limit,
-            rt=self.resp_json.query_info.rt
+            rt=self.resp_json.meta.rt
         )
         session.add(statistic)
         session.commit()
@@ -188,7 +188,7 @@ class DataBaseHandler:
             token_hash = (token_hash.digest()).decode('ascii', errors='ignore')
 
             new_repo = models.RepositoryCollection(
-                repo_path=self.resp_json.repository_info.owner + '/' + self.resp_json.repository_info.name,
+                repo_path=self.resp_json.data.owner + '/' + self.resp_json.data.name,
                 token_hash=str(token_hash),
             )
             session.add(new_repo)
@@ -200,17 +200,17 @@ class DataBaseHandler:
         session.close()
 
     async def final_block(self):
-        code = self.resp_json.query_info.code
+        code = self.resp_json.meta.code
         if code != 200:
-            self.resp_json.__delattr__('repository_info')
+            self.resp_json.__delattr__('data')
             self.resp_json.__delattr__('analytic')
         self.response_duration_time = datetime.utcnow() - self.response_duration_time
-        self.resp_json.query_info.time = round(
+        self.resp_json.meta.time = round(
             self.response_duration_time.seconds + (self.response_duration_time.microseconds * 0.000001), 2
         )
-        self.resp_json.query_info.ght = round(
-            self.resp_json.query_info.ght.seconds + (self.resp_json.query_info.ght.microseconds * 0.000001), 2
+        self.resp_json.meta.ght = round(
+            self.resp_json.meta.ght.seconds + (self.resp_json.meta.ght.microseconds * 0.000001), 2
         )
-        if self.resp_json.query_info.rt:
-            self.resp_json.query_info.rt += '/' + str(self.resp_json.query_info.time)
+        if self.resp_json.meta.rt:
+            self.resp_json.meta.rt += '/' + str(self.resp_json.meta.time)
         return self.resp_json.json(by_alias=True), code

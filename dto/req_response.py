@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 
 
-class RepositoryInfo(BaseModel):
+class Data(BaseModel):
     owner: Optional[str]
     name: Optional[str]
     description: Optional[str]
@@ -35,7 +35,7 @@ class Analytic(BaseModel):
     pr_closed_duration: Optional[float] = Field(alias='prClosedDuration')
 
 
-class QueryInfo(BaseModel):
+class Meta(BaseModel):
     code: Optional[int] = 0
     error_desc: Optional[str] = Field(alias='errorDesc')
     error_message: Optional[str] = Field(alias='errorMessage')
@@ -49,6 +49,6 @@ class QueryInfo(BaseModel):
 
 
 class RequestResponse(BaseModel):
-    repository_info: RepositoryInfo
+    data: Data
     analytic: Analytic
-    query_info: QueryInfo
+    meta: Meta

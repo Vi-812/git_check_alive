@@ -161,13 +161,13 @@ class Link:
                 ght = datetime.utcnow()
                 async with session.post(url=self.url, headers=self.headers, json=json_gql) as resp:
                     data = json.loads(await resp.read())
-                resp_json.query_info.ght += datetime.utcnow() - ght
+                resp_json.meta.ght += datetime.utcnow() - ght
                 return resp_json, data
                 # task = [await session.post(url=self.url, headers=self.headers, json=self.json)]
                 # data = await asyncio.gather(*task, return_exceptions=True)
         except requests.exceptions.ConnectionError as e:
             logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
-            resp_json.query_info.code = 500
-            resp_json.query_info.error_desc = 'ConnectionError'
-            resp_json.query_info.error_message = str(e)
+            resp_json.meta.code = 500
+            resp_json.meta.error_desc = 'ConnectionError'
+            resp_json.meta.error_message = str(e)
             return resp_json, data
