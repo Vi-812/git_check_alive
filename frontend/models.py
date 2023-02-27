@@ -1,21 +1,12 @@
-from sqlalchemy import DateTime
-from sqlalchemy import Float
-from sqlalchemy import Text
+from frontend import db
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-from app import db
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy import Column, DateTime, func
 
 Base = declarative_base()
 
 
-
-
-
 class RepositoryInfo(Base):
-    __tablename__ = 'repository_info'
+    __tablename__ = 'repo_info'
     id = Column(Integer, primary_key=True)
     upd_date = Column(DateTime, onupdate=func.now(), default=func.now(), nullable=False)
     repo_path = Column(String, unique=True, nullable=False)
@@ -49,13 +40,9 @@ class RepositoryInfo(Base):
     def __repr__(self):
         return f'<{self.repo_path}>'
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
-
 
 class QueryStatistics(Base):
-    __tablename__ = 'quer_statistics'
+    __tablename__ = 'query_stat'
     id = Column(Integer, primary_key=True)
     crt_date = Column(DateTime, default=func.now(), nullable=False)
     repo_path = Column(String, nullable=False)
@@ -67,20 +54,14 @@ class QueryStatistics(Base):
     query_limit = Column(Integer, nullable=True)
     rt = Column(String, nullable=True)
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
-
 
 class RepositoryCollection(Base):
-    __tablename__ = 'repository_collection'
+    __tablename__ = 'repo_collection'
     id = Column(Integer, primary_key=True)
     crt_date = Column(DateTime, default=func.now(), nullable=False)
     repo_path = Column(String, unique=True, nullable=False)
     token_hash = Column(String, nullable=False)
     saved = Column(Boolean, default=False, nullable=False)
 
-    @staticmethod
-    def create_database_table():
-        Base.metadata.create_all(db)
 
+Base.metadata.create_all(db)

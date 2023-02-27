@@ -2,7 +2,7 @@ import sys
 import os
 import argparse
 import asyncio
-import analytical.database as db
+import backend.database as db
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -25,6 +25,5 @@ if not args.repository_path:
     args.repository_path = "vi-812/git_check_alive"
 
 instance_dbh = db.DataBaseHandler()
-resp_json, code = asyncio.run(instance_dbh.get_report(repository_path=args.repository_path, token=token))
-print(code)
+resp_json = asyncio.run(instance_dbh.get_report(repository_path=args.repository_path, token=token))
 print(resp_json)
