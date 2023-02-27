@@ -1,7 +1,7 @@
 import os
 from sanic import Sanic
 from sanic_jinja2 import SanicJinja2
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,5 +19,5 @@ DB_DIR = os.path.join(APP_DIR, 'backend/db')
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR)
 
-db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repo.db'), echo=True, future=True)
+db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repo.db'), future=True)
 from frontend import models

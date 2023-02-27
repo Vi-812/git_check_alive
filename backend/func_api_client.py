@@ -45,7 +45,7 @@ async def parsing_version(resp_json, data):
     else:
         if len(data) == 100:
             logger.error(f'ERROR! Не найдено версии (100 записей), '
-                         f'"{resp_json.repository_info.owner}/{resp_json.repository_info.name}".')
+                         f'"{resp_json.data.owner}/{resp_json.data.name}".')
     if not major_v: major_v = published_date
     if not minor_v: minor_v = published_date
     if not patch_v: patch_v = published_date
@@ -79,24 +79,24 @@ async def pull_request_analytics(resp_json, data):
 
 async def path_error_400(resp_json, repository_path, e):
     logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
-    resp_json.query_info.code = 400
-    resp_json.query_info.error_desc = 'Bad adress'
-    resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
+    resp_json.meta.code = 400
+    resp_json.meta.error_desc = 'Bad adress'
+    resp_json.meta.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
     return resp_json
 
 
 async def json_error_401(resp_json, repository_owner, repository_name, e_data):
     logger.error(f'E401! Ошибка токена, обращались к "{repository_owner}/{repository_name}", e_data="{e_data}".')
-    resp_json.query_info.code = 401
-    resp_json.query_info.error_desc = 'Token error, invalid token'
-    resp_json.query_info.error_message = str(e_data)
+    resp_json.meta.code = 401
+    resp_json.meta.error_desc = 'Token error, invalid token'
+    resp_json.meta.error_message = str(e_data)
     return resp_json
 
 
 async def json_error_404(resp_json, repository_owner, repository_name, error):
     logger.error(f'E404! Не найден репозиторий "{repository_owner}/{repository_name}".')
-    resp_json.query_info.code = 404
-    resp_json.query_info.error_desc = 'Repository not found'
-    resp_json.query_info.error_message = str(error)
-    resp_json.query_info.cost = 1
+    resp_json.meta.code = 404
+    resp_json.meta.error_desc = 'Repository not found'
+    resp_json.meta.error_message = str(error)
+    resp_json.meta.cost = 1
     return resp_json

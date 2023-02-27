@@ -9,6 +9,14 @@ async def add_session(request):
     request.ctx.session = session_req
 
 
+@app_sanic.route('/api/repo', methods=['GET'])
+async def index(request):
+    repository_path = request.args.get('name')
+    instance_db_client = database.DataBaseHandler()
+    resp_json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_app)
+    return HTTPResponse(resp_json, status=code)
+
+
 @app_sanic.route('/api', methods=['POST'])
 async def api_request(request):
     token_api = request.json['token']
