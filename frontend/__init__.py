@@ -1,7 +1,7 @@
 import os
 from sanic import Sanic
 from sanic_jinja2 import SanicJinja2
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 load_dotenv()
