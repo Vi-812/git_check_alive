@@ -16,7 +16,7 @@ logger.add(
 token = os.getenv('TOKEN')
 
 try:
-    response = requests.get('http://127.0.0.1:8000/api/repo?name=vi-812/git_check_alive')
+    response = requests.get('https://isgitalive.karo-dev.ru/api/repo?name=vi-812/git_check_alive')
     data = response.json()
 except Exception as e:
     logger.error(f'code="", repo="", response="", e="{e}"')
