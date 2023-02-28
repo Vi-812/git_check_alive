@@ -46,14 +46,14 @@ class DataBaseHandler:
 
         final_block_r = await self.final_block()
         if self.resp_json.meta.code == 200:
-            await self.save_or_upd_repo_data()
-            await self.collection_repo()
+            await self.create_or_update_repo_data()
+            await self.save_collection()
             # Валидация стоимости запроса, записывать ли в статистику
             if self.resp_json.meta.cost > 10:
                 await self.save_statistics()
         return final_block_r
 
-    async def save_or_upd_repo_data(self):
+    async def create_or_update_repo_data(self):
         self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
         await self.find_repository('RepositoryInfo')
         if self.repo_find:
@@ -178,7 +178,7 @@ class DataBaseHandler:
         session.add(statistic)
         session.commit()
 
-    async def collection_repo(self):
+    async def save_collection(self):
         await self.find_repository('RepositoryCollection')
         if not self.repo_find:
             session = Session(bind=db)

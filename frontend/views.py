@@ -10,7 +10,7 @@ async def add_session(request):
 
 
 @app_sanic.route('/api/repo', methods=['GET'])
-async def index(request):
+async def get_api_request(request):
     repository_path = request.args.get('name')
     instance_db_client = database.DataBaseHandler()
     resp_json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_app)
@@ -18,7 +18,7 @@ async def index(request):
 
 
 @app_sanic.route('/api', methods=['POST'])
-async def api_request(request):
+async def post_api_request(request):
     repository_path = request.json['repository_path']
     token_api = request.json['token']
     if not token_api:
