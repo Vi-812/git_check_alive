@@ -18,7 +18,7 @@ class DataBaseHandler:
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
-        except IndexError as e:
+        except (IndexError, AttributeError) as e:
             await fa.path_error_400(
                 resp_json=self.resp_json,
                 repository_path=repository_path,
@@ -43,17 +43,17 @@ class DataBaseHandler:
             repository_path=self.repository_path,
             response_type=self.response_type,
         )
-        final_block_r = await self.final_block()
 
+        await self.time_block()
         if self.resp_json.meta.code == 200:
-            await self.save_or_upd_repo_data()
-            await self.collection_repo()
+            await self.create_or_update_repo_data()
+            await self.save_collection()
             # Валидация стоимости запроса, записывать ли в статистику
             if self.resp_json.meta.cost > 10:
                 await self.save_statistics()
-        return final_block_r
+        return await self.final_block(t_block=False)
 
-    async def save_or_upd_repo_data(self):
+    async def create_or_update_repo_data(self):
         self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
         await self.find_repository('RepositoryInfo')
         if self.repo_find:
@@ -154,7 +154,7 @@ class DataBaseHandler:
         self.resp_json.analytic.pr_closed_duration = self.repo_find.pr_closed_duration
         self.resp_json.meta.code = 200
         self.resp_json.meta.cost = 0
-        self.resp_json.meta.database = f'Information from the database for {str(self.repo_find.upd_date)} UTC'
+        self.resp_json.meta.database = f'Information from DB at {str(self.repo_find.upd_date)} UTC'
 
     async def save_statistics(self):
         session = Session(bind=db)
@@ -172,12 +172,13 @@ class DataBaseHandler:
             cost=cost,
             request_kf=round(time/cost, 3),
             query_limit=query_limit,
-            rt=self.resp_json.meta.rt
+            estimated_time=self.resp_json.meta.estimated_time,
+            request_downtime=self.resp_json.meta.request_downtime,
         )
         session.add(statistic)
         session.commit()
 
-    async def collection_repo(self):
+    async def save_collection(self):
         await self.find_repository('RepositoryCollection')
         if not self.repo_find:
             session = Session(bind=db)
@@ -199,18 +200,25 @@ class DataBaseHandler:
         self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == self.repository_path.lower()).first()')
         session.close()
 
-    async def final_block(self):
-        code = self.resp_json.meta.code
-        if code != 200:
-            self.resp_json.__delattr__('data')
-            self.resp_json.__delattr__('analytic')
+
+    async def time_block(self):
         self.response_duration_time = datetime.utcnow() - self.response_duration_time
         self.resp_json.meta.time = round(
             self.response_duration_time.seconds + (self.response_duration_time.microseconds * 0.000001), 2
         )
-        self.resp_json.meta.ght = round(
-            self.resp_json.meta.ght.seconds + (self.resp_json.meta.ght.microseconds * 0.000001), 2
-        )
-        if self.resp_json.meta.rt:
-            self.resp_json.meta.rt += '/' + str(self.resp_json.meta.time)
+        if self.resp_json.meta.request_downtime:
+            self.resp_json.meta.request_downtime = round(
+                self.resp_json.meta.request_downtime.seconds + (
+                            self.resp_json.meta.request_downtime.microseconds * 0.000001), 2
+            )
+
+    async def final_block(self, t_block=True):
+        if t_block:
+            await self.time_block()
+        code = self.resp_json.meta.code
+        if code == 200:
+            pass
+        else:
+            self.resp_json.__delattr__('data')
+            self.resp_json.__delattr__('analytic')
         return self.resp_json.json(by_alias=True), code

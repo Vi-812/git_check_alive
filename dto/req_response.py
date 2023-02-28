@@ -44,8 +44,8 @@ class Meta(BaseModel):
     remains: Optional[int]
     reset_at: Optional[str] = Field(alias='resetAt')
     database: Optional[str]
-    rt: Optional[str]
-    ght: Optional[datetime] = timedelta(seconds=0)
+    estimated_time: Optional[float] = Field(alias='estimatedTime')
+    request_downtime: Optional[datetime] = Field(alias='requestDowntime')
 
 
 class RequestResponse(BaseModel):

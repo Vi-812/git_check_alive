@@ -5,7 +5,7 @@ from loguru import logger
 logger.add('errors.log', format='{time:DD-MM HH:mm} {message}', level='ERROR',)
 
 if __name__ == '__main__':
-        app_sanic.run()
-        models.RepositoryInfo.create_database_table()
-        models.QueryStatistics.create_database_table()
-        models.RepositoryCollection.create_database_table()
+    app_sanic.run()
+    models.RepositoryInfo.create_database_table()
+    models.QueryStatistics.create_database_table()
+    models.RepositoryCollection.create_database_table()

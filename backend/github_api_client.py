@@ -1,7 +1,7 @@
 import backend.use_graphql as ug
 import backend.func_api_client as fa
 import backend.bug_issues as bi
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class GithubApiClient:
@@ -11,15 +11,9 @@ class GithubApiClient:
     async def get_new_report(self, resp_json, repository_path, response_type='full'):
         self.resp_json = resp_json
         self.response_type = response_type  # Задействовать
-        try:
-            repository_path = repository_path.split('/')
-            self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
-        except IndexError as e:
-            return fa.path_error_400(
-                resp_json=self.resp_json,
-                repository_path=repository_path,
-                e=e,
-            )
+        self.resp_json.meta.request_downtime = timedelta(seconds=0)
+        repository_path = repository_path.split('/')
+        self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
         await self.get_info_labels()
         if resp_json.meta.code:
             return self.resp_json
@@ -132,7 +126,7 @@ class GithubApiClient:
                 # Предварительный расчет времени запроса
                 cost_multiplier = 2.9
                 cost_upped = cost_multiplier * 2
-                self.resp_json.meta.rt = str(round(
+                self.resp_json.meta.estimated_time = str(round(
                     ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped
                     , 2))
             if self.has_next_page:

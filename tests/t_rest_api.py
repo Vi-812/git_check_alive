@@ -10,7 +10,7 @@ token = os.getenv('TOKEN')
 
 if not mega_test:
     testing = [
-        'https://github.com/pallets/flask',
+        'https://github.com/vi-812/git_check_alive',
     ]
 else:
     testing = [

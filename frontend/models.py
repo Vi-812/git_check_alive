@@ -52,7 +52,8 @@ class QueryStatistics(Base):
     cost = Column(Integer, nullable=False)
     request_kf = Column(Float, nullable=False)
     query_limit = Column(Integer, nullable=True)
-    rt = Column(String, nullable=True)
+    estimated_time = Column(Float, nullable=True)
+    request_downtime = Column(Float, nullable=False)
 
 
 class RepositoryCollection(Base):
