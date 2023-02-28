@@ -19,8 +19,10 @@ async def index(request):
 
 @app_sanic.route('/api', methods=['POST'])
 async def api_request(request):
-    token_api = request.json['token']
     repository_path = request.json['repository_path']
+    token_api = request.json['token']
+    if not token_api:
+        token_api = token_app
     instance_db_client = database.DataBaseHandler()
     resp_json, code = await instance_db_client.get_report(repository_path=repository_path, token=token_api)
     return HTTPResponse(resp_json, status=code)

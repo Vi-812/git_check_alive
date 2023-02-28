@@ -53,6 +53,7 @@ class QueryStatistics(Base):
     request_kf = Column(Float, nullable=False)
     query_limit = Column(Integer, nullable=True)
     rt = Column(String, nullable=True)
+    ght = Column(Float, nullable=False)
 
 
 class RepositoryCollection(Base):

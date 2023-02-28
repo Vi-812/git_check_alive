@@ -11,15 +11,8 @@ class GithubApiClient:
     async def get_new_report(self, resp_json, repository_path, response_type='full'):
         self.resp_json = resp_json
         self.response_type = response_type  # Задействовать
-        try:
-            repository_path = repository_path.split('/')
-            self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
-        except IndexError as e:
-            return fa.path_error_400(
-                resp_json=self.resp_json,
-                repository_path=repository_path,
-                e=e,
-            )
+        repository_path = repository_path.split('/')
+        self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
         await self.get_info_labels()
         if resp_json.meta.code:
             return self.resp_json

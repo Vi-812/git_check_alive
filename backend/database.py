@@ -18,7 +18,7 @@ class DataBaseHandler:
         try:
             repository_path = repository_path.split('/')
             repository_path = repository_path[-2] + '/' + repository_path[-1]
-        except IndexError as e:
+        except (IndexError, AttributeError) as e:
             await fa.path_error_400(
                 resp_json=self.resp_json,
                 repository_path=repository_path,
@@ -172,7 +172,8 @@ class DataBaseHandler:
             cost=cost,
             request_kf=round(time/cost, 3),
             query_limit=query_limit,
-            rt=self.resp_json.meta.rt
+            rt=self.resp_json.meta.rt,
+            ght=self.resp_json.meta.ght,
         )
         session.add(statistic)
         session.commit()

@@ -80,7 +80,7 @@ async def pull_request_analytics(resp_json, data):
 async def path_error_400(resp_json, repository_path, e):
     logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
     resp_json.meta.code = 400
-    resp_json.meta.error_desc = 'Bad adress'
+    resp_json.meta.error_desc = 'Bad repository adress'
     resp_json.meta.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
     return resp_json
 
