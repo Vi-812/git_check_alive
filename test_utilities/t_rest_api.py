@@ -3,14 +3,14 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-mega_test = True
+mega_test = False
 
 url = 'http://127.0.0.1:8000/api'
 token = os.getenv('TOKEN')
 
 if not mega_test:
     testing = [
-        'https://github.com/pallets/flask',
+        'https://github.com/vi-812/git_check_alive',
     ]
 else:
     testing = [

@@ -1,6 +1,6 @@
 from subprocess import check_output
 
-testing = False
+testing = True
 
 if not testing:
     repository_path = [

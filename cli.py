@@ -21,9 +21,8 @@ except:
 if not args.repository_path:
     print('Pass the link or "owner/repository_name" as an argument')
     print('"https://github.com/Vi-812/git_check_alive" or "vi-812/git_check_alive"')
-    # sys.exit()
-    args.repository_path = "vi-812/git_check_alive"
+    sys.exit()
 
 instance_dbh = db.DataBaseHandler()
-resp_json = asyncio.run(instance_dbh.get_report(repository_path=args.repository_path, token=token))
+resp_json, code = asyncio.run(instance_dbh.get_report(repository_path=args.repository_path, token=token))
 print(resp_json)

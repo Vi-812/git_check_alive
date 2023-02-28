@@ -43,8 +43,8 @@ class DataBaseHandler:
             repository_path=self.repository_path,
             response_type=self.response_type,
         )
-        final_block_r = await self.final_block()
 
+        final_block_r = await self.final_block()
         if self.resp_json.meta.code == 200:
             await self.save_or_upd_repo_data()
             await self.collection_repo()
