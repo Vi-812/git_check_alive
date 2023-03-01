@@ -15,7 +15,7 @@ class UseGraphQL:
             -------------------------:param repository_owner: логин владельца репозитория
         :param repository_name: имя репозитория
         :param cursor: курсор, для последовотельного запроса данных
-        :param token: токен, для получения доступа
+        :param token: токен, для получения доступа------------------------------------------------------------
         :param labels_bug: наименования bug меток, список
     :return: информацию о репозитории полученную от Link
     """
@@ -101,7 +101,7 @@ class UseGraphQL:
             """
             query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {
                 repository(name: $name, owner: $owner) {
-                    issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {
+                    issues(first: 100, filterBy: {labels: $labels, createdBy: "2018-01-01..*"}, after: $cursor) {
                         totalCount
                         pageInfo {
                             startCursor

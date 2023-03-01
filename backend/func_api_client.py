@@ -66,12 +66,18 @@ async def pull_request_analytics(resp_json, data):
     count_closed_pr = 0
     for pullrequest in data:
         if pullrequest['closed'] and bool(pullrequest['closedAt']):
-            if await to_date(pullrequest['closedAt']) + timedelta(60) > datetime.utcnow():
+            if await to_date(pullrequest['closedAt']) + timedelta(days=60) > datetime.utcnow():
                 duration_pullrequest.append(await to_date(pullrequest['closedAt']) - await to_date(pullrequest['publishedAt']))
                 count_closed_pr += 1
     # Медиана времени закрытия PR за последние 2 месяца, умножаем timedelta на 24, вытягиваем дни(фактически это часы)
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
-    median_closed_pr = median(duration_pullrequest) * 24
+    if duration_pullrequest:
+        median_closed_pr = median(duration_pullrequest) * 24
+
+
+
+
+
     resp_json.analytic.pr_closed_duration = round(median_closed_pr.days / 24, 3)
     resp_json.analytic.pr_closed_count = count_closed_pr
     return resp_json
