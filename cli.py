@@ -2,6 +2,7 @@ import sys
 import os
 import argparse
 import asyncio
+from dto.received_request import ReceivedRequest
 import backend.database as db
 from dotenv import load_dotenv
 load_dotenv()
@@ -23,6 +24,7 @@ if not args.repository_path:
     print('"https://github.com/Vi-812/git_check_alive" or "vi-812/git_check_alive"')
     sys.exit()
 
+rec_request = ReceivedRequest(url='CLI request', repo_path=args.repository_path, token=token)
 instance_dbh = db.DataBaseHandler()
-resp_json, code = asyncio.run(instance_dbh.get_report(repository_path=args.repository_path, token=token))
-print(resp_json)
+resp_json = asyncio.run(instance_dbh.get_report(rec_request=rec_request))
+print(resp_json.json())

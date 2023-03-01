@@ -77,24 +77,24 @@ async def pull_request_analytics(resp_json, data):
     return resp_json
 
 
-async def path_error_400(resp_json, repository_path, e):
-    logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
+async def path_error_400(rec_request, resp_json, repository_path, e):
+    logger.error(f'E_400! Не распознан repository_path={repository_path}, e={e}, rec_request={rec_request.dict(exclude={"token"})}')
     resp_json.meta.code = 400
     resp_json.meta.error_desc = 'Bad repository adress'
     resp_json.meta.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
     return resp_json
 
 
-async def json_error_401(resp_json, repository_owner, repository_name, e_data):
-    logger.error(f'E401! Ошибка токена, обращались к "{repository_owner}/{repository_name}", e_data="{e_data}".')
+async def json_error_401(rec_request, resp_json, e_data):
+    logger.error(f'E_401! Ошибка токена, e_data={e_data}, rec_request={rec_request.dict(exclude={"token"})}')
     resp_json.meta.code = 401
     resp_json.meta.error_desc = 'Token error, invalid token'
     resp_json.meta.error_message = str(e_data)
     return resp_json
 
 
-async def json_error_404(resp_json, repository_owner, repository_name, error):
-    logger.error(f'E404! Не найден репозиторий "{repository_owner}/{repository_name}".')
+async def json_error_404(rec_request, resp_json, error):
+    logger.error(f'E_404! Не найден rec_request={rec_request.dict(exclude={"token"})}')
     resp_json.meta.code = 404
     resp_json.meta.error_desc = 'Repository not found'
     resp_json.meta.error_message = str(error)

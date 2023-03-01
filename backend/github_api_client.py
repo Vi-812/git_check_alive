@@ -2,24 +2,22 @@ import backend.use_graphql as ug
 import backend.func_api_client as fa
 import backend.bug_issues as bi
 from datetime import datetime, timedelta
+from loguru import logger
 
 
 class GithubApiClient:
-    def __init__(self, token):
-        self.token = token
 
-    async def get_new_report(self, resp_json, repository_path, response_type='full'):
+    async def get_new_report(self, rec_request, resp_json):
+        self.rec_request = rec_request  # Задействовать response_type
         self.resp_json = resp_json
-        self.response_type = response_type  # Задействовать
         self.resp_json.meta.request_downtime = timedelta(seconds=0)
-        repository_path = repository_path.split('/')
-        self.repository_owner, self.repository_name = repository_path[-2], repository_path[-1]
         await self.get_info_labels()
         if resp_json.meta.code:
             return self.resp_json
         await self.get_bug_issues()
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
         self.resp_json.meta.code = 200
+        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}')
         return self.resp_json
 
     async def get_info_labels(self):
@@ -27,13 +25,12 @@ class GithubApiClient:
         self.repo_labels_name_list = []
 
         while True:
-            data_github = ug.UseGraphQL(
-                repository_owner=self.repository_owner,
-                repository_name=self.repository_name,
+            data_github = ug.UseGraphQL()
+            self.resp_json, self.data = await data_github.get_info_labels_json(
+                rec_request=self.rec_request,
+                resp_json=self.resp_json,
                 cursor=self.cursor,
-                token=self.token,
             )
-            self.resp_json, self.data = await data_github.get_info_labels_json(resp_json=self.resp_json)
             if self.resp_json.meta.code:
                 return self.resp_json
             await self.parse_info_labels()
@@ -95,16 +92,14 @@ class GithubApiClient:
         except (TypeError, KeyError) as e:
             if str(e) == "'data'":
                 return await fa.json_error_401(
+                    rec_request=self.rec_request,
                     resp_json=self.resp_json,
-                    repository_owner=self.repository_owner,
-                    repository_name=self.repository_name,
                     e_data=self.data,
                 )
             if str(e) == "'NoneType' object is not subscriptable":
                 return await fa.json_error_404(
+                    rec_request=self.rec_request,
                     resp_json=self.resp_json,
-                    repository_owner=self.repository_owner,
-                    repository_name=self.repository_name,
                     error=self.data['errors'][0]['message'],
                 )
 
@@ -113,14 +108,13 @@ class GithubApiClient:
         self.instance_b_i_a = bi.BugIssuesAnalytic()
 
         while True:
-            data_github = ug.UseGraphQL(
-                self.repository_owner,
-                self.repository_name,
-                self.cursor,
-                self.token,
-                self.repo_labels_bug_list,
+            data_github = ug.UseGraphQL()
+            self.resp_json, self.data = await data_github.get_bug_issues_json(
+                rec_request=self.rec_request,
+                resp_json=self.resp_json,
+                cursor=self.cursor,
+                repo_labels_bug_list=self.repo_labels_bug_list,
             )
-            self.resp_json, self.data = await data_github.get_bug_issues_json(resp_json=self.resp_json)
             await self.parse_bug_issues()
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
                 # Предварительный расчет времени запроса
