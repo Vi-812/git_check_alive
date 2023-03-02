@@ -45,7 +45,7 @@ else:
         'github.com/jlippold/tweakCompatible',
     ]
 
-for test in yyy:
+for test in testing:
     body = {
         'token': token,
         'repository_path': test

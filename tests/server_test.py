@@ -22,7 +22,7 @@ try:
     else:
         test_count = 10
 except Exception as e:
-    logger.error(f'Count test ERROR! e={e}')
+    logger.error(f'Count test ERROR! e={e} => test_count = 10')
     test_count = 10
 
 if test_count > len(test_repositories):

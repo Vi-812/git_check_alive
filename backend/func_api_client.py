@@ -73,12 +73,9 @@ async def pull_request_analytics(resp_json, data):
     # и опять делим на 24 для получения дней с точностью до часа (вещественное число)
     if duration_pullrequest:
         median_closed_pr = median(duration_pullrequest) * 24
-
-
-
-
-
-    resp_json.analytic.pr_closed_duration = round(median_closed_pr.days / 24, 3)
+        resp_json.analytic.pr_closed_duration = round(median_closed_pr.days / 24, 3)
+    else:
+        resp_json.analytic.pr_closed_duration = None
     resp_json.analytic.pr_closed_count = count_closed_pr
     return resp_json
 

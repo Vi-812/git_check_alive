@@ -96,12 +96,13 @@ class UseGraphQL:
         )
 
     async def get_bug_issues_json(self, rec_request, resp_json, cursor, repo_labels_bug_list):
+        # issues(first: 100, filterBy: {labels: $labels, createdBy: "2018-01-01..*"}, after: $cursor) {
         json_gql = {
             'query':
             """
             query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {
                 repository(name: $name, owner: $owner) {
-                    issues(first: 100, filterBy: {labels: $labels, createdBy: "2018-01-01..*"}, after: $cursor) {
+                    issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {
                         totalCount
                         pageInfo {
                             startCursor

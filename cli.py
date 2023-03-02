@@ -4,6 +4,7 @@ import argparse
 import asyncio
 from dto.received_request import ReceivedRequest
 import backend.database as db
+from frontend.json_preparation import final_json_preparation
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -27,4 +28,5 @@ if not args.repository_path:
 rec_request = ReceivedRequest(url='CLI request', repo_path=args.repository_path, token=token)
 instance_dbh = db.DataBaseHandler()
 resp_json = asyncio.run(instance_dbh.get_report(rec_request=rec_request))
-print(resp_json.json())
+resp_json = final_json_preparation(resp_json=resp_json)
+print(resp_json)
