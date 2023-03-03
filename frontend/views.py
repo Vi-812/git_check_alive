@@ -5,8 +5,9 @@ from dto.received_request import ReceivedRequest
 from sanic import HTTPResponse
 from loguru import logger
 
-
 session_req = {}
+
+
 @app_sanic.middleware('request')
 async def add_session(request):
     request.ctx.session = session_req
