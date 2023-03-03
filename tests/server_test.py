@@ -5,7 +5,7 @@ from random import choice
 from datetime import datetime
 from loguru import logger
 from dotenv import load_dotenv
-logger.add('server_test.log', format='{time:DD-MM HH:mm} {message}', level='INFO',)
+logger.add('report.log', format='{time:DD-MM HH:mm} {message}', level='INFO',)
 load_dotenv()
 token = os.getenv('TOKEN')
 url = 'http://51.68.189.155/api'
@@ -50,8 +50,8 @@ for i in range(test_count):
         logger.error(f'<<< (i={i+1}/{test_count}) ERROR! code={response.status_code}, repo={random_repo}, response={response.text}')
         continue
     else:
-        print(response.text)
-        time = datetime.utcnow() - time
-        time = round(time.seconds + time.microseconds * 0.000001, 2)
-        time_deviation = round(time - data['meta']['time'], 2)
+        if data['meta']['time']:
+            time = datetime.utcnow() - time
+            time = round(time.seconds + time.microseconds * 0.000001, 2)
+            time_deviation = round(time - data['meta']['time'], 2)
         logger.info(f'<<< (i={i+1}/{test_count}) code={response.status_code}, time_deviation={time_deviation}, repo={random_repo}, response={response.text}')
