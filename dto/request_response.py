@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class Data(BaseModel):

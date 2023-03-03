@@ -4,44 +4,46 @@ from hashlib import blake2s
 from backend import github_api_client as ga
 from backend import func_api_client as fa
 from frontend import load_dotenv, db, models
-from dto.req_response import RequestResponse
+from dto.request_response import RequestResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from loguru import logger
 
 
 class DataBaseHandler:
-    async def get_report(self, repository_path, token, force=False, response_type='full'):
+    async def get_report(self, rec_request):
         self.response_duration_time = datetime.utcnow()
+        self.rec_request = rec_request
         self.resp_json = RequestResponse(data={}, analytic={}, meta={})
-        self.token = token
-        self.response_type = response_type
+        repository_path = self.rec_request.repo_path
         try:
             repository_path = repository_path.split('/')
-            repository_path = repository_path[-2] + '/' + repository_path[-1]
+            self.rec_request.repo_owner, self.rec_request.repo_name = repository_path[-2], repository_path[-1]
+            self.rec_request.repo_path = self.rec_request.repo_owner + '/' + self.rec_request.repo_name
         except (IndexError, AttributeError) as e:
             await fa.path_error_400(
+                rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 repository_path=repository_path,
                 e=e,
             )
-            return await self.final_block()
-        self.repository_path = repository_path
+            return self.resp_json
         await self.find_repository('RepositoryInfo')
         # Проверка что репозиторий найден в БД и forse=False
-        if self.repo_find and not force:
+        if self.repo_find and not self.rec_request.force:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
             # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
-                return await self.final_block()
+                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}')
+                return self.resp_json
 
-        instance_api_client = ga.GithubApiClient(token=self.token)
+        instance_api_client = ga.GithubApiClient()
         self.resp_json = await instance_api_client.get_new_report(
+            rec_request=self.rec_request,
             resp_json=self.resp_json,
-            repository_path=self.repository_path,
-            response_type=self.response_type,
         )
 
         await self.time_block()
@@ -51,7 +53,7 @@ class DataBaseHandler:
             # Валидация стоимости запроса, записывать ли в статистику
             if self.resp_json.meta.cost > 10:
                 await self.save_statistics()
-        return await self.final_block(t_block=False)
+        return self.resp_json
 
     async def create_or_update_repo_data(self):
         self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
@@ -185,8 +187,8 @@ class DataBaseHandler:
             load_dotenv()
             hasher = os.getenv('HASHER')
             token_hash = blake2s(digest_size=32)
-            token_hash.update((hasher + self.token + hasher).encode('utf-8'))
-            token_hash = (token_hash.digest()).decode('ascii', errors='ignore')
+            token_hash.update((hasher + self.rec_request.token + hasher).encode('utf-8'))
+            token_hash = (token_hash.digest()).decode('utf-8', errors='ignore')
 
             new_repo = models.RepositoryCollection(
                 repo_path=self.resp_json.data.owner + '/' + self.resp_json.data.name,
@@ -197,7 +199,7 @@ class DataBaseHandler:
 
     async def find_repository(self, table):
         session = Session(bind=db)
-        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == self.repository_path.lower()).first()')
+        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == self.rec_request.repo_path.lower()).first()')
         session.close()
 
 
@@ -206,19 +208,7 @@ class DataBaseHandler:
         self.resp_json.meta.time = round(
             self.response_duration_time.seconds + (self.response_duration_time.microseconds * 0.000001), 2
         )
-        if self.resp_json.meta.request_downtime:
-            self.resp_json.meta.request_downtime = round(
-                self.resp_json.meta.request_downtime.seconds + (
-                            self.resp_json.meta.request_downtime.microseconds * 0.000001), 2
-            )
-
-    async def final_block(self, t_block=True):
-        if t_block:
-            await self.time_block()
-        code = self.resp_json.meta.code
-        if code == 200:
-            pass
-        else:
-            self.resp_json.__delattr__('data')
-            self.resp_json.__delattr__('analytic')
-        return self.resp_json.json(by_alias=True), code
+        self.resp_json.meta.request_downtime = round(
+            self.resp_json.meta.request_downtime.seconds + (
+                        self.resp_json.meta.request_downtime.microseconds * 0.000001), 2
+        )
