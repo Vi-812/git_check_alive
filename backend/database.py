@@ -28,7 +28,7 @@ class DataBaseHandler:
                 e=e,
             )
             return self.resp_json
-        await self.find_repository('RepositoryInfo')
+        await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
         # Проверка что репозиторий найден в БД и forse=False
         if self.repo_find and not self.rec_request.force:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
@@ -48,6 +48,7 @@ class DataBaseHandler:
 
         await self.time_block()
         if self.resp_json.meta.code == 200:
+            self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
             await self.create_or_update_repo_data()
             await self.save_collection()
             # Валидация стоимости запроса, записывать ли в статистику
@@ -56,8 +57,7 @@ class DataBaseHandler:
         return self.resp_json
 
     async def create_or_update_repo_data(self):
-        self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
-        await self.find_repository('RepositoryInfo')
+        await self.find_repository(table='RepositoryInfo', path=self.repository_path)
         if self.repo_find:
             await self.update_repo_data()
         else:
@@ -181,7 +181,7 @@ class DataBaseHandler:
         session.commit()
 
     async def save_collection(self):
-        await self.find_repository('RepositoryCollection')
+        await self.find_repository(table='RepositoryCollection', path=self.repository_path)
         if not self.repo_find:
             session = Session(bind=db)
             load_dotenv()
@@ -197,9 +197,9 @@ class DataBaseHandler:
             session.add(new_repo)
             session.commit()
 
-    async def find_repository(self, table):
+    async def find_repository(self, table, path):
         session = Session(bind=db)
-        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == self.rec_request.repo_path.lower()).first()')
+        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == "{path}".lower()).first()')
         session.close()
 
 
