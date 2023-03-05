@@ -7,8 +7,8 @@ from loguru import logger
 from dotenv import load_dotenv
 
 # Testing Setup
-local_test = True
-count_test = 5
+local_test = False
+count_test = 10
 
 logger.add('log_err.log', format='{time} {level} {message}', level='ERROR')
 logger.add('log_warn.log', format='{time} {level} {message}', level='WARNING')
