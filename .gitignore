@@ -1,6 +1,6 @@
 .env
 tests/.env
-tests/test_repo.txt
+tests/testing_list.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

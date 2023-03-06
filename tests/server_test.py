@@ -22,8 +22,7 @@ else:
 load_dotenv()
 token = os.getenv('TOKEN')
 
-
-with open('test_repo.txt', 'r') as file:
+with open('testing_list.txt', 'r') as file:
     test_repositories = file.read().splitlines()
 
 try:
@@ -45,24 +44,37 @@ if test_count > len(test_repositories):
 for i in range(test_count):
     time = datetime.utcnow()
     i_test = f'[test={i+1}/{test_count}]'
+    query_type = choice(['GET', 'POST'])
+    response_type = choice(['/api/repo', '/api/issues-statistic'])
     random_repo = choice(test_repositories)
     test_repositories.remove(random_repo)
-    token_test = choice([token, None])
     cache = choice(['True', 'False'])
-    response_type = choice(['/api/repo', '/api/issues-statistic'])
-    url_test = url + response_type
-    headers = {'test': i_test, 'cache': cache}
-    logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {response_type=}, {headers=}')
-    json = {
-        'token': token_test,
-        'repository_path': random_repo
-    }
-
-    try:
-        response = requests.post(url=url_test, json=json, headers=headers)
-    except requests.exceptions.ConnectTimeout as e:
-        logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
-        continue
+    token_test = choice([token, None])
+    if query_type == 'GET':
+        url_test = url + response_type + '?name=' + random_repo
+        if cache == 'False':
+            url_test += '&cache=False'
+        headers = {'test': i_test, 'token': token_test}
+        logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {query_type=}, {response_type=}, {headers=}')
+        try:
+            response = requests.get(url_test, headers=headers)
+        except requests.exceptions.ConnectTimeout as e:
+            logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
+            continue
+    else:
+        url_test = url + response_type
+        json = {
+            'repository_path': random_repo,
+            'cache': cache,
+            'token': token_test,
+        }
+        headers = {'test': i_test}
+        logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {query_type=}, {response_type=}, {headers=}')
+        try:
+            response = requests.post(url=url_test, json=json, headers=headers)
+        except requests.exceptions.ConnectTimeout as e:
+            logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
+            continue
     try:
         data = response.json()
     except:
