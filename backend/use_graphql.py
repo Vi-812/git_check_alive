@@ -164,8 +164,8 @@ class Link:
                 resp_json.meta.request_downtime += datetime.utcnow() - ght
                 return resp_json, data
         except requests.exceptions.ConnectionError as e:
-            logger.error(f'E_500! Ошибка ссоединения с сервером, e={e}, rec_request={rec_request.dict(exclude={"token"})}')
+            logger.error(f'E_500! Ошибка ссоединения с сервером, {e=}, rec_request={rec_request.dict(exclude={"token"})}')
             resp_json.meta.code = 500
-            resp_json.meta.error_desc = 'ConnectionError'
-            resp_json.meta.error_message = str(e)
+            resp_json.error.description = 'ConnectionError'
+            resp_json.error.message = str(e)
             return resp_json, data

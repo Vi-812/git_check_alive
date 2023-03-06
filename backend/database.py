@@ -14,7 +14,7 @@ class DataBaseHandler:
     async def get_report(self, rec_request):
         self.response_duration_time = datetime.utcnow()
         self.rec_request = rec_request
-        self.resp_json = RequestResponse(data={}, analytic={}, meta={})
+        self.resp_json = RequestResponse(data={}, error={}, meta={})
         repository_path = self.rec_request.repo_path
         try:
             repository_path = repository_path.split('/')
@@ -29,15 +29,15 @@ class DataBaseHandler:
             )
             return self.resp_json
         await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
-        # Проверка что репозиторий найден в БД и forse=False
-        if self.repo_find and not self.rec_request.force:
+        # Проверка что репозиторий есть в БД и cache=True
+        if self.repo_find and self.rec_request.cache:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
-            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
+            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
-                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}')
+                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                 return self.resp_json
 
         instance_api_client = ga.GithubApiClient()
@@ -47,7 +47,7 @@ class DataBaseHandler:
         )
 
         await self.time_block()
-        if self.resp_json.meta.code == 200:
+        if self.resp_json.meta.code == 200 and self.rec_request.response_type != 'repo':
             self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
             await self.create_or_update_repo_data()
             await self.save_collection()
@@ -82,15 +82,15 @@ class DataBaseHandler:
             bug_issues_open_count=self.resp_json.data.bug_issues_open_count,
             watchers_count=self.resp_json.data.watchers_count,
             fork_count=self.resp_json.data.fork_count,
-            closed_bug_95perc=self.resp_json.analytic.closed_bug_95perc,
-            closed_bug_50perc=self.resp_json.analytic.closed_bug_50perc,
-            upd_major_ver=self.resp_json.analytic.upd_major_ver,
-            upd_minor_ver=self.resp_json.analytic.upd_minor_ver,
-            upd_patch_ver=self.resp_json.analytic.upd_patch_ver,
-            bug_issues_no_comment=self.resp_json.analytic.bug_issues_no_comment,
-            bug_issues_closed_2months=self.resp_json.analytic.bug_issues_closed_2months,
-            pr_closed_count=self.resp_json.analytic.pr_closed_count,
-            pr_closed_duration=self.resp_json.analytic.pr_closed_duration,
+            closed_bug_95perc=self.resp_json.data.closed_bug_95perc,
+            closed_bug_50perc=self.resp_json.data.closed_bug_50perc,
+            upd_major_ver=self.resp_json.data.upd_major_ver,
+            upd_minor_ver=self.resp_json.data.upd_minor_ver,
+            upd_patch_ver=self.resp_json.data.upd_patch_ver,
+            bug_issues_no_comment=self.resp_json.data.bug_issues_no_comment,
+            bug_issues_closed2m=self.resp_json.data.bug_issues_closed2m,
+            pr_closed_count2m=self.resp_json.data.pr_closed_count2m,
+            pr_closed_duration=self.resp_json.data.pr_closed_duration,
             time=self.resp_json.meta.time,
             cost=self.resp_json.meta.cost,
         )
@@ -114,15 +114,15 @@ class DataBaseHandler:
         self.repo_find.bug_issues_open_count = self.resp_json.data.bug_issues_open_count
         self.repo_find.watchers_count = self.resp_json.data.watchers_count
         self.repo_find.fork_count = self.resp_json.data.fork_count
-        self.repo_find.closed_bug_95perc = self.resp_json.analytic.closed_bug_95perc
-        self.repo_find.closed_bug_50perc = self.resp_json.analytic.closed_bug_50perc
-        self.repo_find.upd_major_ver = self.resp_json.analytic.upd_major_ver
-        self.repo_find.upd_minor_ver = self.resp_json.analytic.upd_minor_ver
-        self.repo_find.upd_patch_ver = self.resp_json.analytic.upd_patch_ver
-        self.repo_find.bug_issues_no_comment = self.resp_json.analytic.bug_issues_no_comment
-        self.repo_find.bug_issues_closed_2months = self.resp_json.analytic.bug_issues_closed_2months
-        self.repo_find.pr_closed_count = self.resp_json.analytic.pr_closed_count
-        self.repo_find.pr_closed_duration = self.resp_json.analytic.pr_closed_duration
+        self.repo_find.closed_bug_95perc = self.resp_json.data.closed_bug_95perc
+        self.repo_find.closed_bug_50perc = self.resp_json.data.closed_bug_50perc
+        self.repo_find.upd_major_ver = self.resp_json.data.upd_major_ver
+        self.repo_find.upd_minor_ver = self.resp_json.data.upd_minor_ver
+        self.repo_find.upd_patch_ver = self.resp_json.data.upd_patch_ver
+        self.repo_find.bug_issues_no_comment = self.resp_json.data.bug_issues_no_comment
+        self.repo_find.bug_issues_closed2m = self.resp_json.data.bug_issues_closed2m
+        self.repo_find.pr_closed_count2m = self.resp_json.data.pr_closed_count2m
+        self.repo_find.pr_closed_duration = self.resp_json.data.pr_closed_duration
         self.repo_find.time = self.resp_json.meta.time
         self.repo_find.cost = self.resp_json.meta.cost
         session.add(self.repo_find)
@@ -145,18 +145,18 @@ class DataBaseHandler:
         self.resp_json.data.bug_issues_open_count = self.repo_find.bug_issues_open_count
         self.resp_json.data.watchers_count = self.repo_find.watchers_count
         self.resp_json.data.fork_count = self.repo_find.fork_count
-        self.resp_json.analytic.closed_bug_95perc = self.repo_find.closed_bug_95perc
-        self.resp_json.analytic.closed_bug_50perc = self.repo_find.closed_bug_50perc
-        self.resp_json.analytic.upd_major_ver = self.repo_find.upd_major_ver
-        self.resp_json.analytic.upd_minor_ver = self.repo_find.upd_minor_ver
-        self.resp_json.analytic.upd_patch_ver = self.repo_find.upd_patch_ver
-        self.resp_json.analytic.bug_issues_no_comment = self.repo_find.bug_issues_no_comment
-        self.resp_json.analytic.bug_issues_closed_2months = self.repo_find.bug_issues_closed_2months
-        self.resp_json.analytic.pr_closed_count = self.repo_find.pr_closed_count
-        self.resp_json.analytic.pr_closed_duration = self.repo_find.pr_closed_duration
+        self.resp_json.data.closed_bug_95perc = self.repo_find.closed_bug_95perc
+        self.resp_json.data.closed_bug_50perc = self.repo_find.closed_bug_50perc
+        self.resp_json.data.upd_major_ver = self.repo_find.upd_major_ver
+        self.resp_json.data.upd_minor_ver = self.repo_find.upd_minor_ver
+        self.resp_json.data.upd_patch_ver = self.repo_find.upd_patch_ver
+        self.resp_json.data.bug_issues_no_comment = self.repo_find.bug_issues_no_comment
+        self.resp_json.data.bug_issues_closed2m = self.repo_find.bug_issues_closed2m
+        self.resp_json.data.pr_closed_count2m = self.repo_find.pr_closed_count2m
+        self.resp_json.data.pr_closed_duration = self.repo_find.pr_closed_duration
         self.resp_json.meta.code = 200
         self.resp_json.meta.cost = 0
-        self.resp_json.meta.database = f'Information from DB at {str(self.repo_find.upd_date)} UTC'
+        self.resp_json.meta.information = f'Data from DB at {str(self.repo_find.upd_date)} UTC'
 
     async def save_statistics(self):
         session = Session(bind=db)

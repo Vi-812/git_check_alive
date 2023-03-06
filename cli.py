@@ -4,7 +4,7 @@ import argparse
 import asyncio
 from dto.received_request import ReceivedRequest
 import backend.database as db
-from frontend.json_preparation import final_json_preparation
+from dto.json_preparation import final_json_preparation
 from dotenv import load_dotenv
 load_dotenv()
 
