@@ -34,27 +34,27 @@ class BugIssuesAnalytic:
     async def get_bug_analytic(self, resp_json):
         closed_list_len = len(self.bug_issues_duration_closed_list)
         open_list_len = len(self.bug_issues_duration_open_list)
-        bug_issues_closed_two_months = None
+        bug_issues_closed2m = None
         if closed_list_len >= 10:
-            bug_issues_closed_two_months = 0
+            bug_issues_closed2m = 0
             self.bug_issues_duration_closed_list.sort()
-            resp_json.analytic.closed_bug_95perc = self.bug_issues_duration_closed_list[
+            resp_json.data.closed_bug_95perc = self.bug_issues_duration_closed_list[
                 round((closed_list_len - 1) * 0.95)
             ].days
-            resp_json.analytic.closed_bug_50perc = median(self.bug_issues_duration_closed_list).days
+            resp_json.data.closed_bug_50perc = median(self.bug_issues_duration_closed_list).days
             for i in range(closed_list_len):
                 if self.bug_issues_duration_closed_list[i].days < 60:
-                    bug_issues_closed_two_months += 1
+                    bug_issues_closed2m += 1
                 else:
                     break
         resp_json.data.bug_issues_closed_count = self.bug_issues_closed_total_count
         resp_json.data.bug_issues_open_count = self.bug_issues_open_total_count
         if resp_json.data.bug_issues_count:
-            resp_json.analytic.bug_issues_no_comment = round(
+            resp_json.data.bug_issues_no_comment = round(
                 self.bug_issues_no_comment / resp_json.data.bug_issues_count * 100, 2
             )
-        if resp_json.data.bug_issues_closed_count and bug_issues_closed_two_months:
-             resp_json.analytic.bug_issues_closed_2months = round(
-                 bug_issues_closed_two_months / resp_json.data.bug_issues_closed_count * 100, 2
+        if resp_json.data.bug_issues_closed_count and bug_issues_closed2m:
+             resp_json.data.bug_issues_closed2m = round(
+                 bug_issues_closed2m / resp_json.data.bug_issues_closed_count * 100, 2
              )
         return resp_json

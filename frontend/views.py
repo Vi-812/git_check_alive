@@ -1,5 +1,5 @@
 from frontend import app_sanic, jinja, token_app, forms
-from frontend.json_preparation import final_json_preparation
+from dto.json_preparation import final_json_preparation
 from backend import database
 from dto.received_request import ReceivedRequest
 from sanic import HTTPResponse
@@ -30,7 +30,7 @@ async def index_resp(request):
     if repository_path:
         instance_db_client = database.DataBaseHandler()
         resp_json = await instance_db_client.get_report(rec_request=rec_request)
-        resp_json, code = await final_json_preparation(resp_json)
+        resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
     else:
         resp_json = "Bad repository adress, enter the address in the format " \
                     "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
@@ -57,7 +57,7 @@ async def get_api_request(request):
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)
-    resp_json, code = await final_json_preparation(resp_json)
+    resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
     logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)
 
@@ -80,6 +80,6 @@ async def post_api_request(request):
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)
-    resp_json, code = await final_json_preparation(resp_json)
+    resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
     logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)
