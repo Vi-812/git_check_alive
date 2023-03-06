@@ -37,7 +37,7 @@ class DataBaseHandler:
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
-                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
+                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                 return self.resp_json
 
         instance_api_client = ga.GithubApiClient()

@@ -35,7 +35,7 @@ async def index_resp(request):
         resp_json = "Bad repository adress, enter the address in the format " \
                     "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
         code = 400
-    logger.info(f'|>>>{i_test} code={code}, rec_request={rec_request.dict(exclude={"token"})}, resp_json={resp_json}')
+    logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return jinja.render('index.html', request, form=form, json=resp_json)
 
 
@@ -58,7 +58,7 @@ async def get_api_request(request):
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)
     resp_json, code = await final_json_preparation(resp_json)
-    logger.info(f'|>>>{i_test} code={code}, rec_request={rec_request.dict(exclude={"token"})}, resp_json={resp_json}')
+    logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)
 
 
@@ -81,5 +81,5 @@ async def post_api_request(request):
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)
     resp_json, code = await final_json_preparation(resp_json)
-    logger.info(f'|>>>{i_test} code={code}, rec_request={rec_request.dict(exclude={"token"})}, resp_json={resp_json}')
+    logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)

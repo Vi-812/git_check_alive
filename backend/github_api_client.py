@@ -16,12 +16,12 @@ class GithubApiClient:
             return self.resp_json
         if self.rec_request.response_type == 'repo':
             self.resp_json.meta.code = 200
-            logger.info(f'GH_200(repo), rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
+            logger.info(f'GH_200/repo, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
             return self.resp_json
         await self.get_bug_issues()
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
         self.resp_json.meta.code = 200
-        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
+        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
         return self.resp_json
 
     async def get_info_labels(self):
@@ -38,7 +38,7 @@ class GithubApiClient:
             if self.resp_json.meta.code:
                 return self.resp_json
             if not self.data.get('data'):
-                logger.error(f'DATA_ERROR! data={self.data}, rec_request={self.rec_request}, resp_json={self.resp_json}')
+                logger.error(f'DATA_ERROR! {self.data=}, {self.rec_request=}, {self.resp_json=}')
                 continue
             await self.parse_info_labels()
             if self.resp_json.meta.code:
@@ -123,7 +123,7 @@ class GithubApiClient:
                 repo_labels_bug_list=self.repo_labels_bug_list,
             )
             if not self.data.get('data'):
-                logger.error(f'DATA_ERROR! data={self.data}, rec_request={self.rec_request}, resp_json={self.resp_json}')
+                logger.error(f'DATA_ERROR! {self.data=}, {self.rec_request=}, {self.resp_json=}')
                 continue
             await self.parse_bug_issues()
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
@@ -151,4 +151,4 @@ class GithubApiClient:
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
         except Exception as e:
-            logger.error(f'ERROR! data={self.data}, e={e}, rec_request={self.rec_request}, resp_json={self.resp_json}')
+            logger.error(f'ERROR! {self.data=}, {e=}, {self.rec_request=}, {self.resp_json=}')

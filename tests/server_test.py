@@ -35,11 +35,11 @@ try:
     else:
         test_count = count_test
 except Exception as e:
-    logger.warning(f'Count test ERROR! e={e} => test_count = 10')
+    logger.warning(f'Count test ERROR! {e=} => test_count = 10')
     test_count = 10
 
 if test_count > len(test_repositories):
-    logger.warning(f'Count test ERROR! test_count={test_count}, repositories={len(test_repositories)}')
+    logger.warning(f'Count test ERROR! {test_count=}, {len(test_repositories)=}')
     test_count = len(test_repositories)
 
 for i in range(test_count):
@@ -52,7 +52,7 @@ for i in range(test_count):
     response_type = choice(['/api/repo', '/api/issues-statistic'])
     url_test = url + response_type
     headers = {'test': i_test, 'cache': cache}
-    logger.info(f'>>>{i_test} repo={random_repo}, token={bool(token_test)}, response_type={response_type}, headers={headers}')
+    logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {response_type=}, {headers=}')
     json = {
         'token': token_test,
         'repository_path': random_repo
@@ -61,21 +61,21 @@ for i in range(test_count):
     try:
         response = requests.post(url=url_test, json=json, headers=headers)
     except requests.exceptions.ConnectTimeout as e:
-        logger.error(f'<<<{i_test} ConnectTimeoutError! repo={random_repo}, e={e}')
+        logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
         continue
     try:
         data = response.json()
     except:
-        logger.error(f'<<<{i_test} ERROR! code={response.status_code}, repo={random_repo}, response={response.text}')
+        logger.error(f'<<<{i_test} ERROR! code={response.status_code}, {random_repo=}, {response.text=}')
         continue
     else:
         try:
             if not data['meta']['time']:
-                logger.info(f'<<<{i_test} code={response.status_code}, time_deviation=DB_load, repo={random_repo}, response={response.text}')
+                logger.info(f'<<<{i_test} code={response.status_code}, time_deviation=DB_load, {random_repo=}, {response.text=}')
             else:
                 time = datetime.utcnow() - time
                 time = round(time.seconds + time.microseconds * 0.000001, 2)
                 time_deviation = round(time - data['meta']['time'], 2)
-                logger.info(f'<<<{i_test} code={response.status_code}, time_deviation={time_deviation}, repo={random_repo}, response={response.text}')
+                logger.info(f'<<<{i_test} code={response.status_code}, {time_deviation=}, {random_repo=}, {response.text=}')
         except Exception as e:
-            logger.error(f'<<<{i_test} ERROR! code={response.status_code} data={data}, e={e}, repo={random_repo}, response={response.text}')
+            logger.error(f'<<<{i_test} ERROR! code={response.status_code} {data=}, {e=}, {random_repo=}, {response.text=}')
