@@ -29,15 +29,15 @@ class DataBaseHandler:
             )
             return self.resp_json
         await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
-        # Проверка что репозиторий найден в БД и forse=False
-        if self.repo_find and not self.rec_request.force:
+        # Проверка что репозиторий есть в БД и cache=True
+        if self.repo_find and self.rec_request.cache:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
-            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (request_cost)
+            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
-                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}')
+                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
                 return self.resp_json
 
         instance_api_client = ga.GithubApiClient()
@@ -47,7 +47,7 @@ class DataBaseHandler:
         )
 
         await self.time_block()
-        if self.resp_json.meta.code == 200:
+        if self.resp_json.meta.code == 200 and self.rec_request.response_type != 'repo':
             self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
             await self.create_or_update_repo_data()
             await self.save_collection()

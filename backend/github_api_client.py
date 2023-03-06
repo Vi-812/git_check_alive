@@ -8,16 +8,20 @@ from loguru import logger
 class GithubApiClient:
 
     async def get_new_report(self, rec_request, resp_json):
-        self.rec_request = rec_request  # Задействовать response_type
+        self.rec_request = rec_request
         self.resp_json = resp_json
         self.resp_json.meta.request_downtime = timedelta(seconds=0)
         await self.get_info_labels()
         if resp_json.meta.code:
             return self.resp_json
+        if self.rec_request.response_type == 'repo':
+            self.resp_json.meta.code = 200
+            logger.info(f'GH_200(repo), rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
+            return self.resp_json
         await self.get_bug_issues()
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
         self.resp_json.meta.code = 200
-        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}')
+        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}, resp_json={self.resp_json}')
         return self.resp_json
 
     async def get_info_labels(self):
@@ -33,6 +37,9 @@ class GithubApiClient:
             )
             if self.resp_json.meta.code:
                 return self.resp_json
+            if not self.data.get('data'):
+                logger.error(f'DATA_ERROR! data={self.data}, rec_request={self.rec_request}, resp_json={self.resp_json}')
+                continue
             await self.parse_info_labels()
             if self.resp_json.meta.code:
                 return self.resp_json
@@ -115,6 +122,9 @@ class GithubApiClient:
                 cursor=self.cursor,
                 repo_labels_bug_list=self.repo_labels_bug_list,
             )
+            if not self.data.get('data'):
+                logger.error(f'DATA_ERROR! data={self.data}, rec_request={self.rec_request}, resp_json={self.resp_json}')
+                continue
             await self.parse_bug_issues()
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
                 # Предварительный расчет времени запроса
@@ -129,13 +139,16 @@ class GithubApiClient:
                 break
 
     async def parse_bug_issues(self):
-        self.resp_json.data.bug_issues_count = self.data['data']['repository']['issues']['totalCount']
-        self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
-        self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
-        self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
-        if self.data['data']['repository']['issues']['edges']:
-            await self.instance_b_i_a.push_bug_issues(self.data['data']['repository']['issues']['edges'])
-        self.request_cost = self.data['data']['rateLimit']['cost']
-        self.resp_json.meta.cost += self.request_cost
-        self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
-        self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
+        try:
+            self.resp_json.data.bug_issues_count = self.data['data']['repository']['issues']['totalCount']
+            self.start_cursor = self.data['data']['repository']['issues']['pageInfo']['startCursor']
+            self.end_cursor = self.data['data']['repository']['issues']['pageInfo']['endCursor']
+            self.has_next_page = self.data['data']['repository']['issues']['pageInfo']['hasNextPage']
+            if self.data['data']['repository']['issues']['edges']:
+                await self.instance_b_i_a.push_bug_issues(self.data['data']['repository']['issues']['edges'])
+            self.request_cost = self.data['data']['rateLimit']['cost']
+            self.resp_json.meta.cost += self.request_cost
+            self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
+            self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
+        except Exception as e:
+            logger.error(f'ERROR! data={self.data}, e={e}, rec_request={self.rec_request}, resp_json={self.resp_json}')

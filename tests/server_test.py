@@ -7,17 +7,17 @@ from loguru import logger
 from dotenv import load_dotenv
 
 # Testing Setup
-local_test = False
-count_test = 10
+count_test = 100
+web_server = False
 
 logger.add('log_err.log', format='{time} {level} {message}', level='ERROR')
 logger.add('log_warn.log', format='{time} {level} {message}', level='WARNING')
 logger.add('log_info.log', format='{time:DD-MM HH:mm} {message}', level='INFO')
 
-if local_test:
-    url = 'http://127.0.0.1:8000/api'
+if web_server:
+    url = 'http://51.68.189.155'
 else:
-    url = 'http://51.68.189.155/api'
+    url = 'http://127.0.0.1:8000'
 
 load_dotenv()
 token = os.getenv('TOKEN')
@@ -46,17 +46,20 @@ for i in range(test_count):
     time = datetime.utcnow()
     i_test = f'[test={i+1}/{test_count}]'
     random_repo = choice(test_repositories)
-    logger.info(f'>>>{i_test} repo={random_repo}')
     test_repositories.remove(random_repo)
+    token_test = choice([token, None])
+    cache = choice(['True', 'False'])
+    response_type = choice(['/api/repo', '/api/issues-statistic'])
+    url_test = url + response_type
+    headers = {'test': i_test, 'cache': cache}
+    logger.info(f'>>>{i_test} repo={random_repo}, token={bool(token_test)}, response_type={response_type}, headers={headers}')
     json = {
-        'token': token,
+        'token': token_test,
         'repository_path': random_repo
     }
 
-    headers = {'i_test': i_test}
-
     try:
-        response = requests.post(url=url, json=json, headers=headers)
+        response = requests.post(url=url_test, json=json, headers=headers)
     except requests.exceptions.ConnectTimeout as e:
         logger.error(f'<<<{i_test} ConnectTimeoutError! repo={random_repo}, e={e}')
         continue
