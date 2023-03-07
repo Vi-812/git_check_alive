@@ -7,29 +7,25 @@ from loguru import logger
 from dotenv import load_dotenv
 
 # Testing Setup
-count_test = 10
+count_test = 500
 web_server = False
 
 logger.add('log_err.log', format='{time} {level} {message}', level='ERROR')
 logger.add('log_warn.log', format='{time} {level} {message}', level='WARNING')
 logger.add('log_info.log', format='{time:DD-MM HH:mm} {message}', level='INFO')
 
-if web_server:
-    url = 'http://51.68.189.155'
-else:
-    url = 'http://127.0.0.1:8000'
-
 load_dotenv()
 token = os.getenv('TOKEN')
 
 with open('testing_list.txt', 'r') as file:
-    test_repositories = file.read().splitlines()
+    testing_list = file.read().splitlines()
 
 try:
     parser = argparse.ArgumentParser()
     parser.add_argument('test_count', nargs='?')
     args = parser.parse_args()
     if args.test_count:
+        web_server = True
         test_count = int(args.test_count)
     else:
         test_count = count_test
@@ -37,9 +33,14 @@ except Exception as e:
     logger.warning(f'Count test ERROR! {e=} => test_count = 10')
     test_count = 10
 
-if test_count > len(test_repositories):
-    logger.warning(f'Count test ERROR! {test_count=}, {len(test_repositories)=}')
-    test_count = len(test_repositories)
+if test_count > len(testing_list):
+    logger.warning(f'Count test ERROR! {test_count=}, {len(testing_list)=}')
+    test_count = len(testing_list)
+
+if web_server:
+    url = 'http://51.68.189.155'
+else:
+    url = 'http://127.0.0.1:8000'
 
 for i in range(test_count):
     time = datetime.utcnow()
@@ -49,16 +50,16 @@ for i in range(test_count):
         rt = 'repo'
     else:
         rt = 'full'
-    random_repo = choice(test_repositories)
-    test_repositories.remove(random_repo)
-    cache = choice(['True', 'False'])
+    random_repo = choice(testing_list)
+    testing_list.remove(random_repo)
+    skip_cache = choice([True, False])
     token_test = choice([token, None])
-    i_test = f'[test={i+1}/{test_count}||{query_type}|{rt}|tok={bool(token_test)}|db={cache}++{cache=}]'
+    i_test = f'[test={i+1}/{test_count}||{query_type}|{rt}|tok={bool(token_test)}|skip={skip_cache}]'
 
     if query_type == 'GET':
         url_test = url + response_type + '?name=' + random_repo
-        if cache == 'False':
-            url_test += '&cache=False'
+        if skip_cache == True:
+            url_test += '&skipCache=True'
         headers = {'test': i_test, 'token': token_test}
         logger.info(f'>>>{i_test} {random_repo=}')
         try:
@@ -70,8 +71,8 @@ for i in range(test_count):
     else:
         url_test = url + response_type
         json = {
-            'repository_path': random_repo,
-            'cache': cache,
+            'repositoryPath': random_repo,
+            'skipCache': skip_cache,
             'token': token_test,
         }
         headers = {'test': i_test}

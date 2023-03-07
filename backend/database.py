@@ -29,8 +29,8 @@ class DataBaseHandler:
             )
             return self.resp_json
         await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
-        # Проверка что репозиторий есть в БД и cache=True
-        if self.repo_find and self.rec_request.cache:
+        # Проверка что репозиторий есть в БД и skip_cache=True
+        if self.repo_find and not self.rec_request.skip_cache:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
             # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (cost)
             # Если времени прошло не достаточно, данные загружаются из БД

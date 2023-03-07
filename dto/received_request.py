@@ -6,7 +6,7 @@ class ReceivedRequest(BaseModel):
     url: str
     repo_path: Optional[str]
     token: str
-    cache: Optional[bool] = True
+    skip_cache: Optional[bool] = False
     response_type: Optional[str] = 'full'
     repo_owner: Optional[str]
     repo_name: Optional[str]
