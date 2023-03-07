@@ -3,11 +3,11 @@ from statistics import median
 from loguru import logger
 
 
-async def to_date(date_str):
+async def to_date(date_str: str) -> datetime:
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
 
 
-async def parsing_version(resp_json, data):
+async def parsing_version(resp_json, data: list):
     """
     Распарсиваем, дополняем до 3х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
     Если в считанных записях не находится изменений версии, присваивается самая ранняя считанная дата.

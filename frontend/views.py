@@ -23,7 +23,7 @@ async def index(request):
 async def index_resp(request):
     form = forms.RepositoryPathForm(request)
     repository_path = request.form.get(['link_repository'][0], None)
-    cache = request.headers.get('cache', True)
+    cache = request.headers.get('skipCache', False)
     i_test = request.headers.get('test', '')
     rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_app, cache=cache)
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -43,17 +43,15 @@ async def index_resp(request):
 @app_sanic.route('/api/issues-statistic', methods=['GET'])
 async def get_api_request(request):
     repository_path = request.args.get('name', None)
-    cache = request.args.get('cache', True)
+    skip_cache = request.args.get('skipCache', False)
     token_api = request.headers.get('token', None)
     i_test = request.headers.get('test', '')
     if not token_api:
         token_api = token_app
     if '/api/repo' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, cache=cache,
-                                      response_type='repo')
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='repo')
     elif '/api/issues-statistic' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, cache=cache,
-                                      response_type='full')
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='full')
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)
@@ -65,18 +63,16 @@ async def get_api_request(request):
 @app_sanic.route('/api/repo', methods=['POST'])
 @app_sanic.route('/api/issues-statistic', methods=['POST'])
 async def post_api_request(request):
-    repository_path = request.json['repository_path']
+    repository_path = request.json['repositoryPath']
     token_api = request.json['token']
-    cache = request.headers.get('cache', True)
+    skip_cache = request.json.get('skipCache', False)
     i_test = request.headers.get('test', '')
     if not token_api:
         token_api = token_app
     if '/api/repo' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, cache=cache,
-                                      response_type='repo')
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='repo')
     elif '/api/issues-statistic' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, cache=cache,
-                                      response_type='full')
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='full')
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json = await instance_db_client.get_report(rec_request=rec_request)

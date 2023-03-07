@@ -23,9 +23,9 @@ else:
     ]
 
 for test in testing:
-    body = {
+    data = {
         'token': token,
-        'repository_path': test
+        'repositoryPath': test
     }
-    response = requests.post(url=url, json=body)
+    response = requests.post(url=url, json=data)
     print(response.status_code, response.text)
