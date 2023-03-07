@@ -43,24 +43,30 @@ if test_count > len(test_repositories):
 
 for i in range(test_count):
     time = datetime.utcnow()
-    i_test = f'[test={i+1}/{test_count}]'
     query_type = choice(['GET', 'POST'])
     response_type = choice(['/api/repo', '/api/issues-statistic'])
+    if response_type == '/api/repo':
+        rt = 'repo'
+    else:
+        rt = 'full'
     random_repo = choice(test_repositories)
     test_repositories.remove(random_repo)
     cache = choice(['True', 'False'])
     token_test = choice([token, None])
+    i_test = f'[test={i+1}/{test_count}||{query_type}|{rt}|tok={bool(token_test)}|db={cache}++{cache=}]'
+
     if query_type == 'GET':
         url_test = url + response_type + '?name=' + random_repo
         if cache == 'False':
             url_test += '&cache=False'
         headers = {'test': i_test, 'token': token_test}
-        logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {query_type=}, {response_type=}, {headers=}')
+        logger.info(f'>>>{i_test} {random_repo=}')
         try:
             response = requests.get(url_test, headers=headers)
         except requests.exceptions.ConnectTimeout as e:
             logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
             continue
+
     else:
         url_test = url + response_type
         json = {
@@ -69,12 +75,13 @@ for i in range(test_count):
             'token': token_test,
         }
         headers = {'test': i_test}
-        logger.info(f'>>>{i_test} {random_repo=}, token={bool(token_test)}, {query_type=}, {response_type=}, {headers=}')
+        logger.info(f'>>>{i_test} {random_repo=}')
         try:
             response = requests.post(url=url_test, json=json, headers=headers)
         except requests.exceptions.ConnectTimeout as e:
             logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
             continue
+
     try:
         data = response.json()
     except:
