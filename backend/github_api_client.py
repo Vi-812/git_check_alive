@@ -123,7 +123,7 @@ class GithubApiClient:
                 repo_labels_bug_list=self.repo_labels_bug_list,
             )
             if not self.data.get('data'):
-                logger.error(f'DATA_ERROR! {self.data=}, {self.rec_request=}, {self.resp_json=}')
+                logger.error(f'DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                 continue
             await self.parse_bug_issues()
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:

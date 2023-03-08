@@ -90,6 +90,9 @@ for i in range(test_count):
         continue
     else:
         try:
+            if data['meta']['code'] != 200:
+                logger.error(f'<<<{i_test} ERROR! code={response.status_code}, {random_repo=}, {response.text=}')
+                continue
             if not data['meta']['time']:
                 logger.info(f'<<<{i_test} code={response.status_code}, time_deviation=DB_load, {random_repo=}, {response.text=}')
             else:
