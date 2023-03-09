@@ -63,8 +63,8 @@ async def get_api_request(request):
 @app_sanic.route('/api/repo', methods=['POST'])
 @app_sanic.route('/api/issues-statistic', methods=['POST'])
 async def post_api_request(request):
-    repository_path = request.json['repositoryPath']
-    token_api = request.json['token']
+    repository_path = request.json.get('repositoryPath', None)
+    token_api = request.json.get('token', None)
     skip_cache = request.json.get('skipCache', False)
     i_test = request.headers.get('test', '')
     if not token_api:

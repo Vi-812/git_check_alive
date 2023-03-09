@@ -3,6 +3,7 @@ import backend.func_api_client as fa
 import backend.bug_issues as bi
 from datetime import datetime, timedelta
 from loguru import logger
+import asyncio
 
 
 class GithubApiClient:
@@ -16,12 +17,14 @@ class GithubApiClient:
             return self.resp_json
         if self.rec_request.response_type == 'repo':
             self.resp_json.meta.code = 200
-            logger.info(f'GH_200/repo, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+            logger.info(f'GH_200/repo, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
             return self.resp_json
         await self.get_bug_issues()
+        if resp_json.meta.code:
+            return self.resp_json
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
         self.resp_json.meta.code = 200
-        logger.info(f'GH_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+        logger.info(f'GH_200, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
         return self.resp_json
 
     async def get_info_labels(self):
@@ -38,7 +41,8 @@ class GithubApiClient:
             if self.resp_json.meta.code:
                 return self.resp_json
             if not self.data.get('data'):
-                logger.error(f'DATA_ERROR! {self.data=}, {self.rec_request=}, {self.resp_json=}')
+                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+                await asyncio.sleep(1)
                 continue
             await self.parse_info_labels()
             if self.resp_json.meta.code:
@@ -122,8 +126,11 @@ class GithubApiClient:
                 cursor=self.cursor,
                 repo_labels_bug_list=self.repo_labels_bug_list,
             )
+            if self.resp_json.meta.code:
+                return self.resp_json
             if not self.data.get('data'):
-                logger.error(f'DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+                await asyncio.sleep(1)
                 continue
             await self.parse_bug_issues()
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:

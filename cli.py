@@ -28,5 +28,5 @@ if not args.repository_path:
 rec_request = ReceivedRequest(url='CLI request', repo_path=args.repository_path, token=token)
 instance_dbh = db.DataBaseHandler()
 resp_json = asyncio.run(instance_dbh.get_report(rec_request=rec_request))
-resp_json = final_json_preparation(resp_json=resp_json)
-print(resp_json)
+resp_json, code = asyncio.run(final_json_preparation(rec_request=rec_request, resp_json=resp_json))
+print(f'{code} => {resp_json}')
