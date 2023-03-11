@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
 from hashlib import blake2s
-from backend import github_api_client as ga
-from backend import func_api_client as fa
+from backend.analytic import github_api_client as ga, functions as fn
 from frontend import load_dotenv, db, models
 from dto.request_response import RequestResponse
-from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from backend.json_preparation import final_json_preparation
 from loguru import logger
 
 
@@ -21,13 +21,13 @@ class DataBaseHandler:
             self.rec_request.repo_owner, self.rec_request.repo_name = repository_path[-2], repository_path[-1]
             self.rec_request.repo_path = self.rec_request.repo_owner + '/' + self.rec_request.repo_name
         except (IndexError, AttributeError) as e:
-            await fa.path_error_400(
+            await fn.path_error_400(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 repository_path=repository_path,
                 e=e,
             )
-            return self.resp_json
+            return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
         await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
         # Проверка что репозиторий есть в БД и skip_cache=True
         if self.repo_find and not self.rec_request.skip_cache:
@@ -38,7 +38,7 @@ class DataBaseHandler:
             if hours < self.repo_find.cost:
                 await self.load_repo_data()
                 logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
-                return self.resp_json
+                return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
         instance_api_client = ga.GithubApiClient()
         self.resp_json = await instance_api_client.get_new_report(
@@ -54,7 +54,7 @@ class DataBaseHandler:
             # Валидация стоимости запроса, записывать ли в статистику
             if self.resp_json.meta.cost > 10:
                 await self.save_statistics()
-        return self.resp_json
+        return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
     async def create_or_update_repo_data(self):
         await self.find_repository(table='RepositoryInfo', path=self.repository_path)

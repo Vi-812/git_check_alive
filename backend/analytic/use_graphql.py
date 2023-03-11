@@ -3,6 +3,7 @@ import requests
 import json
 from datetime import datetime
 from loguru import logger
+from backend.analytic import functions as fn
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -162,6 +163,12 @@ class Link:
                 async with session.post(url=url, headers=headers, json=json_gql) as resp:
                     data = json.loads(await resp.read())
                 resp_json.meta.request_downtime += datetime.utcnow() - ght
+                if data.get('message') == 'Bad credentials':
+                    return await fn.json_error_401(
+                        rec_request=rec_request,
+                        resp_json=resp_json,
+                        e_data=data,
+                    ), data
                 return resp_json, data
         except requests.exceptions.ConnectionError as e:
             logger.error(f'E_500! Ошибка ссоединения с сервером, {e=}, rec_request={rec_request.dict(exclude={"token"})}')

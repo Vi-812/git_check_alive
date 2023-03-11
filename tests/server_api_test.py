@@ -45,9 +45,11 @@ else:
 for i in range(test_count):
     time = datetime.utcnow()
     query_type = choice(['GET', 'POST'])
-    response_type = choice(['/api/repo', '/api/issues-statistic'])
+    response_type = choice(['/api/repo', '/api/issues-statistic', '/api/full'])
     if response_type == '/api/repo':
         rt = 'repo'
+    elif response_type == '/api/issues-statistic':
+        rt = 'issues'
     else:
         rt = 'full'
     random_repo = choice(testing_list)
@@ -90,6 +92,9 @@ for i in range(test_count):
         continue
     else:
         try:
+            if data['meta']['code'] != 200:
+                logger.error(f'<<<{i_test} ERROR! code={response.status_code}, {random_repo=}, {response.text=}')
+                continue
             if not data['meta']['time']:
                 logger.info(f'<<<{i_test} code={response.status_code}, time_deviation=DB_load, {random_repo=}, {response.text=}')
             else:

@@ -1,6 +1,6 @@
 from statistics import median
 from datetime import datetime
-import backend.func_api_client as fa
+import backend.analytic.functions as fn
 
 
 class BugIssuesAnalytic:
@@ -14,7 +14,7 @@ class BugIssuesAnalytic:
     async def push_bug_issues(self, data):
         now_time = datetime.utcnow()
         for bug_issue in data:
-            created_at = await fa.to_date(bug_issue['node']['createdAt'])
+            created_at = await fn.to_date(bug_issue['node']['createdAt'])
             comment_count = bug_issue['node']['comments']['totalCount']
             if bug_issue['node']['comments']['nodes']:
                 last_comment = bug_issue['node']['comments']['nodes'][0]['createdAt']
@@ -22,7 +22,7 @@ class BugIssuesAnalytic:
                 last_comment = None
 
             if bug_issue['node']['closed']:
-                closed_at = await fa.to_date(bug_issue['node']['closedAt'])
+                closed_at = await fn.to_date(bug_issue['node']['closedAt'])
                 self.bug_issues_closed_total_count += 1
                 self.bug_issues_duration_closed_list.append(closed_at - created_at)
             else:
