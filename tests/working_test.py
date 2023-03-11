@@ -22,6 +22,14 @@ else:
         'https://github.com/facebook/jest',
     ]
 
+if not fast:
+    data = {
+        'token': token[1:],
+        'repositoryPath': 'https://github.com/vi-812/git_'
+    }
+    response = requests.post(url=url, json=data)
+    print(response.status_code, response.text)
+
 for test in testing:
     data = {
         'token': token,

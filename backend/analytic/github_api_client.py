@@ -40,13 +40,16 @@ class GithubApiClient:
             )
             if self.resp_json.meta.code:
                 return self.resp_json
-            if not self.data.get('data'):
-                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+            if self.data.get('data'):
+                await self.parse_info_labels()
+                if self.resp_json.meta.code:
+                    return self.resp_json
+            else:
+                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
+                             f'{self.resp_json=}')
                 await asyncio.sleep(1)
                 continue
-            await self.parse_info_labels()
-            if self.resp_json.meta.code:
-                return self.resp_json
+
             if self.has_next_page:
                 self.cursor = self.end_cursor
             else:
@@ -100,19 +103,20 @@ class GithubApiClient:
             self.resp_json.meta.cost += self.request_cost
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
-        except (TypeError, KeyError) as e:
-            if str(e) == "'data'":
-                return await fn.json_error_401(
-                    rec_request=self.rec_request,
-                    resp_json=self.resp_json,
-                    e_data=self.data,
-                )
-            if str(e) == "'NoneType' object is not subscriptable":
-                return await fn.json_error_404(
-                    rec_request=self.rec_request,
-                    resp_json=self.resp_json,
-                    error=self.data['errors'][0]['message'],
-                )
+        except KeyError as e:
+            return await fn.internal_error_500(
+                rec_request=self.rec_request,
+                resp_json=self.resp_json,
+                e_data=self.data,
+                error=e,
+            )
+        except TypeError as e:
+            return await fn.json_error_404(
+                rec_request=self.rec_request,
+                resp_json=self.resp_json,
+                error=self.data['errors'][0]['message'],
+                e=e,
+            )
 
     async def get_bug_issues(self):
         self.cursor = None
@@ -128,11 +132,14 @@ class GithubApiClient:
             )
             if self.resp_json.meta.code:
                 return self.resp_json
-            if not self.data.get('data'):
-                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+            if self.data.get('data'):
+                await self.parse_bug_issues()
+            else:
+                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
+                             f'{self.resp_json=}')
                 await asyncio.sleep(1)
                 continue
-            await self.parse_bug_issues()
+
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
                 # Предварительный расчет времени запроса
                 cost_multiplier = 2.9
