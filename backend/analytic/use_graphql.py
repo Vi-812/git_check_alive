@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime
 from loguru import logger
-from backend import func_api_client as fa
+from backend.analytic import functions as fn
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -164,7 +164,7 @@ class Link:
                     data = json.loads(await resp.read())
                 resp_json.meta.request_downtime += datetime.utcnow() - ght
                 if data.get('message') == 'Bad credentials':
-                    return await fa.json_error_401(
+                    return await fn.json_error_401(
                         rec_request=rec_request,
                         resp_json=resp_json,
                         e_data=data,

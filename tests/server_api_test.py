@@ -45,9 +45,11 @@ else:
 for i in range(test_count):
     time = datetime.utcnow()
     query_type = choice(['GET', 'POST'])
-    response_type = choice(['/api/repo', '/api/issues-statistic'])
+    response_type = choice(['/api/repo', '/api/issues-statistic', '/api/full'])
     if response_type == '/api/repo':
         rt = 'repo'
+    elif response_type == '/api/issues-statistic':
+        rt = 'issues'
     else:
         rt = 'full'
     random_repo = choice(testing_list)

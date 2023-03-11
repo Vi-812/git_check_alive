@@ -1,5 +1,4 @@
 from frontend import app_sanic, jinja, token_app, forms
-from dto.json_preparation import final_json_preparation
 from backend import database
 from dto.received_request import ReceivedRequest
 from sanic import HTTPResponse
@@ -29,8 +28,7 @@ async def index_resp(request):
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     if repository_path:
         instance_db_client = database.DataBaseHandler()
-        resp_json = await instance_db_client.get_report(rec_request=rec_request)
-        resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
+        resp_json, code = await instance_db_client.get_report(rec_request=rec_request)
     else:
         resp_json = "Bad repository adress, enter the address in the format " \
                     "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
@@ -41,6 +39,7 @@ async def index_resp(request):
 
 @app_sanic.route('/api/repo', methods=['GET'])
 @app_sanic.route('/api/issues-statistic', methods=['GET'])
+@app_sanic.route('/api/full', methods=['GET'])
 async def get_api_request(request):
     repository_path = request.args.get('name', None)
     skip_cache = request.args.get('skipCache', False)
@@ -51,17 +50,19 @@ async def get_api_request(request):
     if '/api/repo' in request.url:
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='repo')
     elif '/api/issues-statistic' in request.url:
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='issues')
+    elif '/api/full' in request.url:
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='full')
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
-    resp_json = await instance_db_client.get_report(rec_request=rec_request)
-    resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
+    resp_json, code = await instance_db_client.get_report(rec_request=rec_request)
     logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)
 
 
 @app_sanic.route('/api/repo', methods=['POST'])
 @app_sanic.route('/api/issues-statistic', methods=['POST'])
+@app_sanic.route('/api/full', methods=['POST'])
 async def post_api_request(request):
     repository_path = request.json.get('repositoryPath', None)
     token_api = request.json.get('token', None)
@@ -72,10 +73,11 @@ async def post_api_request(request):
     if '/api/repo' in request.url:
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='repo')
     elif '/api/issues-statistic' in request.url:
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='issues')
+    elif '/api/full' in request.url:
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache, response_type='full')
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
-    resp_json = await instance_db_client.get_report(rec_request=rec_request)
-    resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
+    resp_json, code = await instance_db_client.get_report(rec_request=rec_request)
     logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     return HTTPResponse(resp_json, status=code)

@@ -1,6 +1,6 @@
-import backend.use_graphql as ug
-import backend.func_api_client as fa
-import backend.bug_issues as bi
+import backend.analytic.use_graphql as ug
+import backend.analytic.functions as fn
+import backend.analytic.bug_issues as bi
 from datetime import datetime, timedelta
 from loguru import logger
 import asyncio
@@ -64,30 +64,30 @@ class GithubApiClient:
                 self.resp_json.data.name = self.data['data']['repository']['name']
                 self.resp_json.data.description = self.data['data']['repository']['description']
                 self.resp_json.data.stars = self.data['data']['repository']['stargazerCount']
-                self.resp_json.data.created_at = await fa.to_date(self.data['data']['repository']['createdAt'])
+                self.resp_json.data.created_at = await fn.to_date(self.data['data']['repository']['createdAt'])
                 self.resp_json.data.duration = (
                         datetime.utcnow() - self.resp_json.data.created_at
                 ).days
                 self.resp_json.data.updated_at = (
-                        datetime.utcnow() - await fa.to_date(self.data['data']['repository']['updatedAt'])
+                        datetime.utcnow() - await fn.to_date(self.data['data']['repository']['updatedAt'])
                 ).days
                 self.resp_json.data.pushed_at = (
-                        datetime.utcnow() - await fa.to_date(self.data['data']['repository']['pushedAt'])
+                        datetime.utcnow() - await fn.to_date(self.data['data']['repository']['pushedAt'])
                 ).days
                 self.resp_json.data.archived = self.data['data']['repository']['isArchived']
                 self.resp_json.data.locked = self.data['data']['repository']['isLocked']
-                self.resp_json.data.issues_count = self.data['data']['repository']['issues']['totalCount']
                 self.resp_json.data.watchers_count = self.data['data']['repository']['watchers']['totalCount']
                 self.resp_json.data.fork_count = self.data['data']['repository']['forkCount']
+                self.resp_json.data.issues_count = self.data['data']['repository']['issues']['totalCount']
                 if self.data['data']['repository']['releases']['edges']:
                     self.resp_json.data.version = \
                         self.data['data']['repository']['releases']['edges'][0]['node']['tag']['name']
-                    self.resp_json = await fa.parsing_version(
+                    self.resp_json = await fn.parsing_version(
                         resp_json=self.resp_json,
                         data=self.data['data']['repository']['releases']['edges'],
                     )
                 if self.data['data']['repository']['pullRequests']['nodes']:
-                    self.resp_json = await fa.pull_request_analytics(
+                    self.resp_json = await fn.pull_request_analytics(
                         resp_json=self.resp_json,
                         data=self.data['data']['repository']['pullRequests']['nodes'],
                     )
@@ -102,13 +102,13 @@ class GithubApiClient:
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
         except (TypeError, KeyError) as e:
             if str(e) == "'data'":
-                return await fa.json_error_401(
+                return await fn.json_error_401(
                     rec_request=self.rec_request,
                     resp_json=self.resp_json,
                     e_data=self.data,
                 )
             if str(e) == "'NoneType' object is not subscriptable":
-                return await fa.json_error_404(
+                return await fn.json_error_404(
                     rec_request=self.rec_request,
                     resp_json=self.resp_json,
                     error=self.data['errors'][0]['message'],
