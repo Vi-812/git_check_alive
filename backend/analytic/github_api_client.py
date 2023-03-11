@@ -7,54 +7,76 @@ import asyncio
 
 
 class GithubApiClient:
+    """
+    Данный класс собирает данные из GitHub, проводит аналитику, формирует resp_json.
+    get_info_labels - получение общей информации о репозитории и информации о labels
+        Внутри себя использует:
+        get_info_labels_json - для получения данных от GitHub
+        parse_info_labels - для обработки полученных данных
+            parsing_version - для аналитики версионирования репозитория
+            pull_request_analytics - для аналитики PR
+    Если общей информации достаточно, возвращает resp_json.
+    Если нужна аналитика по bug_issues, то продолжает собирать данные.
+    get_bug_issues - сбор информации по bug_issues
+        Внутри себя использует:
+        get_info_labels_json - для получения данных от GitHub
+        parse_bug_issues - для обработки полученных данных
+            push_bug_issues - для сбора данных о bug_issues
+    get_bug_analytic - получение аналитики по собранной bug_issues информации
+
+    :param rec_request: ReceivedRequest (DTO), запрос полученный от пользователя
+    :param resp_json: RequestResponse (DTO), ответ на запрос
+    :return: resp_json: RequestResponse (DTO), ответ на запрос
+    """
 
     async def get_new_report(self, rec_request, resp_json):
         self.rec_request = rec_request
         self.resp_json = resp_json
         self.resp_json.meta.request_downtime = timedelta(seconds=0)
-        await self.get_info_labels()
-        if resp_json.meta.code:
+        await self.get_info_labels()  # Получает общую информации о репозитории и информации о labels
+        if resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
             return self.resp_json
-        if self.rec_request.response_type == 'repo':
+        if self.rec_request.response_type == 'repo':  # Если информации о репозитории достаточно...
             self.resp_json.meta.code = 200
             logger.info(f'GH_200/repo, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+            return self.resp_json  # ... то возвращаем успешный resp_json с этими данными
+        await self.get_bug_issues()  # сбор информации по bug_issues
+        if resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
             return self.resp_json
-        await self.get_bug_issues()
-        if resp_json.meta.code:
-            return self.resp_json
-        self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)
+        self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)  # Проводим аналитику данных
         self.resp_json.meta.code = 200
         logger.info(f'GH_200, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
-        return self.resp_json
+        return self.resp_json  # Возвращаем успешный resp_json
 
     async def get_info_labels(self):
         self.cursor = None
         self.repo_labels_name_list = []
 
         while True:
-            data_github = ug.UseGraphQL()
+            data_github = ug.UseGraphQL()  # Обращаемся к GitHub
             self.resp_json, self.data = await data_github.get_info_labels_json(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 cursor=self.cursor,
             )
-            if self.resp_json.meta.code:
+            if self.resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
                 return self.resp_json
             if self.data.get('data'):
-                await self.parse_info_labels()
+                await self.parse_info_labels()  # Если есть полученные данные, то начинаем обработку
                 if self.resp_json.meta.code:
                     return self.resp_json
             else:
                 logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
                              f'{self.resp_json=}')
-                await asyncio.sleep(1)
+                await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                 continue
 
-            if self.has_next_page:
+            if self.has_next_page:  # Если есть еще страницы (labels > 100), повторяем считывание
                 self.cursor = self.end_cursor
             else:
-                break
+                break  # Если страниц нет, выходим из цикла
 
+        # Проверяем labels на содержание 'bug' в названии, bug_labels используем для поиска bug_issues
         self.repo_labels_bug_list = []
         for name in self.repo_labels_name_list:
             if 'bug' in name.lower():
@@ -62,7 +84,7 @@ class GithubApiClient:
 
     async def parse_info_labels(self):
         try:
-            if not self.cursor:
+            if not self.cursor:  # Если идет обработка первого запроса (cursor == None)
                 self.resp_json.data.owner = self.data['data']['repository']['owner']['login']
                 self.resp_json.data.name = self.data['data']['repository']['name']
                 self.resp_json.data.description = self.data['data']['repository']['description']
@@ -103,14 +125,14 @@ class GithubApiClient:
             self.resp_json.meta.cost += self.request_cost
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
-        except KeyError as e:
+        except KeyError as e:  # Обработка ошибки при некорректном ответе data от GitHub
             return await fn.internal_error_500(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 e_data=self.data,
                 error=e,
             )
-        except TypeError as e:
+        except TypeError as e:  # Обработка ошибки если репозиторий не найден на GitHub
             return await fn.json_error_404(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
@@ -123,34 +145,38 @@ class GithubApiClient:
         self.instance_b_i_a = bi.BugIssuesAnalytic()
 
         while True:
-            data_github = ug.UseGraphQL()
+            data_github = ug.UseGraphQL()  # Обращаемся к GitHub
             self.resp_json, self.data = await data_github.get_bug_issues_json(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 cursor=self.cursor,
                 repo_labels_bug_list=self.repo_labels_bug_list,
             )
-            if self.resp_json.meta.code:
+            if self.resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
                 return self.resp_json
             if self.data.get('data'):
-                await self.parse_bug_issues()
+                await self.parse_bug_issues()  # Если есть полученные данные, то начинаем обработку
             else:
                 logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
                              f'{self.resp_json=}')
-                await asyncio.sleep(1)
+                await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                 continue
 
+            # Если идет обработка первого запроса (cursor == None) и если количество bug_issues > 200
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
+
                 # Предварительный расчет времени запроса
-                cost_multiplier = 2.9
-                cost_upped = cost_multiplier * 2
+                cost_multiplier = 2.9  # Множетель запроса (100 bug_issues в сукундах)
+                cost_upped = cost_multiplier * 2  # Дополнительная погрешность
                 self.resp_json.meta.estimated_time = str(round(
                     ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped
                     , 2))
-            if self.has_next_page:
+
+
+            if self.has_next_page:  # Если есть еще страницы (считаны не все bug_issues), повторяем считывание
                 self.cursor = self.end_cursor
             else:
-                break
+                break  # Если страниц нет, выходим из цикла
 
     async def parse_bug_issues(self):
         try:
@@ -164,5 +190,5 @@ class GithubApiClient:
             self.resp_json.meta.cost += self.request_cost
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
-        except Exception as e:
+        except Exception as e:  # Логирование ошибки, чтоб знать что обрабатывать
             logger.error(f'ERROR! {self.data=}, {e=}, {self.rec_request=}, {self.resp_json=}')

@@ -156,7 +156,7 @@ class Link:
         headers = {'Authorization': 'token ' + rec_request.token}  # Помещаем токен в headers
         try:
             async with aiohttp.ClientSession() as session:  # Начинаем сессию
-                ght = datetime.utcnow()  # Начинаем засекать время запроса к GraphQL
+                ght = datetime.utcnow()  # Засекаем время запроса к GraphQL
                 async with session.post(url=url, headers=headers, json=json_gql) as resp:  # Формируем запрос resp
                     data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
                 resp_json.meta.request_downtime += datetime.utcnow() - ght  # Добавляем время в request_downtime
