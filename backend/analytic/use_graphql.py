@@ -13,7 +13,7 @@ from backend.analytic import functions as fn
 class UseGraphQL:
     """
     Формирует json запрос к GraphQL GitHub'а, отправляет через класс Link.
-    :param cursor: курсор, для последовотельного запроса данных
+    :param cursor: курсор, для последовательного запроса данных
     :param repo_labels_bug_list: список bug меток
     :return: информацию о репозитории полученную от Link
     """
@@ -146,9 +146,9 @@ class UseGraphQL:
 
 class Link:
     """
-    Делает запрос к GraphQL GitHub'а используя полученый json.
+    Делает запрос к GraphQL GitHub'а используя полученный json.
     В случае ошибки записывает ошибку в resp_json.
-    :return: информацию полученную от GitHub'а в формате словаря python
+    :return: информацию, полученную от GitHub'а (в формате словаря python)
     """
 
     async def link(self, rec_request, resp_json, json_gql):
@@ -168,7 +168,8 @@ class Link:
                     ), data
                 return resp_json, data
         except requests.exceptions.ConnectionError as e:  # Обработка ошибки соединения с GitHub
-            logger.error(f'E_500! Ошибка ссоединения с сервером, {e=}, rec_request={rec_request.dict(exclude={"token"})}')
+            logger.error(f'E_500! Ошибка соединения с сервером, {e=}, '
+                         f'rec_request={rec_request.dict(exclude={"token"})}')
             resp_json.meta.code = 500
             resp_json.error.description = 'ConnectionError'
             resp_json.error.message = str(e)

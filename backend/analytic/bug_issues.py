@@ -70,7 +70,7 @@ class BugIssuesAnalytic:
 
         # Сколько bug_issues было закрыто меньше чем за 2 месяца (в процентном соотношении)
         if resp_json.data.bug_issues_closed_count and bug_issues_closed2m:
-             resp_json.data.bug_issues_closed2m = round(
-                 bug_issues_closed2m / resp_json.data.bug_issues_closed_count * 100, 2
-             )
+            resp_json.data.bug_issues_closed2m = round(
+                bug_issues_closed2m / resp_json.data.bug_issues_closed_count * 100, 2
+            )
         return resp_json

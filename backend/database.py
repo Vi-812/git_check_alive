@@ -5,65 +5,73 @@ from backend.analytic import github_api_client as ga, functions as fn
 from frontend import load_dotenv, db, models
 from dto.request_response import RequestResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func  # Используется
 from backend.json_preparation import final_json_preparation
 from loguru import logger
 
 
 class DataBaseHandler:
+    """
+    Данный класс получает запрос от web сервера, смотрит есть ли данный репозиторий в базе и подходят ли условия для
+    загрузки. Если условия удовлетворяют, загружает resp_json из базы данных. В противном случае перенаправляет запрос
+    в GithubApiClient.
+    Так же занимается записью полученных ответов и статистики в базу данных.
+    """
+
     async def get_report(self, rec_request):
-        self.response_duration_time = datetime.utcnow()
+        self.response_duration_time = datetime.utcnow()  # Засекаем время выполнения запроса
         self.rec_request = rec_request
-        self.resp_json = RequestResponse(data={}, error={}, meta={})
+        self.resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
         repository_path = self.rec_request.repo_path
         try:
-            repository_path = repository_path.split('/')
+            repository_path = repository_path.split('/')  # Распознаем repository_path
             self.rec_request.repo_owner, self.rec_request.repo_name = repository_path[-2], repository_path[-1]
             self.rec_request.repo_path = self.rec_request.repo_owner + '/' + self.rec_request.repo_name
-        except (IndexError, AttributeError) as e:
-            await fn.path_error_400(
+        except (IndexError, AttributeError) as e:  # Обработка ошибки при неверной передаче repository_path
+            self.resp_json = await fn.path_error_400(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 repository_path=repository_path,
                 e=e,
             )
             return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
-        await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)
-        # Проверка что репозиторий есть в БД и skip_cache=True
+
+        await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)  # Ищем репозиторий
+        # Проверка, что репозиторий есть в БД и skip_cache=False
         if self.repo_find and not self.rec_request.skip_cache:
             # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
-            # Количество прошедших часов (hours) должно ровняться или привышать стоимость запроса (cost)
+            # Количество прошедших часов (hours) должно ровняться или превышать стоимость запроса (cost)
             # Если времени прошло не достаточно, данные загружаются из БД
             hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
             if hours < self.repo_find.cost:
-                await self.load_repo_data()
+                await self.load_repo_data()  # Загружаем resp_json из БД
                 logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                 return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
-        instance_api_client = ga.GithubApiClient()
+        instance_api_client = ga.GithubApiClient()  # Запрашиваем аналитику у GithubApiClient
         self.resp_json = await instance_api_client.get_new_report(
             rec_request=self.rec_request,
             resp_json=self.resp_json,
         )
 
-        await self.time_block()
-        if self.resp_json.meta.code == 200 and self.rec_request.response_type != 'repo':
+        await self.time_block()  # Закрываем time поля
+        if self.resp_json.meta.code == 200: # Если запрос с кодом 200, записываем в RepositoryCollection
             self.repository_path = self.resp_json.data.owner + '/' + self.resp_json.data.name
-            await self.create_or_update_repo_data()
             await self.save_collection()
-            # Валидация стоимости запроса, записывать ли в статистику
-            if self.resp_json.meta.cost > 10:
-                await self.save_statistics()
+            if self.rec_request.response_type != 'repo':  # Если запрос не 'repo', записываем в RepositoryInfo
+                await self.create_or_update_repo_data()  # Создание или обновление данных
+                if self.resp_json.meta.cost > 10:  # Если стоимость > 10, записываем в QueryStatistics
+                    await self.save_statistics()
         return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
     async def create_or_update_repo_data(self):
-        await self.find_repository(table='RepositoryInfo', path=self.repository_path)
+        await self.find_repository(table='RepositoryInfo', path=self.repository_path)  # Ищем репозиторий
         if self.repo_find:
-            await self.update_repo_data()
+            await self.update_repo_data()  # Найден - обновляем
         else:
-            await self.create_repo_data()
+            await self.create_repo_data()  # Не найден - создаем новый
 
-    async def create_repo_data(self):
+    async def create_repo_data(self):  # Создаем новый репозиторий в RepositoryInfo
         session = Session(bind=db)
         repo_data = models.RepositoryInfo(
             repo_path=self.resp_json.data.owner + '/' + self.resp_json.data.name,
@@ -97,7 +105,7 @@ class DataBaseHandler:
         session.add(repo_data)
         session.commit()
 
-    async def update_repo_data(self):
+    async def update_repo_data(self):  # Обновляем существующий репозиторий в RepositoryInfo
         session = Session(bind=db)
         self.repo_find.description = self.resp_json.data.description
         self.repo_find.stars = self.resp_json.data.stars
@@ -128,7 +136,7 @@ class DataBaseHandler:
         session.add(self.repo_find)
         session.commit()
 
-    async def load_repo_data(self):
+    async def load_repo_data(self):  # Загружаем resp_json из БД (RepositoryInfo)
         self.resp_json.data.owner, self.resp_json.data.name = self.repo_find.repo_path.split('/', 2)
         self.resp_json.data.description = self.repo_find.description
         self.resp_json.data.stars = self.repo_find.stars
@@ -158,11 +166,11 @@ class DataBaseHandler:
         self.resp_json.meta.cost = 0
         self.resp_json.meta.information = f'Data from DB at {str(self.repo_find.upd_date)} UTC'
 
-    async def save_statistics(self):
+    async def save_statistics(self):  # Записываем в QueryStatistics
         session = Session(bind=db)
         time = self.resp_json.meta.time
         cost = self.resp_json.meta.cost
-        if self.resp_json.meta.remains < 3000:
+        if self.resp_json.meta.remains < 3000:  # Если кредитов осталось меньше 3000, записываем в БД
             query_limit = self.resp_json.meta.remains
         else:
             query_limit = None
@@ -180,13 +188,13 @@ class DataBaseHandler:
         session.add(statistic)
         session.commit()
 
-    async def save_collection(self):
-        await self.find_repository(table='RepositoryCollection', path=self.repository_path)
-        if not self.repo_find:
+    async def save_collection(self):  # Записываем в RepositoryCollection
+        await self.find_repository(table='RepositoryCollection', path=self.repository_path)  # Ищем репозиторий
+        if not self.repo_find:  # Если такого репозитория еще нет, записываем
             session = Session(bind=db)
             load_dotenv()
             hasher = os.getenv('HASHER')
-            token_hash = blake2s(digest_size=32)
+            token_hash = blake2s(digest_size=32)  # Записываем hash токена в БД
             token_hash.update((hasher + self.rec_request.token + hasher).encode('utf-8'))
             token_hash = (token_hash.digest()).decode('utf-8', errors='ignore')
 
@@ -198,17 +206,25 @@ class DataBaseHandler:
             session.commit()
 
     async def find_repository(self, table, path):
+        """
+        Ищет репозиторий в таблице=table с вледельцем_именем_репозитория=path.
+        :param table: Таблица для поиска
+        :param path: Путь для поиска
+        :return repo_find: Найденный репозиторий (для считывания либо обновления), либо None если не найден
+        """
         session = Session(bind=db)
-        self.repo_find = eval(f'session.query(models.{table}).filter(func.lower(models.{table}.repo_path) == "{path}".lower()).first()')
+        self.repo_find = eval(f'session.query(models.{table}).filter('
+                              f'func.lower(models.{table}.repo_path) == "{path}".lower()'
+                              f').first()')
         session.close()
 
-
-    async def time_block(self):
-        self.response_duration_time = datetime.utcnow() - self.response_duration_time
-        self.resp_json.meta.time = round(
+    async def time_block(self):  # Закрываем time поля
+        self.response_duration_time = datetime.utcnow() - self.response_duration_time  # Фиксируем время
+        self.resp_json.meta.time = round(  # Переводим в нужный нам формат, округляем
             self.response_duration_time.seconds + (self.response_duration_time.microseconds * 0.000001), 2
         )
-        self.resp_json.meta.request_downtime = round(
-            self.resp_json.meta.request_downtime.seconds + (
-                        self.resp_json.meta.request_downtime.microseconds * 0.000001), 2
-        )
+        if self.resp_json.meta.request_downtime:  # Если есть request_downtime, переводим, округляем
+            self.resp_json.meta.request_downtime = round(
+                self.resp_json.meta.request_downtime.seconds + (
+                            self.resp_json.meta.request_downtime.microseconds * 0.000001), 2
+            )

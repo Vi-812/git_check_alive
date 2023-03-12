@@ -5,7 +5,7 @@ load_dotenv()
 
 fast = False
 
-url = 'http://127.0.0.1:8000/api/issues-statistic'
+url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
 
 if fast:

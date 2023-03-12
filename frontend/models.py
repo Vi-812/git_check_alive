@@ -2,7 +2,7 @@ from frontend import db
 from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+Base = declarative_base()  # Создаем экземпляр declarative_base (sqlalchemy)
 
 
 class RepositoryInfo(Base):
@@ -65,4 +65,4 @@ class RepositoryCollection(Base):
     saved = Column(Boolean, default=False, nullable=False)
 
 
-Base.metadata.create_all(db)
+Base.metadata.create_all(db)  # Создаем все таблицы

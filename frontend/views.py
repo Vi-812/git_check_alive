@@ -4,21 +4,21 @@ from dto.received_request import ReceivedRequest
 from sanic import HTTPResponse
 from loguru import logger
 
-session_req = {}
+session_req = {}  # Создаем set для сессий Sanic
 
 
 @app_sanic.middleware('request')
 async def add_session(request):
-    request.ctx.session = session_req
+    request.ctx.session = session_req  # Добавляем сессию в Sanic
 
 
-@app_sanic.route('/', methods=['GET'])
+@app_sanic.get('/')
 async def index(request):
     form = forms.RepositoryPathForm(request)
     return jinja.render('index.html', request, form=form)
 
 
-@app_sanic.route('/', methods=['POST'])
+@app_sanic.post('/')
 async def index_resp(request):
     form = forms.RepositoryPathForm(request)
     repository_path = request.form.get(['link_repository'][0], None)
@@ -37,9 +37,9 @@ async def index_resp(request):
     return jinja.render('index.html', request, form=form, json=resp_json)
 
 
-@app_sanic.route('/api/repo', methods=['GET'])
-@app_sanic.route('/api/issues-statistic', methods=['GET'])
-@app_sanic.route('/api/full', methods=['GET'])
+@app_sanic.get('/api/repo')
+@app_sanic.get('/api/issues-statistic')
+@app_sanic.get('/api/full')
 async def get_api_request(request):
     repository_path = request.args.get('name', None)
     skip_cache = request.args.get('skipCache', False)
@@ -63,9 +63,9 @@ async def get_api_request(request):
     return HTTPResponse(resp_json, status=code)
 
 
-@app_sanic.route('/api/repo', methods=['POST'])
-@app_sanic.route('/api/issues-statistic', methods=['POST'])
-@app_sanic.route('/api/full', methods=['POST'])
+@app_sanic.post('/api/repo')
+@app_sanic.post('/api/issues-statistic')
+@app_sanic.post('/api/full')
 async def post_api_request(request):
     repository_path = request.json.get('repositoryPath', None)
     token_api = request.json.get('token', None)

@@ -9,9 +9,10 @@ async def to_date(date_str: str) -> datetime:  # Преобразуем из Б�
 
 async def parsing_version(resp_json, data: list):
     """
-    Распарсиваем, дополняем до 3х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
+    Парсим, дополняем до 3-х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
     Если в считанных записях не находится изменений версии, присваивается самая ранняя считанная дата.
     При наличии 1 версии проекта, все счетчики считаются от нее.
+    :param resp_json: RequestResponse (DTO), для ответа
     :param data: даты и версии проекта, 100 последних изменений (json/GitHub)
     :return: количество полных дней с обновления мажорной, минорной и патч версий
     """
@@ -33,7 +34,7 @@ async def parsing_version(resp_json, data: list):
         if not major_v:  # Если дата изменения версии еще не найдена
             new_mj = version[0]  # Достаем новую версию
             if new_mj != old_mj:  # Смотрим, изменилась ли версия
-                major_v = published_date  # Если изменилась то фиксируем дату
+                major_v = published_date  # Если изменилась - то фиксируем дату
         if not minor_v:
             new_mi = version[1]
             if new_mi != old_mi:
@@ -44,7 +45,7 @@ async def parsing_version(resp_json, data: list):
                 patch_v = published_date
         published_date = release['node']['publishedAt']  # Обновляем дату
     else:
-        if len(data) == 100:  # Если проверено 100 записей и не найдена какая то из версий, записываем warning
+        if len(data) == 100:  # Если проверено 100 записей и не найдена какая-то из версий, записываем warning
             logger.warning(f'Не найдено версии (100 записей)!, {resp_json=}')
     if not major_v: major_v = published_date  # Присваиваем последнюю дату если не найдено изменения версии
     if not minor_v: minor_v = published_date
@@ -59,6 +60,7 @@ async def pull_request_analytics(resp_json, data):
     """
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
+    :param resp_json: RequestResponse (DTO), для ответа
     :param data: данные о 100 последних PR (json/GitHub)
     :return: количество PR закрытых за последние 2 месяца, медиану времени закрытия
     """
@@ -87,8 +89,8 @@ async def path_error_400(rec_request, resp_json, repository_path, e):
     # Обработка ошибки при неверной передаче repository_path
     logger.warning(f'E_400! Не распознан {repository_path=}, {e=}, rec_request={rec_request.dict(exclude={"token"})}')
     resp_json.meta.code = 400
-    resp_json.error.description = 'Bad repository adress'
-    resp_json.error.message = "Bad repository adress, enter the address in the format " \
+    resp_json.error.description = 'Bad repository address'
+    resp_json.error.message = "Bad repository address, enter the address in the format " \
                               "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
     return resp_json
 

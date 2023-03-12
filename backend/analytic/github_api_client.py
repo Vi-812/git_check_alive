@@ -13,7 +13,7 @@ class GithubApiClient:
         Внутри себя использует:
         get_info_labels_json - для получения данных от GitHub
         parse_info_labels - для обработки полученных данных
-            parsing_version - для аналитики версионирования репозитория
+            parsing_version - для аналитики версионирований репозитория
             pull_request_analytics - для аналитики PR
     Если общей информации достаточно, возвращает resp_json.
     Если нужна аналитика по bug_issues, то продолжает собирать данные.
@@ -25,7 +25,7 @@ class GithubApiClient:
     get_bug_analytic - получение аналитики по собранной bug_issues информации
 
     :param rec_request: ReceivedRequest (DTO), запрос полученный от пользователя
-    :param resp_json: RequestResponse (DTO), ответ на запрос
+    :param resp_json: RequestResponse (DTO), для подготовки ответа на запрос
     :return: resp_json: RequestResponse (DTO), ответ на запрос
     """
 
@@ -166,12 +166,11 @@ class GithubApiClient:
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
 
                 # Предварительный расчет времени запроса
-                cost_multiplier = 2.9  # Множетель запроса (100 bug_issues в сукундах)
+                cost_multiplier = 2.9  # Множитель запроса (100 bug_issues в секундах)
                 cost_upped = cost_multiplier * 2  # Дополнительная погрешность
                 self.resp_json.meta.estimated_time = str(round(
-                    ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped
-                    , 2))
-
+                    ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped, 2)
+                )
 
             if self.has_next_page:  # Если есть еще страницы (считаны не все bug_issues), повторяем считывание
                 self.cursor = self.end_cursor
