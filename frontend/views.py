@@ -67,6 +67,11 @@ async def get_api_request(request):
 @app_sanic.post('/api/issues-statistic')
 @app_sanic.post('/api/full')
 async def post_api_request(request):
+
+    # import asyncio
+    # from tests.testing import printing
+    # asyncio.run_coroutine_threadsafe(printing(request.json.get('repositoryPath', None)), asyncio.get_running_loop())
+
     repository_path = request.json.get('repositoryPath', None)
     token_api = request.json.get('token', None)
     skip_cache = request.json.get('skipCache', False)
