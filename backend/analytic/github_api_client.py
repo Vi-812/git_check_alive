@@ -40,7 +40,7 @@ class GithubApiClient:
             self.resp_json.meta.code = 200
             logger.info(f'GH_200/repo, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
             return self.resp_json  # ... то возвращаем успешный resp_json с этими данными
-        await self.get_bug_issues()  # сбор информации по bug_issues
+        await self.get_bug_issues()  # Сбор информации по bug_issues
         if resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
             return self.resp_json
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)  # Проводим аналитику данных
