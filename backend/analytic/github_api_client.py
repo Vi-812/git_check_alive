@@ -51,10 +51,10 @@ class GithubApiClient:
     async def get_info_labels(self):
         self.cursor = None
         self.repo_labels_name_list = []
+        self.data_github = ug.UseGraphQL()
 
         while True:
-            data_github = ug.UseGraphQL()  # Обращаемся к GitHub
-            self.resp_json, self.data = await data_github.get_info_labels_json(
+            self.resp_json, self.data = await self.data_github.get_info_labels_json(  # Обращаемся к GitHub
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 cursor=self.cursor,
@@ -145,8 +145,7 @@ class GithubApiClient:
         self.instance_b_i_a = bi.BugIssuesAnalytic()
 
         while True:
-            data_github = ug.UseGraphQL()  # Обращаемся к GitHub
-            self.resp_json, self.data = await data_github.get_bug_issues_json(
+            self.resp_json, self.data = await self.data_github.get_bug_issues_json(  # Обращаемся к GitHub
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 cursor=self.cursor,

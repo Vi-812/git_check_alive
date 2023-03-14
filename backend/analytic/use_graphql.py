@@ -2,6 +2,7 @@ import aiohttp
 import requests
 import json
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from loguru import logger
 from backend.analytic import functions as fn
 
@@ -18,11 +19,18 @@ class UseGraphQL:
     :return: информацию о репозитории полученную от Link
     """
 
+    def __init__(self, years=2):
+        # Получаем дату актуальности данных, текущяя дата - 2 года, переводим в isoformat
+        self.since_date = (datetime.utcnow() - relativedelta(years=years)).isoformat()
+
+        # Создаем экземпляр класса Link
+        self.instance_link = Link()
+
     async def get_info_labels_json(self, rec_request, resp_json, cursor):
         json_gql = {
             'query':
             """
-            query GetInfo ($owner: String!, $name: String!, $cursor: String) {
+            query GetInfo ($owner: String!, $name: String!, $date: DateTime!, $cursor: String) {
                 repository(name: $name, owner: $owner) {                    
                     owner {
                         login
@@ -35,7 +43,7 @@ class UseGraphQL:
                     pushedAt
                     isArchived
                     isLocked
-                    issues {
+                    issues(first: 1, filterBy: {since: $date}) {
                         totalCount
                     }
                     watchers {
@@ -83,24 +91,23 @@ class UseGraphQL:
             'variables': {
                 "owner": rec_request.repo_owner,
                 "name": rec_request.repo_name,
-                "cursor": cursor
+                "date": self.since_date,
+                "cursor": cursor,
             }
         }
-        instance_link = Link()
-        return await instance_link.link(
+        return await self.instance_link.link(
             rec_request=rec_request,
             resp_json=resp_json,
             json_gql=json_gql
         )
 
     async def get_bug_issues_json(self, rec_request, resp_json, cursor, repo_labels_bug_list):
-        # issues(first: 100, filterBy: {labels: $labels, createdBy: "2018-01-01..*"}, after: $cursor) {
         json_gql = {
             'query':
             """
-            query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {
+            query GetIssues($owner: String!, $name: String!, $labels: [String!], $date: DateTime!, $cursor: String) {
                 repository(name: $name, owner: $owner) {
-                    issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {
+                    issues(first: 100, filterBy: {labels: $labels, since: $date}, after: $cursor) {
                         totalCount
                         pageInfo {
                             startCursor
@@ -133,11 +140,11 @@ class UseGraphQL:
                 "owner": rec_request.repo_owner,
                 "name": rec_request.repo_name,
                 "labels": repo_labels_bug_list,
-                "cursor": cursor
+                "date": self.since_date,
+                "cursor": cursor,
             }
         }
-        instance_link = Link()
-        return await instance_link.link(
+        return await self.instance_link.link(
             rec_request=rec_request,
             resp_json=resp_json,
             json_gql=json_gql,
