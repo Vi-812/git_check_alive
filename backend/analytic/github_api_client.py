@@ -52,6 +52,7 @@ class GithubApiClient:
         self.cursor = None
         self.repo_labels_name_list = []
         self.data_github = ug.UseGraphQL()
+        error_count = 0
 
         while True:
             self.resp_json, self.data = await self.data_github.get_info_labels_json(  # Обращаемся к GitHub
@@ -66,10 +67,19 @@ class GithubApiClient:
                 if self.resp_json.meta.code:
                     return self.resp_json
             else:
-                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
-                             f'{self.resp_json=}')
-                await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
-                continue
+                if error_count < 11:
+                    logger.error(
+                        f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
+                        f'{self.resp_json=}')
+                    error_count += 1
+                    await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
+                    continue
+                else:
+                    return await fn.internal_error_500(
+                        rec_request=self.rec_request,
+                        resp_json=self.resp_json,
+                        e_data=self.data,
+                    )
 
             if self.has_next_page:  # Если есть еще страницы (labels > 100), повторяем считывание
                 self.cursor = self.end_cursor
@@ -143,6 +153,7 @@ class GithubApiClient:
     async def get_bug_issues(self):
         self.cursor = None
         self.instance_b_i_a = bi.BugIssuesAnalytic()
+        error_count = 0
 
         while True:
             self.resp_json, self.data = await self.data_github.get_bug_issues_json(  # Обращаемся к GitHub
@@ -156,10 +167,18 @@ class GithubApiClient:
             if self.data.get('data'):
                 await self.parse_bug_issues()  # Если есть полученные данные, то начинаем обработку
             else:
-                logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
-                             f'{self.resp_json=}')
-                await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
-                continue
+                if error_count < 11:
+                    logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
+                                 f'{self.resp_json=}')
+                    error_count += 1
+                    await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
+                    continue
+                else:
+                    return await fn.internal_error_500(
+                        rec_request=self.rec_request,
+                        resp_json=self.resp_json,
+                        e_data=self.data,
+                    )
 
             # Если идет обработка первого запроса (cursor == None) и если количество bug_issues > 200
             if not self.cursor and self.resp_json.data.bug_issues_count > 200:
@@ -169,6 +188,11 @@ class GithubApiClient:
                 cost_upped = cost_multiplier * 2  # Дополнительная погрешность
                 self.resp_json.meta.estimated_time = str(round(
                     ((self.resp_json.data.bug_issues_count // 100) * cost_multiplier) + cost_upped, 2)
+                )
+                # Запускаем дополнительную корутину для выода предпологаемого времени на форму сайта
+                asyncio.run_coroutine_threadsafe(
+                    self.output_estimated_time(estimated_time=self.resp_json.meta.estimated_time),
+                    asyncio.get_running_loop()
                 )
 
             if self.has_next_page:  # Если есть еще страницы (считаны не все bug_issues), повторяем считывание
@@ -189,4 +213,9 @@ class GithubApiClient:
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
         except Exception as e:  # Логирование ошибки, чтоб знать что обрабатывать
-            logger.error(f'ERROR! {self.data=}, {e=}, {self.rec_request=}, {self.resp_json=}')
+            logger.error(f'ERROR! {self.data=}, {e=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
+                         f'{self.resp_json=}')
+
+    async def output_estimated_time(self, estimated_time):
+        # Планируется вывод на форму сайта
+        logger.info(f'{estimated_time=}, rec_request={self.rec_request.dict(exclude={"token"})}')

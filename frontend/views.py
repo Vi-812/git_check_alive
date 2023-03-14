@@ -48,14 +48,13 @@ async def get_api_request(request):
     if not token_api:
         token_api = token_app
     if '/api/repo' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='repo')
+        response_type = 'repo'  # Запрос информации только о репозитории
     elif '/api/issues-statistic' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='issues')
-    elif '/api/full' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='full')
+        response_type = 'issues'  # Запрос информации только о issues
+    else:
+        response_type = 'full'  # Полный запрос
+    rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
+                                  response_type=response_type)
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json, code = await instance_db_client.get_report(rec_request=rec_request)
@@ -67,11 +66,6 @@ async def get_api_request(request):
 @app_sanic.post('/api/issues-statistic')
 @app_sanic.post('/api/full')
 async def post_api_request(request):
-
-    # import asyncio
-    # from tests.testing import printing
-    # asyncio.run_coroutine_threadsafe(printing(request.json.get('repositoryPath', None)), asyncio.get_running_loop())
-
     repository_path = request.json.get('repositoryPath', None)
     token_api = request.json.get('token', None)
     skip_cache = request.json.get('skipCache', False)
@@ -79,14 +73,13 @@ async def post_api_request(request):
     if not token_api:
         token_api = token_app
     if '/api/repo' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='repo')
+        response_type = 'repo'  # Запрос информации только о репозитории
     elif '/api/issues-statistic' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='issues')
-    elif '/api/full' in request.url:
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type='full')
+        response_type='issues'  # Запрос информации только о issues
+    else:
+        response_type='full'  # Полный запрос
+    rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
+                                  response_type=response_type)
     logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
     instance_db_client = database.DataBaseHandler()
     resp_json, code = await instance_db_client.get_report(rec_request=rec_request)

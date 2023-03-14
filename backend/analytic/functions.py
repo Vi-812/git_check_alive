@@ -114,10 +114,10 @@ async def json_error_404(rec_request, resp_json, error, e):
     return resp_json
 
 
-async def internal_error_500(rec_request, resp_json, e_data, error):
+async def internal_error_500(rec_request, resp_json, e_data, error=None):
     # Обработка ошибки при некорректном ответе data от GitHub
-    logger.warning(f'E_500! Ошибка в полученной data! '
-                   f'rec_request={rec_request.dict(exclude={"token"})}, {error=}, {e_data=}')
+    logger.error(f'GET_DATA_ERROR_500! Ошибка в полученной data! '
+                   f'rec_request={rec_request.dict(exclude={"token"})}, {e_data=}, {error=}')
     resp_json.meta.code = 500
     resp_json.error.description = 'Internal Server Error'
     resp_json.error.message = str(error)
