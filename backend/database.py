@@ -18,10 +18,10 @@ class DataBaseHandler:
     Так же занимается записью полученных ответов и статистики в базу данных.
     """
 
-    async def get_report(self, rec_request):
+    async def get_report(self, rec_request, resp_json):
         self.response_duration_time = datetime.utcnow()  # Засекаем время выполнения запроса
         self.rec_request = rec_request
-        self.resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+        self.resp_json = resp_json
         repository_path = self.rec_request.repo_path
         try:
             repository_path = repository_path.split('/')  # Распознаем repository_path
