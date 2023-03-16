@@ -68,10 +68,9 @@ class GithubApiClient:
                     return self.resp_json
             else:
                 if error_count < 11:
-                    logger.error(
-                        f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
-                        f'{self.resp_json=}')
                     error_count += 1
+                    logger.error(f'ec={error_count}|GET_DATA_ERROR! {self.data=}, '
+                        f'rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                     await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                     continue
                 else:
@@ -168,9 +167,9 @@ class GithubApiClient:
                 await self.parse_bug_issues()  # Если есть полученные данные, то начинаем обработку
             else:
                 if error_count < 11:
-                    logger.error(f'GET_DATA_ERROR! {self.data=}, rec_request={self.rec_request.dict(exclude={"token"})}, '
-                                 f'{self.resp_json=}')
                     error_count += 1
+                    logger.error(f'ec={error_count}|GET_DATA_ERROR! {self.data=}, '
+                                 f'rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
                     await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                     continue
                 else:
