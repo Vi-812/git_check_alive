@@ -28,6 +28,9 @@ async def index_resp(request):
         i_test = request.headers.get('test', '')
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_app, cache=cache)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+    except Exception as e:
+        return await global_error(error=e)
+    try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
         if repository_path:
             instance_db_client = database.DataBaseHandler()
@@ -39,7 +42,7 @@ async def index_resp(request):
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
         return jinja.render('index.html', request, form=form, json=resp_json)
     except Exception as e:
-        return await global_error(rec_request=rec_request, resp_json=resp_json, error=e)
+        return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
 @app_sanic.get('/api/repo')
@@ -62,13 +65,16 @@ async def get_api_request(request):
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
                                       response_type=response_type)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+    except Exception as e:
+        return await global_error(error=e)
+    try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
         return HTTPResponse(resp_json, status=code)
     except Exception as e:
-        return await global_error(rec_request=rec_request, resp_json=resp_json, error=e)
+        return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 @app_sanic.post('/api/repo')
 @app_sanic.post('/api/issues-statistic')
@@ -90,16 +96,20 @@ async def post_api_request(request):
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
                                       response_type=response_type)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+    except Exception as e:
+        return await global_error(error=e)
+    try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
         return HTTPResponse(resp_json, status=code)
     except Exception as e:
-        return await global_error(rec_request=rec_request, resp_json=resp_json, error=e)
+        return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
-async def global_error(rec_request, resp_json, error):
+async def global_error(error, rec_request=None, resp_json=RequestResponse(data={}, error={}, meta={})):
+    # Создаем глобальный обработчик ошибок для всех непредвиденных ситуаций
     logger.critical(f'GLOBAL_ERROR_500! rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}, {error=}')
     resp_json.meta.code = 500
     resp_json.error.description = 'Internal Server Error'

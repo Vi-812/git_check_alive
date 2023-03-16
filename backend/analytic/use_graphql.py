@@ -19,8 +19,8 @@ class UseGraphQL:
     :return: информацию о репозитории полученную от Link
     """
 
-    def __init__(self, years=2):
-        # Получаем дату актуальности данных, текущяя дата - 2 года, переводим в isoformat
+    def __init__(self, years=1):
+        # Получаем дату актуальности данных, текущяя дата - years, переводим в isoformat
         self.since_date = (datetime.utcnow() - relativedelta(years=years)).isoformat()
 
         # Создаем экземпляр класса Link

@@ -1,6 +1,6 @@
 import os
 import redis
-from redis.exceptions import AuthenticationError, ConnectionError
+from redis.exceptions import AuthenticationError, ConnectionError, TimeoutError
 from datetime import datetime
 from loguru import logger
 from dotenv import load_dotenv
@@ -28,7 +28,7 @@ async def final_json_preparation(rec_request, resp_json):
             resp_json.data.__delattr__('closed_bug_95perc')
             resp_json.data.__delattr__('closed_bug_50perc')
         else:
-            # Если у нас полный запрос подвешиваем json в Redis
+            # Если у нас полный запрос подвешиваем в Redis
             await redis_set(resp_json=resp_json)
         if rec_request.response_type == 'issues':  # Убираем неактуальные поля
             resp_json.data.__delattr__('description')
@@ -62,5 +62,7 @@ async def redis_set(resp_json):  # Подвешиваем json в Redis
         logger.error(f'AuthenticationError! {e=}')
     except ConnectionError as e:
         logger.error(f'ConnectionError! {e=}')
+    except TimeoutError as e:
+        logger.error(f'TimeoutError! {e=}')
     except Exception as e:
         logger.error(f'Unknown Redis Exception! {e=}')
