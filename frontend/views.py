@@ -19,6 +19,11 @@ async def index(request):
     return jinja.render('index.html', request, form=form)
 
 
+@app_sanic.get('/help')
+async def index(request):
+    return jinja.render('help.html', request)
+
+
 @app_sanic.post('/')
 async def index_resp(request):
     try:
