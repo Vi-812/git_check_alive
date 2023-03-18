@@ -1,9 +1,12 @@
 from frontend import app_sanic, jinja, token_app, forms
 from backend import database
+from backend.analytic import functions as fn
+from backend.json_preparation import final_json_preparation
 from dto.received_request import ReceivedRequest
 from dto.request_response import RequestResponse
 from sanic import HTTPResponse
 from loguru import logger
+import json
 
 session_req = {}  # Создаем set для сессий Sanic
 
@@ -16,7 +19,7 @@ async def add_session(request):
 @app_sanic.get('/')
 async def index(request):
     form = forms.RepositoryPathForm(request)
-    return jinja.render('index.html', request, form=form)
+    return jinja.render('index.html', request, form=form, data=None)
 
 
 @app_sanic.get('/help')
@@ -37,15 +40,19 @@ async def index_resp(request):
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
-        if repository_path:
+        if rec_request.repo_path:
             instance_db_client = database.DataBaseHandler()
             resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
+            resp_json = json.loads(resp_json)
         else:
-            resp_json = "Bad repository adress, enter the address in the format " \
-                        "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
-            code = 400
+            resp_json = await fn.path_error_400(rec_request=rec_request,
+                                                resp_json=resp_json,
+                                                repository_path=repository_path
+                                                )
+            resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
+            resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request, form=form, json=resp_json)
+        return jinja.render('index.html', request, form=form, data=resp_json)
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
@@ -67,8 +74,8 @@ async def get_api_request(request):
             response_type = 'issues'  # Запрос информации только о issues
         else:
             response_type = 'full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
-                                      response_type=response_type)
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
+                                      skip_cache=skip_cache, response_type=response_type)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
     except Exception as e:
         return await global_error(error=e)
@@ -98,8 +105,8 @@ async def post_api_request(request):
             response_type='issues'  # Запрос информации только о issues
         else:
             response_type='full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api, skip_cache=skip_cache,
-                                      response_type=response_type)
+        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
+                                      skip_cache=skip_cache,response_type=response_type)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
     except Exception as e:
         return await global_error(error=e)
