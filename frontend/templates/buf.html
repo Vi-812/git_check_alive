@@ -1,5 +1,74 @@
 <div class="container">
     <div class="row">
+        <div class="text-center my-2">
+            <h3>
+
+                git_check_alive
+
+            </h3>
+
+            <form action="/">
+                <div class="container">
+                    <button class="btn">
+                        OkkeY
+                    </button>
+                </div>
+            </form>
+            <form action="/" method="POST">
+                <!--                <button type="button" class="btn btn-dark">Dark</button>-->
+                {{ form.link_repository.label }}<br>
+                {{ form.link_repository(size=128) }}
+                {{ form.submit_path() }}
+            </form>
+            {{ json }}
+
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    Выпадающий список
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button class="dropdown-item" type="button">Элемент выпадающего списка</button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item" type="button">Элемент выпадающего списка</button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item" type="button">Элемент выпадающего списка</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+    <ul class="nav nav-pills nav-fill gap-2 p-1 small bg-primary rounded-5 shadow-sm" id="pillNav2" role="tablist"
+        style="--bs-nav-link-color: var(--bs-white); --bs-nav-pills-link-active-color: var(--bs-primary); --bs-nav-pills-link-active-bg: var(--bs-white);">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-5" id="home-tab2" data-bs-toggle="tab" type="button" role="tab"
+                    aria-selected="true">Поиск
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-5" id="profile-tab2" data-bs-toggle="tab" type="button" role="tab"
+                    aria-selected="false">Помощь
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-5" id="contact-tab2" data-bs-toggle="tab" type="button" role="tab"
+                    aria-selected="false">Контакты
+            </button>
+        </li>
+    </ul>
+
+
+<div class="container">
+    <div class="row">
         <div class="col-md-9">
             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequatur consequuntur dolorum facilis in magnam
             nihil? Cum deleniti dolorum eaque est excepturi, fugit illo iste laboriosam laborum odit pariatur,

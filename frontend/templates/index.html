@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="container">
+
+
+
+<form action="/" method="post" autocomplete="off">
     <div class="row">
-        <div class="text-center my-2">
-            <h3>
-
-                git_check_alive
-
-            </h3>
-             <form action="/" method="POST">
-                {{ form.link_repository.label }}<br>
-                {{ form.link_repository(size=128) }}
-                {{ form.submit_path() }}
-            </form>
-            {{ json }}
+        <div class="form-group col-xs-10 col-sm-8 col-md-8 col-lg-8">
+            <label for="exampleInputPath">Repository Path</label>
+            <input type="text" class="form-control" id="exampleInputPath" placeholder="Enter Repository Path">
+            <small id="emailHelp" class="form-text text-muted">'https://github.com/Vi-812/git_check_alive' or
+                'vi-812/git_check_alive'</small>
+        </div>
+        <div class="col-2">
+            <button type="submit" class="btn btn-success">Submit</button>
         </div>
     </div>
-</div>
+</form>
+
 {% endblock %}

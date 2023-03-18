@@ -5,7 +5,7 @@ load_dotenv()
 
 fast = False
 
-url = 'http://127.0.0.1:8000/api/issues-statistic'
+url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
 
 if fast:
@@ -21,6 +21,14 @@ else:
         'https://github.com/pallets/flask',
         'https://github.com/facebook/jest',
     ]
+
+if not fast:
+    data = {
+        'token': token[1:],
+        'repositoryPath': 'https://github.com/vi-812/git_'
+    }
+    response = requests.post(url=url, json=data)
+    print(response.status_code, response.text)
 
 for test in testing:
     data = {

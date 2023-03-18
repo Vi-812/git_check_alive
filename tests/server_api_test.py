@@ -7,7 +7,7 @@ from loguru import logger
 from dotenv import load_dotenv
 
 # Testing Setup
-count_test = 500
+count_test = 100
 web_server = False
 
 logger.add('log_err.log', format='{time} {level} {message}', level='ERROR')
@@ -17,15 +17,15 @@ logger.add('log_info.log', format='{time:DD-MM HH:mm} {message}', level='INFO')
 load_dotenv()
 token = os.getenv('TOKEN')
 
-with open('testing_list.txt', 'r') as file:
+with open('testing_list.txt', 'r') as file:  # Считываем testing_list из файла
     testing_list = file.read().splitlines()
 
-try:
+try:  # Парсим аргументы командной строки
     parser = argparse.ArgumentParser()
     parser.add_argument('test_count', nargs='?')
     args = parser.parse_args()
-    if args.test_count:
-        web_server = True
+    if args.test_count:  # Если количество тестов было передано через аргументы командной строки
+        web_server = True  # Тестируем Web-Server (игнорируя Testing Setup)
         test_count = int(args.test_count)
     else:
         test_count = count_test
@@ -33,32 +33,33 @@ except Exception as e:
     logger.warning(f'Count test ERROR! {e=} => test_count = 10')
     test_count = 10
 
-if test_count > len(testing_list):
+if test_count > len(testing_list):  # Контроль количества тестов, не должен превышать testing_list
     logger.warning(f'Count test ERROR! {test_count=}, {len(testing_list)=}')
     test_count = len(testing_list)
 
-if web_server:
+if web_server:  # Выбор между Web и Local серверами
     url = 'http://51.68.189.155'
 else:
     url = 'http://127.0.0.1:8000'
 
-for i in range(test_count):
-    time = datetime.utcnow()
-    query_type = choice(['GET', 'POST'])
-    response_type = choice(['/api/repo', '/api/issues-statistic', '/api/full'])
-    if response_type == '/api/repo':
+for i in range(test_count):  # Цикл тестов
+    time = datetime.utcnow()  # Засекаем время
+    query_type = choice(['GET', 'POST'])  # Определяем тип запроса
+    response_type = choice(['/api/repo', '/api/issues-statistic', '/api/full'])  # Определяем тип ответа
+    if response_type == '/api/repo':  # Сокращенный тип ответа (для i_test)
         rt = 'repo'
     elif response_type == '/api/issues-statistic':
         rt = 'issues'
     else:
         rt = 'full'
-    random_repo = choice(testing_list)
-    testing_list.remove(random_repo)
-    skip_cache = choice([True, False])
-    token_test = choice([token, None])
+    random_repo = choice(testing_list)  # Определяем репозиторий для тестирования
+    testing_list.remove(random_repo)  # Удаляем выбранный репозиторий из testing_list
+    skip_cache = choice([True, False])  # Определяем skip_cache, разрешена ли загрузка из базы данных
+    token_test = choice([token, None])  # Определяем передавать ли токен
+    # Формируем переменную i_test, как идентификатор текущего теста
     i_test = f'[test={i+1}/{test_count}||{query_type}|{rt}|tok={bool(token_test)}|skip={skip_cache}]'
 
-    if query_type == 'GET':
+    if query_type == 'GET':  # Составляем GET запрос
         url_test = url + response_type + '?name=' + random_repo
         if skip_cache == True:
             url_test += '&skipCache=True'
@@ -70,7 +71,7 @@ for i in range(test_count):
             logger.error(f'<<<{i_test} ConnectTimeoutError! {random_repo=}, {e=}')
             continue
 
-    else:
+    else:  # Составляем POST запрос
         url_test = url + response_type
         json = {
             'repositoryPath': random_repo,
