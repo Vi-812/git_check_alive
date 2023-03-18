@@ -36,17 +36,19 @@ class DataBaseHandler:
             )
             return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
-        await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)  # Ищем репозиторий
-        # Проверка, что репозиторий есть в БД и skip_cache=False
-        if self.repo_find and not self.rec_request.skip_cache:
-            # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
-            # Количество прошедших часов (hours) должно ровняться или превышать стоимость запроса (cost)
-            # Если времени прошло не достаточно, данные загружаются из БД
-            hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
-            if hours < self.repo_find.cost:
-                await self.load_repo_data()  # Загружаем resp_json из БД
-                logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
-                return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
+
+        # Проверка, что skip_cache=False (допускается отчет из БД)
+        if not self.rec_request.skip_cache:
+            await self.find_repository(table='RepositoryInfo', path=self.rec_request.repo_path)  # Ищем репозиторий
+            if self.repo_find:
+                # Проверка актуальности репозитория, данные в БД обновляются если с момента запроса прошло N часов
+                # Количество прошедших часов (hours) должно ровняться или превышать стоимость запроса (cost)
+                # Если времени прошло не достаточно, данные актуальны, ответ загружаем из БД
+                hours = ((datetime.utcnow() - self.repo_find.upd_date)*24).days
+                if hours < self.repo_find.cost:
+                    await self.load_repo_data()  # Загружаем resp_json из БД
+                    logger.info(f'DB_200, rec_request={rec_request.dict(exclude={"token"})}, {self.resp_json=}')
+                    return await final_json_preparation(rec_request=self.rec_request, resp_json=self.resp_json)
 
         instance_api_client = ga.GithubApiClient()  # Запрашиваем аналитику у GithubApiClient
         self.resp_json = await instance_api_client.get_new_report(
