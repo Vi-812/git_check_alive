@@ -85,7 +85,7 @@ async def pull_request_analytics(resp_json, data):
     return resp_json
 
 
-async def path_error_400(rec_request, resp_json, repository_path, e):
+async def path_error_400(rec_request, resp_json, repository_path, e=None):
     # Обработка ошибки при неверной передаче repository_path
     logger.warning(f'E_400! Не распознан {repository_path=}, {e=}, rec_request={rec_request.dict(exclude={"token"})}')
     resp_json.meta.code = 400

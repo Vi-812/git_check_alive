@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="text-center">
+    <h1>Конечные точки API, доступные для запроса к Git Check Alive</h1>
+</div>
+<br>
+
+<div>
+    <p>
+        Ваше приложение может выполнять запросы к следующим конечным точкам REST:
+        <br><b>https://isgitalive.karo-dev.ru/api/repo</b> - получение статистики по репозиторию
+        <br><b>https://isgitalive.karo-dev.ru/api/issues-statistic</b> - получение статистики по issues
+        <br><b>https://isgitalive.karo-dev.ru/api/full</b> - получение всей статистики
+    </p>
+</div>
+<br>
+<div>
+    <p>
+        Для <b>GET</b> запросов доступны следующие параметры:
+        <br><b>name</b> - имя репозитория в формате 'https://github.com/Vi-812/git_check_alive' или
+        'vi-812/git_check_alive'
+        <br><b>skipCache</b> - игнорирование базы данных, только свежие данные (False по умолчанию)
+        <br><b>token</b> - токен, можно передать в headers запроса
+    </p>
+</div>
+<br>
+<div>
+    <p>
+        Для <b>POST</b> запросов доступны следующие параметры в теле запроса:
+        <br><b>name</b> - имя репозитория в формате 'https://github.com/Vi-812/git_check_alive' или
+        'vi-812/git_check_alive'
+        <br><b>skipCache</b> - игнорирование базы данных, только свежие данные (False по умолчанию)
+        <br><b>token</b> - токен
+    </p>
+</div>
+
+{% endblock %}

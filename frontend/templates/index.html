@@ -1,20 +1,49 @@
 {% extends "base.html" %}
 {% block body %}
 
+<div class="text-center">
+    <h1>Git Check Alive</h1>
+</div>
+<br>
 
-
-<form action="/" method="post" autocomplete="off">
-    <div class="row">
-        <div class="form-group col-xs-10 col-sm-8 col-md-8 col-lg-8">
-            <label for="exampleInputPath">Repository Path</label>
-            <input type="text" class="form-control" id="exampleInputPath" placeholder="Enter Repository Path">
-            <small id="emailHelp" class="form-text text-muted">'https://github.com/Vi-812/git_check_alive' or
-                'vi-812/git_check_alive'</small>
+<div class="row">
+    <form action="/" method="POST">
+        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 text-right">
+            {{ form.link_repository(size=80) }}
+            {{ form.submit_path() }}
         </div>
-        <div class="col-2">
-            <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+</div>
+<br>
+
+    {% if data %}
+    {% for group in data %}
+
+    {% if data[group] %}
+<div class="container-fluir">
+    <div class="row">
+        <div class="panel panel-default col-xs-12 col-sm-10 col-md-8 col-lg-8 center-block">
+            <table class="table table-fixed">
+                <thead>
+                <tr>
+                    <th class="col-xs-3 text-right text-uppercase"><h2>{{ group }}</h2></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for attr in data[group] %}
+                <tr>
+                    <td class="col-xs-3 text-right">{{ attr }}</td>
+                    <td class="col-xs-9">{{ data[group][attr] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</form>
+</div>
+{% endif %}
+
+{% endfor %}
+{% endif %}
 
 {% endblock %}

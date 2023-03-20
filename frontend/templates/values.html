@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="text-center">
+    <h1>Значения аналитики</h1>
+    <br>
+</div>
+<h2>DATA</h2>
+<ul>
+    <li><b>owner</b> - имя владельца репозитория</li>
+    <li><b>name</b> - имя репозитория</li>
+    <li><b>description</b> - описание</li>
+    <li><b>stars</b> - количество звезд</li>
+    <li><b>createdAt</b> - дата создания</li>
+    <li><b>duration</b> - время существования (дней)</li>
+    <li><b>updatedAt</b> - время с последнего обновления (дней)</li>
+    <li><b>pushedAt</b> - время с последнего push-обновления кода (дней)</li>
+    <li><b>version</b> - текущая версия проекта</li>
+    <li><b>updMajorVer</b> - время с обновления Мажорной версии (дней)</li>
+    <li><b>updMinorVer</b> - время с обновления Минорной версии (дней)</li>
+    <li><b>updPatchVer</b> - время с обновления Патч версии (дней)</li>
+    <li><b>prClosedCount2m</b> - количество PR закрытых за 2 месяца</li>
+    <li><b>prClosedDuration</b> - среднее время закрытия PR (дней с точностью до часа)</li>
+    <li><b>archived</b> - репозиторий находится в архиве</li>
+    <li><b>locked</b> - репозиторий закрыт</li>
+    <li><b>watchersCount</b> - количество наблюдателей</li>
+    <li><b>forkCount</b> - количество форков</li>
+    <li><b>issuesCount</b> - количество вопросов</li>
+    <li><b>bugIssuesCount</b> - количество вопросов с BUG метками</li>
+    <li><b>bugIssuesClosedCount</b> - количество закрытых вопросов с BUG метками</li>
+    <li><b>bugIssuesOpenCount</b> - количество открытых вопросов с BUG метками</li>
+    <li><b>bugIssuesNoComment</b> - количество вопросов с BUG метками без комментариев (проценты 100.00%)</li>
+    <li><b>bugIssuesClosed2m</b> - количество вопросов с BUG метками закрытые за 2 месяца (не последние 2 месяца)</li>
+    <li><b>closedBug95perc</b> - за какое среднее время было закрыто 95 процентов BUG-вопросов (в днях)</li>
+    <li><b>closedBug50perc</b> - за какое среднее время было закрыто 50 процентов BUG-вопросов (в днях)</li>
+</ul>
+<br>
+<h2>ERROR</h2>
+<ul>
+    <li><b>description</b> - описание ошибки</li>
+    <li><b>message</b> - текст ошибки</li>
+</ul>
+<br>
+<h2>META</h2>
+<ul>
+    <li><b>code</b> - код ответа</li>
+    <li><b>information</b> - информация</li>
+    <li><b>cost</b> - стоимость запроса</li>
+    <li><b>remains</b> - остаток кредитов для запросов</li>
+    <li><b>resetAt</b> - время обнуления кредитов</li>
+    <li><b>estimatedTime</b> - предполагаемое время запроса</li>
+    <li><b>time</b> - фактическое время запроса</li>
+    <li><b>requestDowntime</b> - время простоя, ожидание ответа GitHub</li>
+</ul>
+<br>
+<br>
+
+{% endblock %}
