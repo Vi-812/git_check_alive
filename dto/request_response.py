@@ -29,10 +29,10 @@ class Data(BaseModel):
     bug_issues_no_comment: Optional[float] = Field(alias='bugIssuesNoComment')  # Количество bug_issues без комментария
     bug_issues_closed2m: Optional[float] = Field(alias='bugIssuesClosed2m')  # Количество bug_issues закрытых менее
     # чем за 2 месяца (не последние 2 месяца)
-    closed_bug_95perc: Optional[int] = Field(alias='closedBug95perc')  # За какое время было закрыто 95 процентов
-    # bug_issues (в днях)
-    closed_bug_50perc: Optional[int] = Field(alias='closedBug50perc')  # За какое время было закрыто 95 процентов
-    # bug_issues (в днях)
+    closed_bug_95perc: Optional[int] = Field(alias='closedBug95perc')  # За какое среднее время было закрыто 95
+    # процентов bug_issues (в днях)
+    closed_bug_50perc: Optional[int] = Field(alias='closedBug50perc')  # За какое среднее время было закрыто 50
+    # процентов bug_issues (в днях)
 
 
 class Error(BaseModel):

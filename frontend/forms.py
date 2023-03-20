@@ -3,4 +3,4 @@ from wtforms import StringField, SubmitField
 
 class RepositoryPathForm(SanicForm):
     link_repository = StringField('Введите ссылку на репозиторий')
-    submit_path = SubmitField('Анализировать')
+    submit_path = SubmitField('Анализ')

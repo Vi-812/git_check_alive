@@ -1,35 +1,38 @@
 {% extends "base.html" %}
 {% block body %}
 
+<div class="text-center">
+    <h1>Git Check Alive</h1>
+</div>
+<br>
 
 <div class="row">
     <form action="/" method="POST">
-        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10">
-            {{ form.link_repository.label }}<br>
-            {{ form.link_repository(size=128) }}
+        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 text-right">
+            {{ form.link_repository(size=80) }}
             {{ form.submit_path() }}
         </div>
     </form>
 </div>
-<hr>
+<br>
 
-{% if data %}
-{% for group in data %}
+    {% if data %}
+    {% for group in data %}
 
-{% if data[group] %}
+    {% if data[group] %}
 <div class="container-fluir">
     <div class="row">
         <div class="panel panel-default col-xs-12 col-sm-10 col-md-8 col-lg-8 center-block">
             <table class="table table-fixed">
                 <thead>
                 <tr>
-                    <th class="col-xs-3">{{ group }}</th>
+                    <th class="col-xs-3 text-right text-uppercase"><h2>{{ group }}</h2></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for attr in data[group] %}
                 <tr>
-                    <td class="col-xs-3">{{ attr }}</td>
+                    <td class="col-xs-3 text-right">{{ attr }}</td>
                     <td class="col-xs-9">{{ data[group][attr] }}</td>
                 </tr>
                 {% endfor %}
