@@ -16,10 +16,10 @@
 </div>
 <br>
 
-    {% if data %}
-    {% for group in data %}
+{% if data %}
+{% for group in data %}
 
-    {% if data[group] %}
+{% if data[group] %}
 <div class="container-fluir">
     <div class="row">
         <div class="panel panel-default col-xs-12 col-sm-10 col-md-8 col-lg-8 center-block">
@@ -45,5 +45,5 @@
 
 {% endfor %}
 {% endif %}
-
+<br>
 {% endblock %}
