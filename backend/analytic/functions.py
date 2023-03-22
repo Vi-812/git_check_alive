@@ -7,25 +7,25 @@ async def to_date(date_str: str) -> datetime:  # Преобразуем из Б�
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
 
 
-async def parsing_version(resp_json, data: list):
+async def parsing_version(resp_json, github_data: list):
     """
     Парсим, дополняем до 3-х версий, присваиваем значения по умолчанию и смотрим изменения в цикле.
     Если в считанных записях не находится изменений версии, присваивается самая ранняя считанная дата.
     При наличии 1 версии проекта, все счетчики считаются от нее.
     :param resp_json: RequestResponse (DTO), для ответа
-    :param data: даты и версии проекта, 100 последних изменений (json/GitHub)
+    :param github_data: даты и версии проекта, 100 последних изменений (json/GitHub)
     :return: количество полных дней с обновления мажорной, минорной и патч версий
     """
     major_v = minor_v = patch_v = None  # Присваиваем начальные значения
-    version = data[0]['node']['tag']['name'].split('.')
-    published_date = data[0]['node']['publishedAt']
+    version = github_data[0]['node']['tag']['name'].split('.')
+    published_date = github_data[0]['node']['publishedAt']
     for _ in range(len(version), 3):
         version.append('0')
     old_mj = version[0]
     old_mi = version[1]
     old_pt = version[2]  # Присваиваем начальные значения
 
-    for release in data[1:]:  # Перебираем полученные версии
+    for release in github_data[1:]:  # Перебираем полученные версии
         if major_v and minor_v and patch_v:  # Если все три версии найдены break
             break
         version = (release['node']['tag']['name']).split('.')  # Разбиваем версию на части
@@ -45,7 +45,7 @@ async def parsing_version(resp_json, data: list):
                 patch_v = published_date
         published_date = release['node']['publishedAt']  # Обновляем дату
     else:
-        if len(data) == 100:  # Если проверено 100 записей и не найдена какая-то из версий, записываем warning
+        if len(github_data) == 100:  # Если проверено 100 записей и не найдена какая-то из версий, записываем warning
             logger.warning(f'Не найдено версии (100 записей)!, {resp_json=}')
     if not major_v: major_v = published_date  # Присваиваем последнюю дату если не найдено изменения версии
     if not minor_v: minor_v = published_date
@@ -56,7 +56,7 @@ async def parsing_version(resp_json, data: list):
     return resp_json
 
 
-async def pull_request_analytics(resp_json, data):
+async def pull_request_analytics(resp_json, github_data):
     """
     Анализ 100 последних Pull Request.
     Анализируем только закрытые PR с момента закрытия которых прошло не более 2х месяцев.
@@ -66,7 +66,7 @@ async def pull_request_analytics(resp_json, data):
     """
     duration_pullrequest = []
     count_closed_pr = 0
-    for pullrequest in data:  # Перебираем полученные PR
+    for pullrequest in github_data:  # Перебираем полученные PR
         if pullrequest['closed'] and bool(pullrequest['closedAt']):  # Если PR закрыт
             if await to_date(pullrequest['closedAt']) + timedelta(days=60) > datetime.utcnow():  # За последние 60 дней
                 duration_pullrequest.append(  # Добавляем в список продолжительность PR

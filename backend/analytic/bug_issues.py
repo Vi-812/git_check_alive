@@ -16,9 +16,9 @@ class BugIssuesAnalytic:
         self.bug_issues_duration_closed_list = []
         self.bug_issues_duration_open_list = []
 
-    async def push_bug_issues(self, data):
+    async def push_bug_issues(self, github_data):
         now_time = datetime.utcnow()
-        for bug_issue in data:  # Перебираем полученные bug_issues, собираем промежуточную статистику
+        for bug_issue in github_data:  # Перебираем полученные bug_issues, собираем промежуточную статистику
             created_at = await fn.to_date(bug_issue['node']['createdAt'])
             comment_count = bug_issue['node']['comments']['totalCount']
             if bug_issue['node']['comments']['nodes']:  # Когда был последний комментарий (пока не используется)

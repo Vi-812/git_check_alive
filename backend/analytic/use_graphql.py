@@ -164,15 +164,15 @@ class Link:
             async with aiohttp.ClientSession() as session:  # Начинаем сессию
                 ght = datetime.utcnow()  # Засекаем время запроса к GraphQL
                 async with session.post(url=url, headers=headers, json=json_gql) as resp:  # Формируем запрос resp
-                    data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
+                    github_data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
                 resp_json.meta.request_downtime += datetime.utcnow() - ght  # Добавляем время в request_downtime
-                if data.get('message') == 'Bad credentials':  # Обработка ошибки некорректного токена
+                if github_data.get('message') == 'Bad credentials':  # Обработка ошибки некорректного токена
                     return await eh.json_error_401(
                         rec_request=rec_request,
                         resp_json=resp_json,
-                        e_data=data,
-                    ), data
-                return resp_json, data
+                        e_data=github_data,
+                    ), github_data
+                return resp_json, github_data
         except ClientConnectorError as e:  # Обработка ошибки соединения с GitHub
             return await eh.connection_error_500(rec_request=rec_request, resp_json=resp_json, error=e), None
         except Exception as e:  # Обработка ошибок GitHub
