@@ -9,7 +9,7 @@ class Data(BaseModel):
     description: Optional[str]  # Описание
     stars: Optional[int]  # Количество звезд
     created_at: Optional[datetime] = Field(alias='createdAt')  # Дата создания
-    duration: Optional[int]  # Продолжительность, количество полных дней
+    existence_time: Optional[int] = Field(alias='existenceTime')  # Продолжительность, количество полных дней
     updated_at: Optional[int] = Field(alias='updatedAt')  # Количество полных дней с обновления
     pushed_at: Optional[int] = Field(alias='pushedAt')  # Количество полных дней с последнего push'а
     version: Optional[str]  # Версия
@@ -36,8 +36,8 @@ class Data(BaseModel):
 
 
 class Error(BaseModel):
-    description: Optional[str]  # Описание ошибки
-    message: Optional[str]  # Сообщение ошибки
+    error_description: Optional[str] = Field(alias='errorDescription')  # Описание ошибки
+    error_message: Optional[str] = Field(alias='errorMessage')  # Сообщение ошибки
 
 
 class Meta(BaseModel):

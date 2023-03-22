@@ -1,6 +1,6 @@
 from frontend import app_sanic, jinja, token_app, forms
 from backend import database
-from backend.analytic import functions as fn
+from backend.analytic import errors_handler as eh
 from backend.json_preparation import final_json_preparation
 from dto.received_request import ReceivedRequest
 from dto.request_response import RequestResponse
@@ -55,7 +55,7 @@ async def index_resp(request):
             resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         else:
-            resp_json = await fn.path_error_400(rec_request=rec_request,
+            resp_json = await eh.path_error_400(rec_request=rec_request,
                                                 resp_json=resp_json,
                                                 repository_path=repository_path
                                                 )
@@ -132,8 +132,11 @@ async def post_api_request(request):
 
 async def global_error(error, rec_request=None, resp_json=RequestResponse(data={}, error={}, meta={})):
     # Создаем глобальный обработчик ошибок для всех непредвиденных ситуаций
-    logger.critical(f'GLOBAL_ERROR_500! rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}, {error=}')
+    if not rec_request:
+        logger.critical(f'GLOBAL_ERROR_500! {error=}, {resp_json=}')
+    else:
+        logger.critical(f'GLOBAL_ERROR_500! {error=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
     resp_json.meta.code = 500
-    resp_json.error.description = 'Internal Server Error'
-    resp_json.error.message = str(error)
+    resp_json.error.error_description = 'Internal Server Error'
+    resp_json.error.error_message = str(error)
     return resp_json

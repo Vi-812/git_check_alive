@@ -1,9 +1,8 @@
 import os
 from datetime import datetime
 from hashlib import blake2s
-from backend.analytic import github_api_client as ga, functions as fn
+from backend.analytic import github_api_client as ga, errors_handler as eh
 from frontend import load_dotenv, db, models
-from dto.request_response import RequestResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func  # Используется
 from backend.json_preparation import final_json_preparation
@@ -28,7 +27,7 @@ class DataBaseHandler:
             self.rec_request.repo_owner, self.rec_request.repo_name = repository_path[-2], repository_path[-1]
             self.rec_request.repo_path = self.rec_request.repo_owner + '/' + self.rec_request.repo_name
         except (IndexError, AttributeError) as e:  # Обработка ошибки при неверной передаче repository_path
-            self.resp_json = await fn.path_error_400(
+            self.resp_json = await eh.path_error_400(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 repository_path=repository_path,
@@ -81,7 +80,7 @@ class DataBaseHandler:
             stars=self.resp_json.data.stars,
             version=self.resp_json.data.version,
             created_at=self.resp_json.data.created_at,
-            duration=self.resp_json.data.duration,
+            existence_time=self.resp_json.data.existence_time,
             updated_at=self.resp_json.data.updated_at,
             pushed_at=self.resp_json.data.pushed_at,
             archived=self.resp_json.data.archived,
@@ -113,7 +112,7 @@ class DataBaseHandler:
         self.repo_find.stars = self.resp_json.data.stars
         self.repo_find.version = self.resp_json.data.version
         self.repo_find.created_at = self.resp_json.data.created_at
-        self.repo_find.duration = self.resp_json.data.duration
+        self.repo_find.existence_time = self.resp_json.data.existence_time
         self.repo_find.updated_at = self.resp_json.data.updated_at
         self.repo_find.pushed_at = self.resp_json.data.pushed_at
         self.repo_find.archived = self.resp_json.data.archived
@@ -144,7 +143,7 @@ class DataBaseHandler:
         self.resp_json.data.stars = self.repo_find.stars
         self.resp_json.data.version = self.repo_find.version
         self.resp_json.data.created_at = self.repo_find.created_at
-        self.resp_json.data.duration = self.repo_find.duration
+        self.resp_json.data.existence_time = self.repo_find.existence_time
         self.resp_json.data.updated_at = self.repo_find.updated_at
         self.resp_json.data.pushed_at = self.repo_find.pushed_at
         self.resp_json.data.archived = self.repo_find.archived

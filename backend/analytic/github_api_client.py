@@ -1,4 +1,5 @@
 import backend.analytic.use_graphql as ug
+import backend.analytic.errors_handler as eh
 import backend.analytic.functions as fn
 import backend.analytic.bug_issues as bi
 from datetime import datetime, timedelta
@@ -74,7 +75,7 @@ class GithubApiClient:
                     await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                     continue
                 else:
-                    return await fn.internal_error_500(
+                    return await eh.internal_error_500(
                         rec_request=self.rec_request,
                         resp_json=self.resp_json,
                         e_data=self.data,
@@ -99,7 +100,7 @@ class GithubApiClient:
                 self.resp_json.data.description = self.data['data']['repository']['description']
                 self.resp_json.data.stars = self.data['data']['repository']['stargazerCount']
                 self.resp_json.data.created_at = await fn.to_date(self.data['data']['repository']['createdAt'])
-                self.resp_json.data.duration = (
+                self.resp_json.data.existence_time = (
                         datetime.utcnow() - self.resp_json.data.created_at
                 ).days
                 self.resp_json.data.updated_at = (
@@ -135,14 +136,14 @@ class GithubApiClient:
             self.resp_json.meta.remains = self.data['data']['rateLimit']['remaining']
             self.resp_json.meta.reset_at = self.data['data']['rateLimit']['resetAt']
         except KeyError as e:  # Обработка ошибки при некорректном ответе data от GitHub
-            return await fn.internal_error_500(
+            return await eh.internal_error_500(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 e_data=self.data,
                 error=e,
             )
         except TypeError as e:  # Обработка ошибки если репозиторий не найден на GitHub
-            return await fn.json_error_404(
+            return await eh.json_error_404(
                 rec_request=self.rec_request,
                 resp_json=self.resp_json,
                 error=self.data['errors'][0]['message'],
@@ -173,7 +174,7 @@ class GithubApiClient:
                     await asyncio.sleep(1)  # Если полученных данные нет, то повторяем запрос через 1 секунду
                     continue
                 else:
-                    return await fn.internal_error_500(
+                    return await eh.internal_error_500(
                         rec_request=self.rec_request,
                         resp_json=self.resp_json,
                         e_data=self.data,
