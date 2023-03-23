@@ -74,7 +74,7 @@ for i in range(test_count):  # Цикл тестов
     else:  # Составляем POST запрос
         url_test = url + response_type
         json = {
-            'repositoryPath': random_repo,
+            'name': random_repo,
             'skipCache': skip_cache,
             'token': token_test,
         }

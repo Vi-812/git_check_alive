@@ -7,7 +7,7 @@ async def path_error_400(rec_request, resp_json, repository_path, e=None):
     resp_json.meta.code = 400
     resp_json.error.error_description = 'Bad repository address'
     resp_json.error.error_message = "Bad repository address, enter the address in the format " \
-                              "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
+                                    "'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
     return resp_json
 
 

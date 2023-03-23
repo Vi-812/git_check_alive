@@ -103,7 +103,7 @@ async def get_api_request(request):
 @app_sanic.post('/api/full')
 async def post_api_request(request):
     try:
-        repository_path = request.json.get('repositoryPath', None)
+        repository_path = request.json.get('name', None)
         token_api = request.json.get('token', None)
         skip_cache = request.json.get('skipCache', False)
         i_test = request.headers.get('test', '')
