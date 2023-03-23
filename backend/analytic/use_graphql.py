@@ -1,10 +1,9 @@
-import aiohttp
-import requests
 import json
+import aiohttp
+from aiohttp.client_exceptions import ClientConnectorError
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from loguru import logger
-from backend.analytic import functions as fn
+from backend.analytic import errors_handler as eh
 
 
 # Сформировать json можно тут (кнопка Explorer)
@@ -165,19 +164,16 @@ class Link:
             async with aiohttp.ClientSession() as session:  # Начинаем сессию
                 ght = datetime.utcnow()  # Засекаем время запроса к GraphQL
                 async with session.post(url=url, headers=headers, json=json_gql) as resp:  # Формируем запрос resp
-                    data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
+                    github_data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
                 resp_json.meta.request_downtime += datetime.utcnow() - ght  # Добавляем время в request_downtime
-                if data.get('message') == 'Bad credentials':  # Обработка ошибки некорректного токена
-                    return await fn.json_error_401(
+                if github_data.get('message') == 'Bad credentials':  # Обработка ошибки некорректного токена
+                    return await eh.json_error_401(
                         rec_request=rec_request,
                         resp_json=resp_json,
-                        e_data=data,
-                    ), data
-                return resp_json, data
-        except requests.exceptions.ConnectionError as e:  # Обработка ошибки соединения с GitHub
-            logger.error(f'E_500! Ошибка соединения с сервером, {e=}, '
-                         f'rec_request={rec_request.dict(exclude={"token"})}')
-            resp_json.meta.code = 500
-            resp_json.error.description = 'ConnectionError'
-            resp_json.error.message = str(e)
-            return resp_json, data
+                        e_data=github_data,
+                    ), github_data
+                return resp_json, github_data
+        except ClientConnectorError as e:  # Обработка ошибки соединения с GitHub
+            return await eh.connection_error_500(rec_request=rec_request, resp_json=resp_json, error=e), None
+        except Exception as e:  # Обработка ошибок GitHub
+            return await eh.connection_error_500(rec_request=rec_request, resp_json=resp_json, error=e), None

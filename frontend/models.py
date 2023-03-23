@@ -14,7 +14,7 @@ class RepositoryInfo(Base):
     stars = Column(Integer, nullable=False)
     version = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
-    duration = Column(Integer, nullable=False)
+    existence_time = Column(Integer, nullable=False)
     updated_at = Column(Integer, nullable=False)
     pushed_at = Column(Integer, nullable=False)
     archived = Column(Boolean, nullable=False)
