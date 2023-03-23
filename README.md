@@ -35,7 +35,7 @@
 <li>Сформируйте body запроса, headers при необходимости</li>
 <li>Отправьте запрос на необходимый эндпоинт</li>
 </ol>
-<a href="https://isgitalive.karo-dev.ru/rest-api">Подробная информация о REST API апросах</a>
+<a href="https://isgitalive.karo-dev.ru/rest-api">Подробная информация о REST API запросах</a>
 
 ## Вводные данные
 ### name
@@ -65,4 +65,4 @@
 </ul>
 
 ## Структура проекта
-``````
+![Описание картинки с котиком](http://placekitten.com/g/100/20.jpg)
