@@ -76,54 +76,44 @@
 </div>
 
 ### git_check_alive
-<ul>
-<li><b>server.py</b> - запускает приложение на сервере</li>
-<li><b>cli.py</b> - запускает приложение из командной строки</li>
-<li><b><u>frontend</u></b></li>
-<ul>
-<li><b>views.py</b> - содержит маршруты, принимает запросы пользователей</li>
-<li><b>models.py</b> - содержит представления базы данных (sqlalchemy)</li>
-<li><b>forms.py</b> - содержит представления формы для WebUI (wtforms)</li>
-<li><b>__init__.py</b> - содержит информацию модуля</li>
-<li><b><u>templates</u></b></li>
-<ul>
-<li><b>base.html</b> - содержит шаблон всех страниц (jinja2)</li>
-<li><b>index.html</b> - главная страница с формой для запроса</li>
-<li><b>values.html</b> - содержит описания значений ответа (resp_json)</li>
-<li><b>api_help.html</b> - синтаксис запросов к REST API</li>
-<li><b>contact.html</b> - контакты</li>
-</ul>
-</ul>
-<li><b><u>dto</u></b></li>
-<ul>
-<li><b>received_request.py</b> - DTO входящего запроса</li>
-<li><b>request_response.py</b> - DTO ответа на запрос</li>
-</ul>
-<li><b><u>backend</u></b></li>
-<ul>
-<li><b>database.py</b> - осуществляет работу с базой данных</li>
-<li><b>json_preparation.py</b> - формирует конечное представление resp_json, сохраняет redis</li>
-<li><b><u>analytic</u></b></li>
-<ul>
-<li><b>github_api_client.py</b> - принимает запрос и руководит его обработкиой</li>
-<li><b>use_graphql.py</b> - отвечает за отправку запросов к GraphQL GitHub</li>
-<li><b>bug_issues.py</b> - отвечает за обработку bug-вопросов (полученных от GitHub)</li>
-<li><b>functions.py</b> - содержит вспомогательные функции</li>
-<li><b>errors_handler.py</b> - содержит обработчики ошибок</li>
-</ul>
-</ul>
-<li><b><u>tests</u></b></li>
-<ul>
-<li><b>cli_test.py</b> - тестирует использование программы через CLI</li>
-<li><b>working_test.py</b> - для оперативного тестирования при разработке, тестирование ошибок</li>
-<li><b>scraping.py</b> - собирает репозитории для тестирования с "habr.com/ru/post/453444/", сохраняет в файл "testing_list.txt"</li>
-<li><b>testing_list.txt</b> - содержит репозитории для тестирования с помощью server_api_test.py</li>
-<li><b>server_api_test.py</b> - отвечает за нагрузочное тестирование через REST API</li>
-</ul>
-<li><b><u>other</u></b></li>
-<ul>
-<li><b>update.sh</b> - набор bash команд для обновления на сервере</li>
-<li><b>program_structure</b> - схема программы для README.md</li>
-</ul>
-</ul>
+* **server.py** - запускает приложение на сервере
+* **cli.py** - запускает приложение из командной строки
+* **FRONTEND**
+  * **views.py** - содержит маршруты, принимает запросы пользователей
+  * **models.py** - содержит представления базы данных (sqlalchemy)
+  * **forms.py** - содержит представления формы для WebUI (wtforms)
+  * **\_\_init__.py** - содержит информацию модуля
+  * **TEMPLATES**
+    * **base.html** - содержит шаблон всех страниц (jinja2)
+    * **index.html** - главная страница с формой для запроса
+    * **values.html** - содержит описания значений ответа (resp_json)
+    * **api_help.html** - синтаксис запросов к REST API
+    * **contact.html** - контакты
+* **DTO**
+  * **received_request.py** - DTO входящего запроса
+  * **request_response.py** - DTO ответа на запрос
+* **BACKEND**
+  * **database.py** - осуществляет работу с базой данных
+  * **json_preparation.py** - формирует конечное представление resp_json, сохраняет redis
+  * **ANALYTIC**
+    * **DB** - папка базы данных
+    * **github_api_client.py** - принимает запрос и руководит его обработкиой
+    * **use_graphql.py** - отвечает за отправку запросов к GraphQL GitHub
+    * **bug_issues.py** - отвечает за обработку bug-вопросов (полученных от GitHub)
+    * **functions.py** - содержит вспомогательные функции
+    * **errors_handler.py** - содержит обработчики ошибок
+* **TESTS**
+  * **cli_test.py** - тестирует использование программы через CLI
+  * **working_test.py** - для рабочего повседневного тестирования
+  * **scraping.py** - собирает репозитории для тестирования с "habr.com/ru/post/453444/", сохраняет в файл "testing_list.txt"
+  * **testing_list.txt** - содержит репозитории для тестирования с помощью server_api_test.py
+  * **server_api_test.py** - отвечает за нагрузочное тестирование через REST API
+  * **PYTEST**
+    * **test_to_date.py** - тестирует функцию to_date с помощью PyTest
+    * **test_scraping.py** - тестирует работу scraping.py с помощью PyTest
+    * **conftest.py** - очищает файл testing_list.txt для работы test_scraping.py
+* **OTHER**
+  * **update.sh** - набор bash команд для обновления на сервере
+  * **program_structure** - схема программы для README.md
+
 <br>

@@ -34,7 +34,7 @@ async def final_json_preparation(rec_request, resp_json):
             resp_json.data.__delattr__('description')
             resp_json.data.__delattr__('stars')
             resp_json.data.__delattr__('created_at')
-            resp_json.data.__delattr__('duration')
+            resp_json.data.__delattr__('existence_time')
             resp_json.data.__delattr__('updated_at')
             resp_json.data.__delattr__('pushed_at')
             resp_json.data.__delattr__('version')

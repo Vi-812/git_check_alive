@@ -25,7 +25,7 @@ else:
 if not fast:
     data = {
         'token': token[1:],
-        'repositoryPath': 'https://github.com/vi-812/git_'
+        'name': 'https://github.com/vi-812/git_'
     }
     response = requests.post(url=url, json=data)
     print(response.status_code, response.text)
@@ -33,7 +33,7 @@ if not fast:
 for test in testing:
     data = {
         'token': token,
-        'repositoryPath': test
+        'name': test
     }
     response = requests.post(url=url, json=data)
     print(response.status_code, response.text)
