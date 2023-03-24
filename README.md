@@ -6,6 +6,9 @@
 <a href="https://isgitalive.karo-dev.ru/values">Полный список можно посмотреть тут</a>. Список может быть расширен по 
 вашим предложениям и пожеланиям.
 
+(<a href="https://isgitalive.karo-dev.ru/">WebUI</a></li>
+/
+<a href="https://isgitalive.karo-dev.ru/rest-api">API</a></li>)
 ## Варианты использования
 ### CLI
 <ol>
