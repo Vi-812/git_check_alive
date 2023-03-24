@@ -6,6 +6,9 @@
 <a href="https://isgitalive.karo-dev.ru/values">Полный список можно посмотреть тут</a>. Список может быть расширен по 
 вашим предложениям и пожеланиям.
 
+(<a href="https://isgitalive.karo-dev.ru/">WebUI</a></li>
+/
+<a href="https://isgitalive.karo-dev.ru/rest-api">API</a></li>)
 ## Варианты использования
 ### CLI
 <ol>
@@ -35,7 +38,7 @@
 <li>Сформируйте body запроса, headers при необходимости</li>
 <li>Отправьте запрос на необходимый эндпоинт</li>
 </ol>
-<a href="https://isgitalive.karo-dev.ru/rest-api">Подробная информация о REST API апросах</a>
+<a href="https://isgitalive.karo-dev.ru/rest-api">Подробная информация о REST API запросах</a>
 
 ## Вводные данные
 ### name
@@ -65,4 +68,3 @@
 </ul>
 
 ## Структура проекта
-``````
