@@ -32,8 +32,16 @@
                 <tbody>
                 {% for attr in data[group] %}
                 <tr>
-                    <td class="col-xs-3 text-right">{{ attr }}</td>
+
+
+
+                    {% set desc = values_description[group][attr] %}
+
+                    <td class="col-xs-3 text-right" title={{ desc }}>{{ attr }}</td>
                     <td class="col-xs-9">{{ data[group][attr] }}</td>
+
+
+
                 </tr>
                 {% endfor %}
                 </tbody>

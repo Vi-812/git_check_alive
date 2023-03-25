@@ -24,7 +24,7 @@ async def index(request):
 
 @app_sanic.get('/values')
 async def index(request):
-    return jinja.render('values.html', request)
+    return jinja.render('values.html', request, values_description=values_description)
 
 
 @app_sanic.get('/rest-api')
@@ -62,7 +62,7 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request, form=form, data=resp_json)
+        return jinja.render('index.html', request, form=form, data=resp_json, values_description=values_description)
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
@@ -140,3 +140,48 @@ async def global_error(error, rec_request=None, resp_json=RequestResponse(data={
     resp_json.error.error_description = 'Internal Server Error'
     resp_json.error.error_message = str(error)
     return resp_json
+
+values_description = {  # Описание значений resp_json
+    'data': {
+        'owner': 'Имя владельца репозитория',
+        'name': 'Имя репозитория',
+        'description': 'Описание',
+        'stars': 'Количество звезд',
+        'createdAt': 'Дата создания',
+        'existenceTime': 'Время существования (дней)',
+        'updatedAt': 'Время с последнего обновления (дней)',
+        'pushedAt': 'Время с последнего push-обновления кода (дней)',
+        'version': 'Текущая версия проекта',
+        'updMajorVer': 'Время с обновления Мажорной версии (дней)',
+        'updMinorVer': 'Время с обновления Минорной версии (дней)',
+        'updPatchVer': 'Время с обновления Патч версии (дней)',
+        'prClosedCount2m': 'Количество PR закрытых за 2 месяца',
+        'prClosedDuration': 'Среднее время закрытия PR (дней с точностью до часа)',
+        'archived': 'Репозиторий находится в архиве',
+        'locked': 'Репозиторий закрыт',
+        'watchersCount': 'Количество наблюдателей',
+        'forkCount': 'Количество форков',
+        'issuesCount': 'Количество вопросов',
+        'bugIssuesCount': 'Количество вопросов с BUG метками',
+        'bugIssuesClosedCount': 'Количество закрытых вопросов с BUG метками',
+        'bugIssuesOpenCount': 'Количество открытых вопросов с BUG метками',
+        'bugIssuesNoComment': 'Количество вопросов с BUG метками без комментариев (проценты 100.00%)',
+        'bugIssuesClosed2m': 'Количество вопросов с BUG метками закрытые за 2 месяца (не последние 2 месяца)',
+        'closedBug95perc': 'За какое среднее время было закрыто 95 процентов BUG-вопросов (в днях)',
+        'closedBug50perc': 'За какое среднее время было закрыто 50 процентов BUG-вопросов (в днях)',
+    },
+    'error': {
+        'errorDescription': 'Описание ошибки',
+        'errorMessage': 'Текст ошибки',
+    },
+    'meta': {
+        'code': 'Код ответа',
+        'information': 'Информация о запросе',
+        'cost': 'Стоимость запроса',
+        'remains': 'Остаток кредитов для запросов',
+        'resetAt': 'Время обнуления кредитов',
+        'estimatedTime': 'Предполагаемое время запроса',
+        'time': 'Фактическое время запроса',
+        'requestDowntime': 'Время простоя, ожидание ответа GitHub',
+    },
+}

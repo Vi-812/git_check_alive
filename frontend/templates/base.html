@@ -12,39 +12,44 @@
 
     </title>
     <style type="text/css">
+
 		body {
 		  font-size: 16px;
 		}
-	</style>
+
+
+    </style>
 </head>
 <body>
 <div class="container">
 
-<nav class="navbar navbar-expand">
-    <div class="nav mx-auto col-xs-12 col-sm-8 col-md-8 col-lg-8">
+    <nav class="navbar navbar-expand">
+        <div class="nav mx-auto col-xs-12 col-sm-8 col-md-8 col-lg-8">
 
-        <div class="navbar-header">
-            <img src="https://freelance.ru/img/portfolio/pics/00/31/8F/3248032.jpg" width="70"
-                 height="51" alt="Лого">
+            <div class="navbar-header">
+                <a class="nav-link" href="/">
+                    <img src="https://freelance.ru/img/portfolio/pics/00/31/8F/3248032.jpg" width="70"
+                         height="51" alt="Лого">
+                </a>
+            </div>
+
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">Check Alive</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/values">Values</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/rest-api">REST API</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/contact">Сontact</a>
+                </li>
+            </ul>
         </div>
-
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Check Alive</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/values">Values</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/rest-api">REST API</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/contact">Сontact</a>
-            </li>
-        </ul>
-    </div>
-</nav>
-<hr>
+    </nav>
+    <hr>
 
     {% block body %}{% endblock %}
 
