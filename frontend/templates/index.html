@@ -24,27 +24,23 @@
     <div class="row">
         <div class="panel panel-default col-xs-12 col-sm-10 col-md-8 col-lg-8 center-block">
             <table class="table table-fixed">
+
                 <thead>
                 <tr>
                     <th class="col-xs-3 text-right text-uppercase"><h2>{{ group }}</h2></th>
                 </tr>
                 </thead>
+
                 <tbody>
                 {% for attr in data[group] %}
                 <tr>
-
-
-
                     {% set desc = values_description[group][attr] %}
-
-                    <td class="col-xs-3 text-right" title={{ desc }}>{{ attr }}</td>
-                    <td class="col-xs-9">{{ data[group][attr] }}</td>
-
-
-
+                    <td class="col-xs-3 text-right" title="{{ desc }}: {{ data[group][attr] }}">{{ attr }}</td>
+                    <td class="col-xs-9" title="{{ desc }}: {{ data[group][attr] }}">{{ data[group][attr] }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
+
             </table>
         </div>
     </div>
@@ -53,5 +49,6 @@
 
 {% endfor %}
 {% endif %}
+
 <br>
 {% endblock %}
