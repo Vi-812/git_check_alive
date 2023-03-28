@@ -58,11 +58,11 @@ async def redis_set(resp_json):  # Подвешиваем json в Redis
             resp_json.data.owner + '/' + resp_json.data.name,
             resp_json.json(by_alias=True)
         )
-    except AuthenticationError as e:
+    except AuthenticationError as e:  # Обработка ошибки аутентификации
         logger.error(f'AuthenticationError! {e=}')
-    except ConnectionError as e:
+    except ConnectionError as e:  # Обработка ошибки соединения
         logger.error(f'ConnectionError! {e=}')
-    except TimeoutError as e:
+    except TimeoutError as e:  # Обработка ошибки превышения таймаута
         logger.error(f'TimeoutError! {e=}')
-    except Exception as e:
+    except Exception as e:  # Обработка непредвиденных ошибок
         logger.error(f'Unknown Redis Exception! {e=}')

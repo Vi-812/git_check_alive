@@ -25,7 +25,7 @@ if not args.repository_path:  # Обработка ошибки, не перед
     print('"https://github.com/Vi-812/git_check_alive" or "vi-812/git_check_alive"')
     sys.exit()
 
-rec_request = ReceivedRequest(url='CLI request', repo_path=args.repository_path, token=token)  # формируем rec_request
+rec_request = ReceivedRequest(url='CLI request', repo_path=args.repository_path, token=token)  # Формируем rec_request
 resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
 instance_dbh = db.DataBaseHandler()  # Создаем экземпляр DataBaseHandler
 resp_json, code = asyncio.run(instance_dbh.get_report(rec_request=rec_request, resp_json=resp_json))  # Делаем запрос

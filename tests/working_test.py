@@ -8,11 +8,11 @@ fast = False
 url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
 
-if fast:
+if fast:  # При быстром тестировании, запускаем на проверку один репозиторий
     testing = [
         'https://github.com/vi-812/git_check_alive',
     ]
-else:
+else:  # При полном тестировании, запускаем проверку ошибок и несколько репозиториев
     testing = [
         '--sub--zero--',
         'https://github.com/vi-812/git_',
@@ -23,14 +23,14 @@ else:
     ]
 
 if not fast:
-    data = {
+    data = {  # Проверка ошибки неправильного токена
         'token': token[1:],
         'name': 'https://github.com/vi-812/git_'
     }
     response = requests.post(url=url, json=data)
     print(response.status_code, response.text)
 
-for test in testing:
+for test in testing:  # Цикл тестов
     data = {
         'token': token,
         'name': test

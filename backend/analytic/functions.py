@@ -3,7 +3,7 @@ from statistics import median
 from loguru import logger
 
 
-async def to_date(date_str: str) -> datetime:  # Преобразуем из БД в DateTime
+async def to_date(date_str: str) -> datetime:  # Преобразуем из iso-формата базы данных в формат DateTime
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
 
 

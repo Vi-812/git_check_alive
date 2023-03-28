@@ -62,7 +62,12 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request, form=form, data=resp_json, values_description=values_description)
+        return jinja.render('index.html', request,
+                            status=code,
+                            form=form,
+                            data=resp_json,
+                            values_description=values_description
+                            )
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
@@ -143,45 +148,48 @@ async def global_error(error, rec_request=None, resp_json=RequestResponse(data={
 
 values_description = {  # Описание значений resp_json
     'data': {
-        'owner': 'Имя владельца репозитория',
-        'name': 'Имя репозитория',
-        'description': 'Описание',
-        'stars': 'Количество звезд',
-        'createdAt': 'Дата создания',
-        'existenceTime': 'Время существования (дней)',
-        'updatedAt': 'Время с последнего обновления (дней)',
-        'pushedAt': 'Время с последнего push-обновления кода (дней)',
-        'version': 'Текущая версия проекта',
-        'updMajorVer': 'Время с обновления Мажорной версии (дней)',
-        'updMinorVer': 'Время с обновления Минорной версии (дней)',
-        'updPatchVer': 'Время с обновления Патч версии (дней)',
-        'prClosedCount2m': 'Количество PR закрытых за 2 месяца',
-        'prClosedDuration': 'Среднее время закрытия PR (дней с точностью до часа)',
-        'archived': 'Репозиторий находится в архиве',
-        'locked': 'Репозиторий закрыт',
-        'watchersCount': 'Количество наблюдателей',
-        'forkCount': 'Количество форков',
-        'issuesCount': 'Количество вопросов',
-        'bugIssuesCount': 'Количество вопросов с BUG метками',
-        'bugIssuesClosedCount': 'Количество закрытых вопросов с BUG метками',
-        'bugIssuesOpenCount': 'Количество открытых вопросов с BUG метками',
-        'bugIssuesNoComment': 'Количество вопросов с BUG метками без комментариев (проценты 100.00%)',
-        'bugIssuesClosed2m': 'Количество вопросов с BUG метками закрытые за 2 месяца (не последние 2 месяца)',
-        'closedBug95perc': 'За какое среднее время было закрыто 95 процентов BUG-вопросов (в днях)',
-        'closedBug50perc': 'За какое среднее время было закрыто 50 процентов BUG-вопросов (в днях)',
+        'owner': 'Имя владельца репозитория (str)',
+        'name': 'Имя репозитория (str)',
+        'description': 'Описание (str)',
+        'stars': 'Количество звезд (int)',
+        'createdAt': 'Дата создания (str iso)',
+        'existenceTime': 'Как давно существует (int дней)',
+        'updatedAt': 'Время с последнего обновления НЕ КОДА (int дней)',
+        'pushedAt': 'Время с последнего обновления КОДА, любая ветка (int дней)',
+        'version': 'Текущая версия проекта (str)',
+        'updMajorVer': 'Время с обновления Мажорной версии (int дней)',
+        'updMinorVer': 'Время с обновления Минорной версии (int дней)',
+        'updPatchVer': 'Время с обновления Патч версии (int дней)',
+        'prClosedCount2m': 'Количество PR закрытых за последние 2 месяца (int)',
+        'prClosedDuration': 'Среднее время закрытия PR (float дней)',
+        'archived': 'Репозиторий находится в архиве (bool)',
+        'locked': 'Репозиторий закрыт (bool)',
+        'watchersCount': 'Количество наблюдателей (int)',
+        'forkCount': 'Количество форков (int)',
+        'issuesCount': 'Общее количество вопросов (int)',
+        'bugIssuesCount': 'Общее количество вопросов в которых присутствуют bug метками (int)',
+        'bugIssuesClosedCount': 'Количество закрытых bug-вопросов (int)',
+        'bugIssuesOpenCount': 'Количество открытых bug-вопросов (int)',
+        'bugIssuesNoComment': 'Какой процент bug-вопросов не имеет комментариев (float % max 100.00)',
+        'bugIssuesClosed2m': 'Процент bug-вопросов решенных быстрее 2х месяцев, '
+                             'от общего числа решенных bug-вопросов (float % max 100.00)',
+        'closedBug95perc': 'Медианное значение времени закрытия 95 % bug-вопросов, '
+                           'среди всех закрытых bug-вопросов (int дней)',
+        'closedBug50perc': 'Медианное значение времени закрытия bug-вопросов, '
+                           'среди всех закрытых bug-вопросов (int дней)',
     },
     'error': {
-        'errorDescription': 'Описание ошибки',
-        'errorMessage': 'Текст ошибки',
+        'errorDescription': 'Описание ошибки (str)',
+        'errorMessage': 'Текст ошибки (str)',
     },
     'meta': {
-        'code': 'Код ответа',
-        'information': 'Информация о запросе',
-        'cost': 'Стоимость запроса',
-        'remains': 'Остаток кредитов для запросов',
-        'resetAt': 'Время обнуления кредитов',
-        'estimatedTime': 'Предполагаемое время запроса',
-        'time': 'Фактическое время запроса',
-        'requestDowntime': 'Время простоя, ожидание ответа GitHub',
+        'code': 'Код ответа (int)',
+        'information': 'Информация о запросе (str)',
+        'cost': 'Стоимость запроса (int)',
+        'remains': 'Остаток кредитов для запросов (int 5000/час)',
+        'resetAt': 'Время обнуления кредитов (str iso)',
+        'estimatedTime': 'Предполагаемое время запроса (float секунд)',
+        'time': 'Фактическое время запроса (float секунд)',
+        'requestDowntime': 'Время простоя, ожидание ответа GitHub (float секунд)',
     },
 }

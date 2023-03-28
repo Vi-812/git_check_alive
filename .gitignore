@@ -3,6 +3,8 @@ tests/.env
 tests/testing.py
 tests/testing_list.txt
 tests/pytest/testing_list.txt
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
