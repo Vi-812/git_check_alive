@@ -14,7 +14,7 @@ app_sanic.config.RESPONSE_TIMEOUT = 1800
 
 jinja = SanicJinja2(app_sanic, pkg_name='frontend')  # Создаем экземпляр SanicJinja2
 
-APP_DIR = os.path.abspath(os.path.dirname('__init__.py'))
+APP_DIR = os.path.abspath(os.path.dirname('__init__.py'))  # Определяем путь приложения
 DB_DIR = os.path.join(APP_DIR, 'backend/db')  # Задаем путь для DB
 if not os.path.exists(DB_DIR):  # Создаем если не существует
     os.makedirs(DB_DIR)

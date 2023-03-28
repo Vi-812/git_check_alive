@@ -62,7 +62,12 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request, form=form, data=resp_json, values_description=values_description)
+        return jinja.render('index.html', request,
+                            status=code,
+                            form=form,
+                            data=resp_json,
+                            values_description=values_description
+                            )
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
@@ -174,17 +179,17 @@ values_description = {  # Описание значений resp_json
                            'среди всех закрытых bug-вопросов (int дней)',
     },
     'error': {
-        'errorDescription': 'Описание ошибки',
-        'errorMessage': 'Текст ошибки',
+        'errorDescription': 'Описание ошибки (str)',
+        'errorMessage': 'Текст ошибки (str)',
     },
     'meta': {
-        'code': 'Код ответа',
-        'information': 'Информация о запросе',
-        'cost': 'Стоимость запроса',
-        'remains': 'Остаток кредитов для запросов',
-        'resetAt': 'Время обнуления кредитов',
-        'estimatedTime': 'Предполагаемое время запроса',
-        'time': 'Фактическое время запроса',
-        'requestDowntime': 'Время простоя, ожидание ответа GitHub',
+        'code': 'Код ответа (int)',
+        'information': 'Информация о запросе (str)',
+        'cost': 'Стоимость запроса (int)',
+        'remains': 'Остаток кредитов для запросов (int 5000/час)',
+        'resetAt': 'Время обнуления кредитов (str iso)',
+        'estimatedTime': 'Предполагаемое время запроса (float секунд)',
+        'time': 'Фактическое время запроса (float секунд)',
+        'requestDowntime': 'Время простоя, ожидание ответа GitHub (float секунд)',
     },
 }

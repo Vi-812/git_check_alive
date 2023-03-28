@@ -26,7 +26,7 @@ class UseGraphQL:
         self.instance_link = Link()
 
     async def get_info_labels_json(self, rec_request, resp_json, cursor):
-        json_gql = {
+        json_gql = {  # Формируем запрос к GitHub
             'query':
             """
             query GetInfo ($owner: String!, $name: String!, $date: DateTime!, $cursor: String) {
@@ -87,7 +87,7 @@ class UseGraphQL:
                 }
             }
             """,
-            'variables': {
+            'variables': {  # Переменные
                 "owner": rec_request.repo_owner,
                 "name": rec_request.repo_name,
                 "date": self.since_date,
@@ -101,7 +101,7 @@ class UseGraphQL:
         )
 
     async def get_bug_issues_json(self, rec_request, resp_json, cursor, repo_labels_bug_list):
-        json_gql = {
+        json_gql = {  # Формируем запрос к GitHub
             'query':
             """
             query GetIssues($owner: String!, $name: String!, $labels: [String!], $date: DateTime!, $cursor: String) {
@@ -135,7 +135,7 @@ class UseGraphQL:
                 }
             }
             """,
-            'variables': {
+            'variables': {  # Переменные
                 "owner": rec_request.repo_owner,
                 "name": rec_request.repo_name,
                 "labels": repo_labels_bug_list,
@@ -162,7 +162,7 @@ class Link:
         headers = {'Authorization': 'token ' + rec_request.token}  # Помещаем токен в headers
         try:
             async with aiohttp.ClientSession() as session:  # Начинаем сессию
-                ght = datetime.utcnow()  # Засекаем время запроса к GraphQL
+                ght = datetime.utcnow()  # Засекаем время запроса к GraphQL (для request_downtime)
                 async with session.post(url=url, headers=headers, json=json_gql) as resp:  # Формируем запрос resp
                     github_data = json.loads(await resp.read())  # Ожидаем ответ от resp, переводим в json
                 resp_json.meta.request_downtime += datetime.utcnow() - ght  # Добавляем время в request_downtime

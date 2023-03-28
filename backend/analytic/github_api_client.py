@@ -38,14 +38,14 @@ class GithubApiClient:
         if resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
             return self.resp_json
         if self.rec_request.response_type == 'repo':  # Если информации о репозитории достаточно...
-            self.resp_json.meta.code = 200
+            self.resp_json.meta.code = 200  # Присваиваем код ответа
             logger.info(f'GH_200/repo, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
             return self.resp_json  # ... то возвращаем успешный resp_json с этими данными
         await self.get_bug_issues()  # Сбор информации по bug_issues
         if resp_json.meta.code:  # Если resp_json содержит код (была ошибка), то возвращаем resp_json
             return self.resp_json
         self.resp_json = await self.instance_b_i_a.get_bug_analytic(self.resp_json)  # Проводим аналитику данных
-        self.resp_json.meta.code = 200
+        self.resp_json.meta.code = 200  # Присваиваем код ответа
         logger.info(f'GH_200, rec_request={self.rec_request.dict(exclude={"token"})}, {self.resp_json=}')
         return self.resp_json  # Возвращаем успешный resp_json
 
@@ -86,7 +86,7 @@ class GithubApiClient:
             else:
                 break  # Если страниц нет, выходим из цикла
 
-        # Проверяем labels на содержание 'bug' в названии, bug_labels используем для поиска bug_issues
+        # Проверяем labels на содержание 'bug' в названии, далее bug_labels используем для поиска bug_issues
         self.repo_labels_bug_list = []
         for name in self.repo_labels_name_list:
             if 'bug' in name.lower():
