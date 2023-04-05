@@ -33,7 +33,7 @@ async def rest_api(request):
 
 
 @app_sanic.get('/contact')
-async def contacts(request):
+async def contact(request):
     return jinja.render('contact.html', request)
 
 

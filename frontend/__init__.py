@@ -14,11 +14,19 @@ app_sanic.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # SECRET_KEY для р
 app_sanic.config.REQUEST_TIMEOUT = 1800
 app_sanic.config.RESPONSE_TIMEOUT = 1800
 
-CORS_OPTIONS = {
-    'methods': ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
-    'allow_headers': ['content-type', 'token'],
-}
-Extend(app_sanic, extensions=[CORS], config={"CORS": False, "CORS_OPTIONS": CORS_OPTIONS})
+
+
+
+cors = CORS(app_sanic, resources={
+    r"*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+        "allow_headers": ["content-type", "token"],
+    }
+})
+
+
+
 
 jinja = SanicJinja2(app_sanic, pkg_name='frontend')  # Создаем экземпляр SanicJinja2
 
