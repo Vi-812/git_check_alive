@@ -1,6 +1,8 @@
 import os
 from sanic import Sanic
 from sanic_jinja2 import SanicJinja2
+from sanic_ext import Extend
+from sanic_cors import CORS, cross_origin
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
@@ -11,6 +13,12 @@ app_sanic = Sanic(name='git_check_alive')  # Создаем экземпляр S
 app_sanic.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # SECRET_KEY для работы с формами на сайте
 app_sanic.config.REQUEST_TIMEOUT = 1800
 app_sanic.config.RESPONSE_TIMEOUT = 1800
+
+CORS_OPTIONS = {
+    'methods': ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+    'allow_headers': ['content-type', 'token'],
+}
+Extend(app_sanic, extensions=[CORS], config={"CORS": False, "CORS_OPTIONS": CORS_OPTIONS})
 
 jinja = SanicJinja2(app_sanic, pkg_name='frontend')  # Создаем экземпляр SanicJinja2
 

@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-fast = False
+fast = True
 
 url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
@@ -37,3 +37,4 @@ for test in testing:  # Цикл тестов
     }
     response = requests.post(url=url, json=data)
     print(response.status_code, response.text)
+    print(f'HEADERS>{response.headers}')
