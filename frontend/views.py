@@ -23,17 +23,17 @@ async def index(request):
 
 
 @app_sanic.get('/values')
-async def index(request):
+async def values(request):
     return jinja.render('values.html', request, values_description=values_description)
 
 
 @app_sanic.get('/rest-api')
-async def index(request):
+async def rest_api(request):
     return jinja.render('api_help.html', request)
 
 
 @app_sanic.get('/contact')
-async def index(request):
+async def contact(request):
     return jinja.render('contact.html', request)
 
 
