@@ -1,4 +1,11 @@
-from frontend import app_sanic, jinja, token_app, forms
+from fastapi import FastAPI, Request
+
+from .values_description import values_description
+
+
+
+
+from frontend import app, templates, token_app, forms
 from backend import database
 from backend.analytic import errors_handler as eh
 from backend.json_preparation import final_json_preparation
@@ -7,37 +14,44 @@ from dto.request_response import RequestResponse
 from sanic import HTTPResponse
 from loguru import logger
 import json
+# from sanic_cors import CORS
+# CORS(app_sanic)
+
+
+from starlette import status
+from starlette.responses import Response
+# from models import Body
 
 session_req = {}  # Создаем set для сессий Sanic
 
 
-@app_sanic.middleware('request')
-async def add_session(request):
-    request.ctx.session = session_req  # Добавляем сессию в Sanic
+# @app_sanic.middleware('request')
+# async def add_session(request):
+#     request.ctx.session = session_req  # Добавляем сессию в Sanic
 
 
-@app_sanic.get('/')
+@app.get('/')
 async def index(request):
     form = forms.RepositoryPathForm(request)
-    return jinja.render('index.html', request, form=form, data=None)
+    return templates.render('index.html', request, form=form, data=None)
 
 
-@app_sanic.get('/values')
+@app.get('/values')
 async def values(request):
-    return jinja.render('values.html', request, values_description=values_description)
+    return templates.render('values.html', request, values_description=values_description)
 
 
-@app_sanic.get('/rest-api')
+@app.get('/rest-api')
 async def rest_api(request):
-    return jinja.render('api_help.html', request)
+    return templates.render('api_help.html', request)
 
 
-@app_sanic.get('/contact')
+@app.get('/contact')
 async def contact(request):
-    return jinja.render('contact.html', request)
+    return templates.render('contact.html', request)
 
 
-@app_sanic.post('/')
+@app.post('/')
 async def index_resp(request):
     try:
         form = forms.RepositoryPathForm(request)
@@ -62,7 +76,7 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request,
+        return templates.render('index.html', request,
                             status=code,
                             form=form,
                             data=resp_json,
@@ -72,9 +86,9 @@ async def index_resp(request):
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
-@app_sanic.get('/api/repo')
-@app_sanic.get('/api/issues-statistic')
-@app_sanic.get('/api/full')
+@app.get('/api/repo')
+@app.get('/api/issues-statistic')
+@app.get('/api/full')
 async def get_api_request(request):
     try:
         repository_path = request.args.get('name', None)
@@ -103,27 +117,36 @@ async def get_api_request(request):
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
-@app_sanic.post('/api/repo')
-@app_sanic.post('/api/issues-statistic')
-@app_sanic.post('/api/full')
-async def post_api_request(request):
+
+from typing import Any, Dict, List, Union
+
+@app.post('/api/repo')
+@app.post('/api/issues-statistic')
+@app.post('/api/full')
+async def post_api_request(request: Request=None):
     try:
-        repository_path = request.json.get('name', None)
-        token_api = request.json.get('token', None)
-        skip_cache = request.json.get('skipCache', False)
+        repository_path = request.get('name', None)
+        token_api = request.get('token', None)
+        skip_cache = request.get('skipCache', False)
         i_test = request.headers.get('test', '')
+        print(f'SS_{repository_path=}, {token_api=}')
+        xxx=request.url
+        yyy=xxx.path
+        print(f'22_{xxx=}')
+        print(f'22_{yyy=}')
         if not token_api:
             token_api = token_app
-        if '/api/repo' in request.url:
+        if '/api/repo' in request.url.path:
             response_type = 'repo'  # Запрос информации только о репозитории
-        elif '/api/issues-statistic' in request.url:
+        elif '/api/issues-statistic' in request.url.path:
             response_type='issues'  # Запрос информации только о issues
         else:
             response_type='full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
+        rec_request = ReceivedRequest(url=request.url.path, repo_path=repository_path, token=token_api,
                                       skip_cache=skip_cache,response_type=response_type)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    except Exception as e:
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -136,7 +159,7 @@ async def post_api_request(request):
 
 
 async def global_error(error, rec_request=None, resp_json=RequestResponse(data={}, error={}, meta={})):
-    # Создаем глобальный обработчик ошибок для всех непредвиденных ситуаций
+    # Глобальный обработчик ошибок для всех непредвиденных ситуаций
     if not rec_request:
         logger.critical(f'GLOBAL_ERROR_500! {error=}, {resp_json=}')
     else:
@@ -145,51 +168,3 @@ async def global_error(error, rec_request=None, resp_json=RequestResponse(data={
     resp_json.error.error_description = 'Internal Server Error'
     resp_json.error.error_message = str(error)
     return resp_json
-
-values_description = {  # Описание значений resp_json
-    'data': {
-        'owner': 'Имя владельца репозитория (str)',
-        'name': 'Имя репозитория (str)',
-        'description': 'Описание (str)',
-        'stars': 'Количество звезд (int)',
-        'createdAt': 'Дата создания (str iso)',
-        'existenceTime': 'Как давно существует (int дней)',
-        'updatedAt': 'Время с последнего обновления НЕ КОДА (int дней)',
-        'pushedAt': 'Время с последнего обновления КОДА, любая ветка (int дней)',
-        'version': 'Текущая версия проекта (str)',
-        'updMajorVer': 'Время с обновления Мажорной версии (int дней)',
-        'updMinorVer': 'Время с обновления Минорной версии (int дней)',
-        'updPatchVer': 'Время с обновления Патч версии (int дней)',
-        'prClosedCount2m': 'Количество PR закрытых за последние 2 месяца (int)',
-        'prClosedDuration': 'Среднее время закрытия PR (float дней)',
-        'archived': 'Репозиторий находится в архиве (bool)',
-        'locked': 'Репозиторий закрыт (bool)',
-        'watchersCount': 'Количество наблюдателей (int)',
-        'forkCount': 'Количество форков (int)',
-        'issuesCount': 'Общее количество вопросов (int)',
-        'bugIssuesCount': 'Общее количество вопросов в которых присутствуют bug метками (int)',
-        'bugIssuesClosedCount': 'Количество закрытых bug-вопросов (int)',
-        'bugIssuesOpenCount': 'Количество открытых bug-вопросов (int)',
-        'bugIssuesNoComment': 'Какой процент bug-вопросов не имеет комментариев (float % max 100.00)',
-        'bugIssuesClosed2m': 'Процент bug-вопросов решенных быстрее 2х месяцев, '
-                             'от общего числа решенных bug-вопросов (float % max 100.00)',
-        'closedBug95perc': 'Медианное значение времени закрытия 95 % bug-вопросов, '
-                           'среди всех закрытых bug-вопросов (int дней)',
-        'closedBug50perc': 'Медианное значение времени закрытия bug-вопросов, '
-                           'среди всех закрытых bug-вопросов (int дней)',
-    },
-    'error': {
-        'errorDescription': 'Описание ошибки (str)',
-        'errorMessage': 'Текст ошибки (str)',
-    },
-    'meta': {
-        'code': 'Код ответа (int)',
-        'information': 'Информация о запросе (str)',
-        'cost': 'Стоимость запроса (int)',
-        'remains': 'Остаток кредитов для запросов (int 5000/час)',
-        'resetAt': 'Время обнуления кредитов (str iso)',
-        'estimatedTime': 'Предполагаемое время запроса (float секунд)',
-        'time': 'Фактическое время запроса (float секунд)',
-        'requestDowntime': 'Время простоя, ожидание ответа GitHub (float секунд)',
-    },
-}
