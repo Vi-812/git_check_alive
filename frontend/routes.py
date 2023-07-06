@@ -1,4 +1,5 @@
-from frontend import app_sanic, jinja, token_app, forms
+from main import templates, token_app
+from frontend import forms
 from backend import database
 from backend.analytic import errors_handler as eh
 from backend.json_preparation import final_json_preparation
@@ -7,37 +8,34 @@ from dto.request_response import RequestResponse
 from sanic import HTTPResponse
 from loguru import logger
 import json
-
-session_req = {}  # Создаем set для сессий Sanic
-
-
-@app_sanic.middleware('request')
-async def add_session(request):
-    request.ctx.session = session_req  # Добавляем сессию в Sanic
+from fastapi import APIRouter
 
 
-@app_sanic.get('/')
+router = APIRouter()
+
+
+@router.get('/')
 async def index(request):
     form = forms.RepositoryPathForm(request)
-    return jinja.render('index.html', request, form=form, data=None)
+    return templates.render('index.html', request, form=form, data=None)
 
 
-@app_sanic.get('/values')
+@router.get('/values')
 async def values(request):
-    return jinja.render('values.html', request, values_description=values_description)
+    return templates.render('values.html', request, values_description=values_description)
 
 
-@app_sanic.get('/rest-api')
+@router.get('/rest-api')
 async def rest_api(request):
-    return jinja.render('api_help.html', request)
+    return templates.render('api_help.html', request)
 
 
-@app_sanic.get('/contact')
+@router.get('/contact')
 async def contact(request):
-    return jinja.render('contact.html', request)
+    return templates.render('contact.html', request)
 
 
-@app_sanic.post('/')
+@router.post('/')
 async def index_resp(request):
     try:
         form = forms.RepositoryPathForm(request)
@@ -62,7 +60,7 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request,
+        return templates.render('index.html', request,
                             status=code,
                             form=form,
                             data=resp_json,
@@ -72,9 +70,9 @@ async def index_resp(request):
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
-@app_sanic.get('/api/repo')
-@app_sanic.get('/api/issues-statistic')
-@app_sanic.get('/api/full')
+@router.get('/api/repo')
+@router.get('/api/issues-statistic')
+@router.get('/api/full')
 async def get_api_request(request):
     try:
         repository_path = request.args.get('name', None)
@@ -103,9 +101,9 @@ async def get_api_request(request):
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
-@app_sanic.post('/api/repo')
-@app_sanic.post('/api/issues-statistic')
-@app_sanic.post('/api/full')
+@router.post('/api/repo')
+@router.post('/api/issues-statistic')
+@router.post('/api/full')
 async def post_api_request(request):
     try:
         repository_path = request.json.get('name', None)

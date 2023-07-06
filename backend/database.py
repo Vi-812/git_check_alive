@@ -2,7 +2,8 @@ import os
 from datetime import datetime
 from hashlib import blake2s
 from backend.analytic import github_api_client as ga, errors_handler as eh
-from frontend import load_dotenv, db, models
+from frontend import models
+from main import load_dotenv, db
 from sqlalchemy.orm import Session
 from sqlalchemy import func  # Используется
 from backend.json_preparation import final_json_preparation
