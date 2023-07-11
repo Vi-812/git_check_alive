@@ -3,7 +3,7 @@ import aiohttp
 from aiohttp.client_exceptions import ClientConnectorError
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from backend.analytic import errors_handler as eh
+from app.backend.analytic import errors_handler as eh
 
 
 # Сформировать json можно тут (кнопка Explorer)

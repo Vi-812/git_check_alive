@@ -1,12 +1,13 @@
 import os
 from datetime import datetime
 from hashlib import blake2s
-from backend.analytic import github_api_client as ga, errors_handler as eh
-from frontend import models
-from main import load_dotenv, db
+from app.backend.analytic import github_api_client as ga
+from app.backend.analytic import errors_handler as eh
+from app.frontend import models
+from app.core.settings import load_dotenv, db
 from sqlalchemy.orm import Session
 from sqlalchemy import func  # Используется
-from backend.json_preparation import final_json_preparation
+from app.backend.json_preparation import final_json_preparation
 from loguru import logger
 
 

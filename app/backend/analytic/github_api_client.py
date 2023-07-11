@@ -1,7 +1,7 @@
-import backend.analytic.use_graphql as ug
-import backend.analytic.errors_handler as eh
-import backend.analytic.functions as fn
-import backend.analytic.bug_issues as bi
+import app.backend.analytic.use_graphql as ug
+import app.backend.analytic.errors_handler as eh
+import app.backend.analytic.functions as fn
+import app.backend.analytic.bug_issues as bi
 from datetime import datetime, timedelta
 from loguru import logger
 import asyncio

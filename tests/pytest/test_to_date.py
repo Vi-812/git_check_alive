@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 from datetime import datetime
-from backend.analytic.functions import to_date
+from app.backend.analytic.functions import to_date
 
 
 @pytest.mark.parametrize('str_date, datetime', [('2023-01-01T12:00:00Z', datetime(2023, 1, 1, 12, 0)),

@@ -2,9 +2,9 @@ import sys
 import os
 import argparse
 import asyncio
-from dto.received_request import ReceivedRequest
-from dto.request_response import RequestResponse
-import backend.database as db
+from app.core.data_transfer_objects.received_request import ReceivedRequest
+from app.core.data_transfer_objects.answer import RequestResponse
+import app.backend.database as db
 from dotenv import load_dotenv
 load_dotenv()
 

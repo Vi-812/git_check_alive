@@ -1,6 +1,6 @@
 from statistics import median
 from datetime import datetime
-import backend.analytic.functions as fn
+import app.backend.analytic.functions as fn
 
 
 class BugIssuesAnalytic:

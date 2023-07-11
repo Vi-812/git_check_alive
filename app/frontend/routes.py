@@ -1,10 +1,10 @@
-from main import templates, token_app
-from frontend import forms
-from backend import database
-from backend.analytic import errors_handler as eh
-from backend.json_preparation import final_json_preparation
-from dto.received_request import ReceivedRequest
-from dto.request_response import RequestResponse
+from app.core.settings import templates, token_app
+from app.frontend import forms
+from app.backend import database
+from app.backend.analytic import errors_handler as eh
+from app.backend.json_preparation import final_json_preparation
+from app.core.data_transfer_objects.received_request import ReceivedRequest
+from app.core.data_transfer_objects.answer import RequestResponse
 from sanic import HTTPResponse
 from loguru import logger
 import json
@@ -106,6 +106,7 @@ async def get_api_request(request):
 @router.post('/api/full')
 async def post_api_request(request):
     try:
+        print("START post_api_request")
         repository_path = request.json.get('name', None)
         token_api = request.json.get('token', None)
         skip_cache = request.json.get('skipCache', False)
