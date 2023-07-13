@@ -18,15 +18,14 @@ logger.add(os.path.join(LOG_DIR, 'error.log'), format='{time} {level} {message}'
 logger.add(os.path.join(LOG_DIR, 'warning.log'), format='{time} {level} {message}', level='WARNING')
 logger.add(os.path.join(LOG_DIR, 'info.log'), format='{time:DD-MM HH:mm} {message}', level='INFO')
 
-DB_DIR = os.path.join(PROJECT_ROOT, 'backend/db')
+DB_DIR = os.path.join(PROJECT_ROOT, 'db')
 os.makedirs(DB_DIR, exist_ok=True)
 db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repo.db'), future=True)  # Создаем экземпляр db
 
 load_dotenv()
 token_app = os.getenv('TOKEN')  # Загрузка токена, используется если пользователь не передал свой
 
-# Подключение Jinja2
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(PROJECT_ROOT, "frontend", "templates"))
 
 app = FastAPI(
     timeout=1800,

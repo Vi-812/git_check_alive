@@ -5,19 +5,18 @@ from app.backend.analytic import errors_handler as eh
 from app.backend.json_preparation import final_json_preparation
 from app.core.data_transfer_objects.received_request import ReceivedRequest
 from app.core.data_transfer_objects.answer import RequestResponse
-from sanic import HTTPResponse
 from loguru import logger
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Response
 
 
 router = APIRouter()
 
 
 @router.get('/')
-async def index(request):
+async def index(request: Request):
     form = forms.RepositoryPathForm(request)
-    return templates.render('index.html', request, form=form, data=None)
+    return templates.TemplateResponse("index.html", {"request": request, "form": form, "data": None})
 
 
 @router.get('/values')
@@ -44,7 +43,8 @@ async def index_resp(request):
         i_test = request.headers.get('test', '')
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_app, cache=cache)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    except Exception as e:
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -66,76 +66,110 @@ async def index_resp(request):
                             data=resp_json,
                             values_description=values_description
                             )
-    except Exception as e:
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
 @router.get('/api/repo')
 @router.get('/api/issues-statistic')
 @router.get('/api/full')
-async def get_api_request(request):
+async def get_api_request(request: Request):
     try:
-        repository_path = request.args.get('name', None)
-        skip_cache = request.args.get('skipCache', False)
+        repository_path = request.query_params.get('name', None)
+        skip_cache = request.query_params.get('skipCache', False)
         token_api = request.headers.get('token', None)
         i_test = request.headers.get('test', '')
         if not token_api:
             token_api = token_app
-        if '/api/repo' in request.url:
+        request_url = str(request.url)
+        if '/api/repo' in request_url:
             response_type = 'repo'  # Запрос информации только о репозитории
-        elif '/api/issues-statistic' in request.url:
+        elif '/api/issues-statistic' in request_url:
             response_type = 'issues'  # Запрос информации только о issues
         else:
             response_type = 'full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type=response_type)
-        resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    except Exception as e:
+
+        rec_request = ReceivedRequest(
+            url=request_url,
+            repo_path=repository_path,
+            token=token_api,
+            skip_cache=skip_cache,
+            response_type=response_type,
+        )
+        resp_json = RequestResponse(
+            data={},
+            error={},
+            meta={},
+        )
+
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
+
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
+
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return HTTPResponse(resp_json, status=code)
-    except Exception as e:
+
+        return Response(content=resp_json, status_code=code)
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
+
 
 @router.post('/api/repo')
 @router.post('/api/issues-statistic')
 @router.post('/api/full')
-async def post_api_request(request):
+async def post_api_request(request: Request):
     try:
-        print("START post_api_request")
-        repository_path = request.json.get('name', None)
-        token_api = request.json.get('token', None)
-        skip_cache = request.json.get('skipCache', False)
+        data = await request.json()
+        repository_path = data.get('name', None)
+        token_api = data.get('token', None)
+        skip_cache = data.get('skipCache', False)
         i_test = request.headers.get('test', '')
         if not token_api:
             token_api = token_app
-        if '/api/repo' in request.url:
+        request_url = str(request.url)
+        if '/api/repo' in request_url:
             response_type = 'repo'  # Запрос информации только о репозитории
-        elif '/api/issues-statistic' in request.url:
+        elif '/api/issues-statistic' in request_url:
             response_type='issues'  # Запрос информации только о issues
         else:
             response_type='full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache,response_type=response_type)
-        resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+
+        rec_request = ReceivedRequest(
+            url=request_url,
+            repo_path=repository_path,
+            token=token_api,
+            skip_cache=skip_cache,
+            response_type=response_type,
+        )
+        resp_json = RequestResponse(
+            data={},
+            error={},
+            meta={},
+        )
+
     except Exception as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
+
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
+
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return HTTPResponse(resp_json, status=code)
+
+        return Response(content=resp_json, status_code=code)
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
 async def global_error(error, rec_request=None, resp_json=RequestResponse(data={}, error={}, meta={})):
-    # Создаем глобальный обработчик ошибок для всех непредвиденных ситуаций
+    # Глобальный обработчик ошибок для всех непредвиденных ситуаций
     if not rec_request:
         logger.critical(f'GLOBAL_ERROR_500! {error=}, {resp_json=}')
     else:

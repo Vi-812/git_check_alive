@@ -7,7 +7,7 @@ from loguru import logger
 from dotenv import load_dotenv
 
 # Testing Setup
-count_test = 100
+count_test = 10
 web_server = False
 
 logger.add('log_err.log', format='{time} {level} {message}', level='ERROR')
