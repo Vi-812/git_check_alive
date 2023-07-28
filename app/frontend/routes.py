@@ -1,43 +1,40 @@
-from frontend import app_sanic, jinja, token_app, forms
-from backend import database
-from backend.analytic import errors_handler as eh
-from backend.json_preparation import final_json_preparation
-from dto.received_request import ReceivedRequest
-from dto.request_response import RequestResponse
-from sanic import HTTPResponse
+from app.core.settings import templates, token_app
+from app.frontend import forms
+from app.backend import database
+from app.backend.analytic import errors_handler as eh
+from app.backend.json_preparation import final_json_preparation
+from app.core.data_transfer_objects.received_request import ReceivedRequest
+from app.core.data_transfer_objects.answer import RequestResponse
 from loguru import logger
 import json
-
-session_req = {}  # Создаем set для сессий Sanic
-
-
-@app_sanic.middleware('request')
-async def add_session(request):
-    request.ctx.session = session_req  # Добавляем сессию в Sanic
+from fastapi import APIRouter, Request, Response
 
 
-@app_sanic.get('/')
-async def index(request):
+router = APIRouter()
+
+
+@router.get('/')
+async def index(request: Request):
     form = forms.RepositoryPathForm(request)
-    return jinja.render('index.html', request, form=form, data=None)
+    return templates.TemplateResponse("index.html", {"request": request, "form": form, "data": None})
 
 
-@app_sanic.get('/values')
+@router.get('/values')
 async def values(request):
-    return jinja.render('values.html', request, values_description=values_description)
+    return templates.render('values.html', request, values_description=values_description)
 
 
-@app_sanic.get('/rest-api')
+@router.get('/rest-api')
 async def rest_api(request):
-    return jinja.render('api_help.html', request)
+    return templates.render('api_help.html', request)
 
 
-@app_sanic.get('/contact')
+@router.get('/contact')
 async def contact(request):
-    return jinja.render('contact.html', request)
+    return templates.render('contact.html', request)
 
 
-@app_sanic.post('/')
+@router.post('/')
 async def index_resp(request):
     try:
         form = forms.RepositoryPathForm(request)
@@ -46,7 +43,8 @@ async def index_resp(request):
         i_test = request.headers.get('test', '')
         rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_app, cache=cache)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    except Exception as e:
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -62,81 +60,116 @@ async def index_resp(request):
             resp_json, code = await final_json_preparation(rec_request=rec_request, resp_json=resp_json)
             resp_json = json.loads(resp_json)
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return jinja.render('index.html', request,
+        return templates.render('index.html', request,
                             status=code,
                             form=form,
                             data=resp_json,
                             values_description=values_description
                             )
-    except Exception as e:
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
-@app_sanic.get('/api/repo')
-@app_sanic.get('/api/issues-statistic')
-@app_sanic.get('/api/full')
-async def get_api_request(request):
+@router.get('/api/repo')
+@router.get('/api/issues-statistic')
+@router.get('/api/full')
+async def get_api_request(request: Request):
     try:
-        repository_path = request.args.get('name', None)
-        skip_cache = request.args.get('skipCache', False)
+        repository_path = request.query_params.get('name', None)
+        skip_cache = request.query_params.get('skipCache', False)
         token_api = request.headers.get('token', None)
         i_test = request.headers.get('test', '')
         if not token_api:
             token_api = token_app
-        if '/api/repo' in request.url:
+        request_url = str(request.url)
+        if '/api/repo' in request_url:
             response_type = 'repo'  # Запрос информации только о репозитории
-        elif '/api/issues-statistic' in request.url:
+        elif '/api/issues-statistic' in request_url:
             response_type = 'issues'  # Запрос информации только о issues
         else:
             response_type = 'full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache, response_type=response_type)
-        resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    except Exception as e:
+
+        rec_request = ReceivedRequest(
+            url=request_url,
+            repo_path=repository_path,
+            token=token_api,
+            skip_cache=skip_cache,
+            response_type=response_type,
+        )
+        resp_json = RequestResponse(
+            data={},
+            error={},
+            meta={},
+        )
+
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
+
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
+
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return HTTPResponse(resp_json, status=code)
-    except Exception as e:
+
+        return Response(content=resp_json, status_code=code)
+    # except Exception as e:
+    except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
-@app_sanic.post('/api/repo')
-@app_sanic.post('/api/issues-statistic')
-@app_sanic.post('/api/full')
-async def post_api_request(request):
+
+@router.post('/api/repo')
+@router.post('/api/issues-statistic')
+@router.post('/api/full')
+async def post_api_request(request: Request):
     try:
-        repository_path = request.json.get('name', None)
-        token_api = request.json.get('token', None)
-        skip_cache = request.json.get('skipCache', False)
+        data = await request.json()
+        repository_path = data.get('name', None)
+        token_api = data.get('token', None)
+        skip_cache = data.get('skipCache', False)
         i_test = request.headers.get('test', '')
         if not token_api:
             token_api = token_app
-        if '/api/repo' in request.url:
+        request_url = str(request.url)
+        if '/api/repo' in request_url:
             response_type = 'repo'  # Запрос информации только о репозитории
-        elif '/api/issues-statistic' in request.url:
+        elif '/api/issues-statistic' in request_url:
             response_type='issues'  # Запрос информации только о issues
         else:
             response_type='full'  # Полный запрос
-        rec_request = ReceivedRequest(url=request.url, repo_path=repository_path, token=token_api,
-                                      skip_cache=skip_cache,response_type=response_type)
-        resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
+
+        rec_request = ReceivedRequest(
+            url=request_url,
+            repo_path=repository_path,
+            token=token_api,
+            skip_cache=skip_cache,
+            response_type=response_type,
+        )
+        resp_json = RequestResponse(
+            data={},
+            error={},
+            meta={},
+        )
+
     except Exception as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
+
         instance_db_client = database.DataBaseHandler()
         resp_json, code = await instance_db_client.get_report(rec_request=rec_request, resp_json=resp_json)
+
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
-        return HTTPResponse(resp_json, status=code)
+
+        return Response(content=resp_json, status_code=code)
     except Exception as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
 async def global_error(error, rec_request=None, resp_json=RequestResponse(data={}, error={}, meta={})):
-    # Создаем глобальный обработчик ошибок для всех непредвиденных ситуаций
+    # Глобальный обработчик ошибок для всех непредвиденных ситуаций
     if not rec_request:
         logger.critical(f'GLOBAL_ERROR_500! {error=}, {resp_json=}')
     else:

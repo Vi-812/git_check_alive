@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class ReceivedRequest(BaseModel):  # DTO с данными по запросу
+# DTO с данными по запросу
+class ReceivedRequest(BaseModel):
     url: str  # URL на который пришел запрос
     repo_path: Optional[str]  # Переданный адрес репозитория
     token: str  # Токен для доступа

@@ -1,4 +1,4 @@
-from frontend import db
+from app.core.settings import db
 from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 

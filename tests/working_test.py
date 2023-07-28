@@ -8,6 +8,10 @@ fast = True
 url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
 
+headers = {
+    "Origin": "http://example.com",
+}
+
 if fast:  # При быстром тестировании, запускаем на проверку один репозиторий
     testing = [
         'https://github.com/vi-812/git_check_alive',
@@ -27,7 +31,7 @@ if not fast:
         'token': token[1:],
         'name': 'https://github.com/vi-812/git_'
     }
-    response = requests.post(url=url, json=data)
+    response = requests.post(url=url, json=data, headers=headers)
     print(response.status_code, response.text)
 
 for test in testing:  # Цикл тестов
@@ -35,6 +39,6 @@ for test in testing:  # Цикл тестов
         'token': token,
         'name': test
     }
-    response = requests.post(url=url, json=data)
+    response = requests.post(url=url, json=data, headers=headers)
     print(response.status_code, response.text)
     print(f'HEADERS>{response.headers}')
