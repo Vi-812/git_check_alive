@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-fast = True
+fast = False
 
 url = 'http://127.0.0.1:8000/api/full'
 token = os.getenv('TOKEN')
