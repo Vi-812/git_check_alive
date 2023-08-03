@@ -6,14 +6,12 @@
 </div>
 <br>
 
-<div class="row">
-    <form action="/" method="POST">
-        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 text-right">
-            {{ form.link_repository(size=80) }}
-            {{ form.submit_path() }}
-        </div>
-    </form>
-</div>
+<div class="form-container">
+        <form method="post">
+            <input type="text" name="text" required>
+            <input type="submit" value="Отправить">
+        </form>
+    </div>
 <br>
 
 {% if data %}
