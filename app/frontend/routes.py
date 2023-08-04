@@ -1,15 +1,14 @@
 from app.core.settings import templates, token_app
-from app.frontend import forms
 from app.backend import database
 from app.backend.analytic import errors_handler as eh
 from app.backend.json_preparation import final_json_preparation
 from app.core.data_transfer_objects.received_request import ReceivedRequest
 from app.core.data_transfer_objects.answer import RequestResponse
 from app.core.values_description import values_description
+from app.frontend.global_error_handler import global_error
 from loguru import logger
 import json
 from fastapi import APIRouter, Request, Response, Form
-from .global_error_handler import global_error
 
 
 router = APIRouter()
@@ -44,8 +43,8 @@ async def index_resp(request: Request, text: str = Form(...)):
         i_test = request.headers.get('test', '')
         rec_request = ReceivedRequest(url=request.url.path, repo_path=repository_path, token=token_app, cache=cache)
         resp_json = RequestResponse(data={}, error={}, meta={})  # Создаем экземпляр RequestResponse
-    # except Exception as e:
-    except ZeroDivisionError as e:
+    except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -67,8 +66,8 @@ async def index_resp(request: Request, text: str = Form(...)):
             "data": resp_json,
             "values_description": values_description,
         })
-    # except Exception as e:
-    except ZeroDivisionError as e:
+    except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
@@ -104,8 +103,8 @@ async def get_api_request(request: Request):
             meta={},
         )
 
-    # except Exception as e:
-    except ZeroDivisionError as e:
+    except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -116,8 +115,8 @@ async def get_api_request(request: Request):
         logger.info(f'|>>>{i_test} {code=}, rec_request={rec_request.dict(exclude={"token"})}, {resp_json=}')
 
         return Response(content=resp_json, status_code=code)
-    # except Exception as e:
-    except ZeroDivisionError as e:
+    except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)
 
 
@@ -155,6 +154,7 @@ async def post_api_request(request: Request):
         )
 
     except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e)
     try:
         logger.info(f'<<<|{i_test} rec_request={rec_request.dict(exclude={"token"})}')
@@ -166,4 +166,5 @@ async def post_api_request(request: Request):
 
         return Response(content=resp_json, status_code=code)
     except Exception as e:
+    # except ZeroDivisionError as e:
         return await global_error(error=e, rec_request=rec_request, resp_json=resp_json)

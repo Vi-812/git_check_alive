@@ -1,5 +1,5 @@
 import uvicorn
-from core.settings import app
+from app.core.settings import app
 from app.frontend.routes import router
 
 
