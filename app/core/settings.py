@@ -8,8 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-current_file = os.path.abspath(sys.argv[0])
-PROJECT_ROOT = os.path.dirname(os.path.abspath(current_file))
+SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SETTINGS_DIR)
 
 LOG_DIR = os.path.join(PROJECT_ROOT, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
