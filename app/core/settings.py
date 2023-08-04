@@ -25,7 +25,7 @@ db = create_engine('sqlite:///' + os.path.join(DB_DIR, 'repo.db'), future=True) 
 load_dotenv()
 token_app = os.getenv('TOKEN')  # Загрузка токена, используется если пользователь не передал свой
 
-templates = Jinja2Templates(directory=os.path.join(PROJECT_ROOT, "frontend", "templates"))
+templates = Jinja2Templates(directory=os.path.join(PROJECT_ROOT, "templates"))
 
 app = FastAPI(
     timeout=1800,
